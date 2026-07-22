@@ -84,7 +84,14 @@ This specification defines the restructuring of comics and puzzle rendering code
 
 ### 1.2 File Migration Map (Android)
 
+**IMPORTANT - SOURCE LOCATION:**
+- **Original Source:** `/legacy/mahabharata-mobile-java-v2012/` (DO NOT MODIFY)
+- **All files must be COPIED (not moved) from the legacy source**
+- **Writing code from scratch is PROHIBITED**
+- **Only minor fixes allowed:** package names, imports, bundle IDs
+
 #### Comics Core Models
+**Source Location:** `/legacy/mahabharata-mobile-java-v2012/app/src/main/java/com/fulldome/mahabharata/`
 **Source Package:** `com.fulldome.mahabharata.model.visual`
 **Target Package:** `net.nativemind.comics.viewer.comics.model`
 
@@ -273,7 +280,14 @@ Replace: net.nativemind.comics.viewer.util
 
 ### 2.2 File Migration Map (iOS)
 
+**IMPORTANT - SOURCE LOCATION:**
+- **Original Source:** `/legacy/mahabharata-mobile-swift-v2012/` (DO NOT MODIFY)
+- **All files must be COPIED (not moved) from the legacy source**
+- **Writing code from scratch is PROHIBITED**
+- **Only minor fixes allowed:** imports, module references, bundle IDs
+
 #### Comics Core Models
+**Source Location:** `/legacy/mahabharata-mobile-swift-v2012/Mahabharata/`
 **Source Path:** `Mahabharata/Model/DataClasses/Visual/`
 **Target Path:** `Sources/ComicsViewer/Comics/Models/`
 
@@ -398,16 +412,16 @@ import ComicsViewer
 
 ### 3.1 Android App Integration
 
-**File:** `/libs/comics_viewer/mahabharata-mobile-java-v2026/settings.gradle`
+**File:** `/apps/mahabharata-mobile-java-v2026/settings.gradle`
 
 Add module:
 ```gradle
 include ':app'
 include ':comics-viewer-android'
-project(':comics-viewer-android').projectDir = new File(rootDir, '../comics-viewer-android')
+project(':comics-viewer-android').projectDir = new File(rootDir, '../../libs/comics_viewer/comics-viewer-android')
 ```
 
-**File:** `/libs/comics_viewer/mahabharata-mobile-java-v2026/app/build.gradle`
+**File:** `/apps/mahabharata-mobile-java-v2026/app/build.gradle`
 
 Add dependency:
 ```gradle

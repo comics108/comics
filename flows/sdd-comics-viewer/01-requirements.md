@@ -15,6 +15,14 @@ The current comics and puzzle viewer implementations are tightly coupled within 
 
 The goal is to restructure the architecture by extracting comics and puzzle rendering into standalone, reusable libraries that can be consumed by the native apps, Flutter, and React Native.
 
+**Key Constraints:**
+- **Source Code:** Original implementations in `/legacy/mahabharata-mobile-java-v2012` and `/legacy/mahabharata-mobile-swift-v2012` must be used
+- **No Rewriting:** Code must be copied and adapted, NOT written from scratch
+- **Minimal Changes:** Only path adjustments and bundle ID updates are allowed
+- **Bundle ID:** `net.nativemind.comics.viewer` for core libraries
+- **Analysis:** Must leverage existing analysis from `sdd-flutter-comics-viewer` and `sdd-flutter-puzzle-viewer`
+- **Test Asset:** `sample.comics` in Flutter example must remain archived (do not unarchive)
+
 ## User Stories
 
 ### Primary
@@ -91,15 +99,21 @@ The goal is to restructure the architecture by extracting comics and puzzle rend
 
 9. **Given** the bundle ID requirement of net.nativemind.comics.viewer
    **When** integrating with puzzle functionality
-   **Then** a clear strategy exists for handling bundle IDs in Flutter/React Native contexts
+   **Then** puzzle is included in the same library as comics (not separate)
+   **And** bundle ID strategy follows Option C (framework-specific prefixes):
+   - Core: `net.nativemind.comics.viewer`
+   - Flutter: `net.nativemind.flutter.comics.viewer`
+   - React Native: `net.nativemind.rn.comics.viewer`
 
 10. **Given** existing analysis in sdd-flutter-comics-viewer and sdd-flutter-puzzle-viewer
     **When** implementing wrappers
-    **Then** insights from previous analysis are incorporated
+    **Then** ALL insights from previous analysis MUST be incorporated
+    **And** architectural decisions must align with previous findings
 
-11. **Given** sample.comics file in libs/comics_viewer/flutter_comics_viewer/example/assets
+11. **Given** sample.comics file in `/libs/comics_viewer/flutter_comics_viewer/example/assets/sample.comics`
     **When** using for testing
-    **Then** file remains archived (not extracted) and used as-is
+    **Then** file MUST remain archived (ZIP format, not extracted)
+    **And** used directly as a test asset without unpacking
 
 ### Should Have
 
@@ -202,50 +216,54 @@ User must choose approach for bundle ID handling:
 ### Target Structure
 
 ```
-/libs/
+/libs/comics_viewer/
 ├── comics-viewer-android/              # Android Library
 │   ├── build.gradle
 │   ├── src/main/java/net/nativemind/comics/viewer/
-│   │   ├── comics/                     # Comics rendering (moved from mahabharata-mobile-java-v2026)
-│   │   └── puzzle/                     # Puzzle rendering (moved from mahabharata-mobile-java-v2026)
+│   │   ├── comics/                     # Comics rendering (COPIED from /legacy/mahabharata-mobile-java-v2012)
+│   │   └── puzzle/                     # Puzzle rendering (COPIED from /legacy/mahabharata-mobile-java-v2012)
 │   └── ...
 │
 ├── comics-viewer-ios/                  # iOS Swift Package
 │   ├── Package.swift
 │   ├── Sources/ComicsViewer/
-│   │   ├── Comics/                     # Comics rendering (moved from mahabharata-mobile-swift-v2026)
-│   │   └── Puzzle/                     # Puzzle rendering (moved from mahabharata-mobile-swift-v2026)
+│   │   ├── Comics/                     # Comics rendering (COPIED from /legacy/mahabharata-mobile-swift-v2012)
+│   │   └── Puzzle/                     # Puzzle rendering (COPIED from /legacy/mahabharata-mobile-swift-v2012)
 │   └── ...
 │
-├── comics_viewer/
-│   ├── flutter_comics_viewer/          # Flutter Plugin
-│   │   ├── android/                    # Uses implementation project(":comics-viewer-android")
-│   │   ├── ios/                        # Uses SPM import of comics-viewer-ios
-│   │   ├── lib/                        # Dart wrapper code
-│   │   └── example/                    # Example Flutter app
-│   │       └── assets/sample.comics    # Test file (already exists)
-│   │
-│   └── react-native-comics-viewer/     # React Native Module
-│       ├── android/                    # Uses implementation project(":comics-viewer-android")
-│       ├── ios/                        # Uses SPM import of comics-viewer-ios
-│       ├── src/                        # JavaScript/TypeScript wrapper
-│       └── example/                    # Example RN app
+├── flutter_comics_viewer/              # Flutter Plugin
+│   ├── android/                        # Uses implementation project(":comics-viewer-android")
+│   ├── ios/                            # Uses SPM import of comics-viewer-ios
+│   ├── lib/                            # Dart wrapper code
+│   └── example/                        # Example Flutter app
+│       └── assets/sample.comics        # Test file (already exists, DO NOT UNARCHIVE)
 │
-├── comics_viewer/
-│   └── mahabharata-mobile-java-v2026/  # Updated to use comics-viewer-android
-│       └── app/build.gradle            # implementation project(":comics-viewer-android")
+└── react-native-comics-viewer/         # React Native Module
+    ├── android/                        # Uses implementation project(":comics-viewer-android")
+    ├── ios/                            # Uses SPM import of comics-viewer-ios
+    ├── src/                            # JavaScript/TypeScript wrapper
+    └── example/                        # Example RN app
+
+/apps/
+├── mahabharata-mobile-java-v2026/      # Android App (updated to use comics-viewer-android)
+│   └── app/build.gradle                # implementation project(":comics-viewer-android")
 │
-└── comics_viewer/
-    └── mahabharata-mobile-swift-v2026/ # Updated to use comics-viewer-ios via SPM
+└── mahabharata-mobile-swift-v2026/     # iOS App (updated to use comics-viewer-ios via SPM)
+
+/legacy/
+├── mahabharata-mobile-java-v2012/      # ORIGINAL SOURCE for Android code (DO NOT MODIFY)
+└── mahabharata-mobile-swift-v2012/     # ORIGINAL SOURCE for iOS code (DO NOT MODIFY)
 ```
 
 ## Migration Strategy
 
 ### Phase 1: Extract Android Library
 
+**IMPORTANT**: Code is COPIED from `/legacy/mahabharata-mobile-java-v2012` (ORIGINAL SOURCE). Writing code from scratch is PROHIBITED. Only minor fixes allowed (paths, bundle IDs).
+
 1. Create `/libs/comics_viewer/comics-viewer-android/` structure
-2. Move comics rendering code from mahabharata-mobile-java-v2026
-3. Move puzzle rendering code from mahabharata-mobile-java-v2026
+2. **COPY** comics rendering code from `/legacy/mahabharata-mobile-java-v2012`
+3. **COPY** puzzle rendering code from `/legacy/mahabharata-mobile-java-v2012`
 4. Fix package names: `com.fulldome.mahabharata` → `net.nativemind.comics.viewer`
 5. Update internal imports
 6. Configure build.gradle with bundle ID
@@ -253,9 +271,11 @@ User must choose approach for bundle ID handling:
 
 ### Phase 2: Extract iOS Swift Package
 
+**IMPORTANT**: Code is COPIED from `/legacy/mahabharata-mobile-swift-v2012` (ORIGINAL SOURCE). Writing code from scratch is PROHIBITED. Only minor fixes allowed (imports, bundle IDs).
+
 1. Create `/libs/comics_viewer/comics-viewer-ios/` with Package.swift
-2. Move comics rendering code from mahabharata-mobile-swift-v2026
-3. Move puzzle rendering code from mahabharata-mobile-swift-v2026
+2. **COPY** comics rendering code from `/legacy/mahabharata-mobile-swift-v2012`
+3. **COPY** puzzle rendering code from `/legacy/mahabharata-mobile-swift-v2012`
 4. Fix imports and module references
 5. Update bundle identifiers
 6. Configure Package.swift
@@ -263,10 +283,10 @@ User must choose approach for bundle ID handling:
 
 ### Phase 3: Update Native Apps
 
-1. Update mahabharata-mobile-java-v2026/app/build.gradle
+1. Update `/apps/mahabharata-mobile-java-v2026/app/build.gradle`
    - Add: `implementation project(":comics-viewer-android")`
    - Remove local comics/puzzle code
-2. Update mahabharata-mobile-swift-v2026 Package.swift or Xcode project
+2. Update `/apps/mahabharata-mobile-swift-v2026` Package.swift or Xcode project
    - Add SPM dependency on comics-viewer-ios
    - Remove local comics/puzzle code
 3. Test both apps build and run correctly
@@ -314,17 +334,26 @@ User must choose approach for bundle ID handling:
 
 ## References
 
-- **Existing Analysis**:
+- **Existing Analysis** (MUST BE REVIEWED):
   - `flows/sdd-flutter-comics-viewer/` - Flutter comics analysis
   - `flows/sdd-flutter-puzzle-viewer/` - Flutter puzzle analysis
 
-- **Source Code Locations**:
-  - Android Source: `libs/comics_viewer/mahabharata-mobile-java-v2026/`
-  - iOS Source: `libs/comics_viewer/mahabharata-mobile-swift-v2026/`
-  - Flutter Example: `libs/comics_viewer/flutter_comics_viewer/example/`
+- **Source Code Locations** (ORIGINALS - DO NOT MODIFY):
+  - Android Source (ORIGINAL): `/legacy/mahabharata-mobile-java-v2012/`
+  - iOS Source (ORIGINAL): `/legacy/mahabharata-mobile-swift-v2012/`
+
+- **Target App Locations** (Will use extracted libraries):
+  - Android App: `/apps/mahabharata-mobile-java-v2026/`
+  - iOS App: `/apps/mahabharata-mobile-swift-v2026/`
+
+- **Library Locations** (Extraction targets):
+  - Android Library: `/libs/comics_viewer/comics-viewer-android/`
+  - iOS Library: `/libs/comics_viewer/comics-viewer-ios/`
+  - Flutter Plugin: `/libs/comics_viewer/flutter_comics_viewer/`
+  - React Native Module: `/libs/comics_viewer/react-native-comics-viewer/`
 
 - **Test Assets**:
-  - Sample Comics: `libs/comics_viewer/flutter_comics_viewer/example/assets/sample.comics`
+  - Sample Comics: `/libs/comics_viewer/flutter_comics_viewer/example/assets/sample.comics` (DO NOT UNARCHIVE)
 
 ---
 
