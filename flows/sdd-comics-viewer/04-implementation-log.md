@@ -35,7 +35,14 @@
 - ✅ ComicsDescriptor.java
 - ✅ ImageManager.java (with IronWater dependencies)
 - ✅ SoundManager.java
-- ✅ IronWater framework (8 server files + 4 serializers)
+- ✅ IronWater framework (12 files total):
+  - Server: ActionRequest, ServiceCallTask, Request, CacheManager (4 files)
+  - Serializers: JsonSerializer, GsonExclusionStrategy, Ignore, Serializer (4 files)
+  - Data: ApiResult, ApiResultWrapper (2 files)
+  - Listeners: SimpleCallListener (1 file)
+  - Utils: FileUtils (1 file)
+  - **Package:** `net.nativemind.comics.viewer.ironwater.*` (to avoid conflicts with app-level IronWater)
+  - **NOT migrated:** HTTP functionality (HttpHelper, HttpRequest, etc.) - not needed for local .comics files
 
 #### 1.4 Migrate Comics Views ✅
 - ✅ LayersView.java

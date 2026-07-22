@@ -158,17 +158,155 @@ This specification defines the restructuring of comics and puzzle rendering code
 |-------------|----------------|------------------|
 | `controls/PieceView.java` | `puzzle/view/PieceView.java` | Package rename + import fixes |
 
-#### Shared Dependencies (IronWaterStudio)
-**Source Package:** `com.ironwaterstudio.utils`
-**Target Package:** `net.nativemind.comics.viewer.util`
+#### Shared Dependencies (IronWaterStudio Framework)
 
-| Source File | Target Location | Changes Required |
-|-------------|----------------|------------------|
-| `utils/SoundManager.java` | `util/SoundManager.java` | Package rename to `net.nativemind.comics.viewer.util` |
+**IMPORTANT - IronWater Package Strategy:**
 
-**Note:** Other IronWaterStudio utilities (HTTP, serialization, etc.) should be evaluated. If used only by app code, don't migrate. If used by comics/puzzle, migrate or replace with standard libraries.
+IronWater framework exists in TWO places with DIFFERENT package names to avoid conflicts:
 
-### 1.3 Build Configuration (Android)
+**1. Application Level (mahabharata-mobile-java-v2026):**
+- **Package:** `com.ironwaterstudio.*` (ORIGINAL)
+- **Location:** `/apps/mahabharata-mobile-java-v2026/app/src/main/java/com/ironwaterstudio/`
+- **Purpose:** App-level functionality (HTTP requests, UI controls, backend integration)
+- **Scope:** Full IronWater framework including HTTP
+
+**2. Library Level (comics-viewer-android):**
+- **Package:** `net.nativemind.comics.viewer.ironwater.*` (RENAMED)
+- **Location:** `/libs/comics_viewer/comics-viewer-android/src/main/java/net/nativemind/comics/viewer/ironwater/`
+- **Purpose:** Internal library dependencies (async execution, caching, JSON serialization)
+- **Scope:** Minimal subset - NO HTTP functionality
+
+**Why Different Packages:**
+- Prevents class conflicts between app and library
+- Library is self-contained and autonomous
+- App can update its IronWater independently
+- Clear separation: library internals vs app utilities
+
+**IronWater Components - Library Migration Map:**
+
+| Source Package | Target Package | Components | Migrate? |
+|----------------|----------------|------------|----------|
+| `com.ironwaterstudio.server` | `net.nativemind.comics.viewer.ironwater.server` | ActionRequest, ServiceCallTask, Request, CacheManager | ✅ YES |
+| `com.ironwaterstudio.server.serializers` | `net.nativemind.comics.viewer.ironwater.serializers` | JsonSerializer, GsonExclusionStrategy, Ignore, Serializer | ✅ YES |
+| `com.ironwaterstudio.server.data` | `net.nativemind.comics.viewer.ironwater.server.data` | ApiResult, ApiResultWrapper | ✅ YES |
+| `com.ironwaterstudio.server.listeners` | `net.nativemind.comics.viewer.ironwater.server.listeners` | SimpleCallListener | ✅ YES |
+| `com.ironwaterstudio.utils` | `net.nativemind.comics.viewer.ironwater.utils` | FileUtils | ✅ YES |
+| `com.ironwaterstudio.utils` | `net.nativemind.comics.viewer.util` | SoundManager (standalone) | ✅ YES |
+| `com.ironwaterstudio.server.http` | N/A | HttpHelper, HttpRequest, HttpImageRequest, PersistentCookieStore, etc. | ❌ NO |
+
+**NOT Migrated (HTTP functionality - 10+ files):**
+- All `/server/http/` directory components
+- Reason: Comics library works ONLY with local .comics files (ZIP archives), NO network access needed
+- File downloading is responsibility of consuming application
+
+**Required Fix:**
+- `JsonSerializer.java` line 16: Replace `HttpHelper.CT_JSON` with hardcoded `"application/json"`
+- Reason: HttpHelper not migrated, only constant value needed
+
+### 1.3 Simplified Public API (Android)
+
+**IMPORTANT:** To unify the API across all platforms (Android, iOS, Flutter, React Native), create a simplified controller class that wraps internal complexity.
+
+#### ComicsViewController Class
+
+High-level controller matching Flutter/React Native API.
+
+**File:** `src/main/java/net/nativemind/comics/viewer/ComicsViewController.java`
+
+```java
+package net.nativemind.comics.viewer;
+
+public class ComicsViewController {
+    // Properties
+    public boolean isPlaying();
+    public float getDuration();
+    public float getCurrentPosition();
+
+    // Methods (matching Flutter/RN API)
+    public void loadComics(String filePath, ComicsLoadListener listener);
+    public void play();
+    public void pause();
+    public void setScrollPosition(float position);
+    public float getScrollPosition();
+    public void togglePreview(boolean show);
+    public void toggleSounds(boolean enabled);
+    public void setLanguage(int languageIndex);
+    public void dispose();
+
+    // Callbacks
+    public interface ComicsLoadListener {
+        void onLoaded();
+        void onError(String error);
+    }
+
+    public interface ScrollListener {
+        void onScrollChanged(float position);
+    }
+
+    public void setScrollListener(ScrollListener listener);
+}
+```
+
+#### PuzzleViewController Class
+
+High-level controller for puzzles.
+
+**File:** `src/main/java/net/nativemind/comics/viewer/PuzzleViewController.java`
+
+```java
+package net.nativemind.comics.viewer;
+
+public class PuzzleViewController {
+    // Properties
+    public int getCurrentPieceIndex();
+    public int getTotalPieces();
+
+    // Methods
+    public void loadPuzzle(String filePath, PuzzleLoadListener listener);
+    public void selectPiece(int index);
+    public void play();
+    public void pause();
+    public void togglePreview(boolean show);
+    public void toggleSounds(boolean enabled);
+    public void dispose();
+
+    // Callbacks
+    public interface PuzzleLoadListener {
+        void onLoaded();
+        void onError(String error);
+    }
+
+    public interface PieceSelectListener {
+        void onPieceSelected(int index);
+    }
+
+    public void setPieceSelectListener(PieceSelectListener listener);
+}
+```
+
+**Usage in v2026 apps:**
+```java
+// Instead of working with LayersView, ComicsDescriptor, etc. directly:
+ComicsViewController controller = new ComicsViewController(context, layersView);
+controller.loadComics("/path/to/file.comics", new ComicsViewController.ComicsLoadListener() {
+    @Override
+    public void onLoaded() {
+        controller.play();
+    }
+    @Override
+    public void onError(String error) {
+        Log.e(TAG, "Error: " + error);
+    }
+});
+```
+
+**Benefits:**
+- Unified API across all platforms
+- Hides internal complexity (LayersView, ComicsDescriptor, ImageManager)
+- Easier migration for apps
+- Matches Flutter/React Native API exactly
+
+### 1.4 Build Configuration (Android)
 
 **File:** `/libs/comics_viewer/comics-viewer-android/build.gradle`
 
@@ -246,14 +384,32 @@ dependencies {
 Find:    com.fulldome.mahabharata
 Replace: net.nativemind.comics.viewer
 
-Find:    com.ironwaterstudio.utils
-Replace: net.nativemind.comics.viewer.util
+Find:    com.ironwaterstudio.server
+Replace: net.nativemind.comics.viewer.ironwater.server
+
+Find:    com.ironwaterstudio.utils.SoundManager
+Replace: net.nativemind.comics.viewer.util.SoundManager
+
+Find:    com.ironwaterstudio.utils (other files)
+Replace: net.nativemind.comics.viewer.ironwater.utils
 ```
 
 **Import Cleanup:**
 - Remove app-specific imports (Settings, Analytics, etc.)
 - Remove Activity/Fragment imports (if migrating to library components)
 - Update internal cross-references between migrated files
+
+**IronWater-Specific Fixes:**
+1. **JsonSerializer.java**: Replace HTTP dependency
+   ```java
+   // BEFORE (references non-existent HttpHelper):
+   private static final String[] CONTENT_TYPES = new String[]{HttpHelper.CT_JSON};
+
+   // AFTER (hardcoded constant):
+   private static final String[] CONTENT_TYPES = new String[]{"application/json"};
+   ```
+
+2. **Verify no other HTTP references** in migrated IronWater files
 
 ---
 
@@ -278,7 +434,103 @@ Replace: net.nativemind.comics.viewer.util
 └── README.md
 ```
 
-### 2.2 File Migration Map (iOS)
+### 2.2 Simplified Public API (iOS)
+
+**IMPORTANT:** Create a simplified Swift controller class matching the Android/Flutter/React Native API.
+
+#### ComicsViewerController Class
+
+High-level controller matching Android/Flutter/React Native API.
+
+**File:** `Sources/ComicsViewer/ComicsViewerController.swift`
+
+```swift
+import Foundation
+import UIKit
+
+public class ComicsViewerController {
+    // Properties
+    public var isPlaying: Bool { get }
+    public var duration: CGFloat { get }
+    public var currentPosition: CGFloat { get }
+
+    // Initialization
+    public init(scrollView: ImageScrollView)
+
+    // Methods (matching Android/Flutter/RN API)
+    public func loadComics(filePath: String, completion: @escaping (Result<Void, Error>) -> Void)
+    public func play()
+    public func pause()
+    public func setScrollPosition(_ position: CGFloat)
+    public func getScrollPosition() -> CGFloat
+    public func togglePreview(_ show: Bool)
+    public func toggleSounds(_ enabled: Bool)
+    public func setLanguage(_ languageIndex: Int)
+    public func dispose()
+
+    // Callbacks
+    public var onScrollChanged: ((CGFloat) -> Void)?
+}
+```
+
+#### PuzzleViewerController Class
+
+High-level controller for puzzles.
+
+**File:** `Sources/ComicsViewer/PuzzleViewerController.swift`
+
+```swift
+import Foundation
+
+public class PuzzleViewerController {
+    // Properties
+    public var currentPieceIndex: Int { get }
+    public var totalPieces: Int { get }
+
+    // Initialization
+    public init()
+
+    // Methods
+    public func loadPuzzle(filePath: String, completion: @escaping (Result<Void, Error>) -> Void)
+    public func selectPiece(_ index: Int)
+    public func play()
+    public func pause()
+    public func togglePreview(_ show: Bool)
+    public func toggleSounds(_ enabled: Bool)
+    public func dispose()
+
+    // Callbacks
+    public var onPieceSelected: ((Int) -> Void)?
+}
+```
+
+**Usage in v2026 apps:**
+```swift
+// Instead of working with ImageScrollView, ArchiveManager, etc. directly:
+let scrollView = ImageScrollView()
+let controller = ComicsViewerController(scrollView: scrollView)
+
+controller.onScrollChanged = { position in
+    print("Position: \(position)")
+}
+
+controller.loadComics(filePath: comicsURL.path) { result in
+    switch result {
+    case .success:
+        controller.play()
+    case .failure(let error):
+        print("Error: \(error)")
+    }
+}
+```
+
+**Benefits:**
+- Unified API across all platforms
+- Hides internal complexity (ImageScrollView, ArchiveManager, SoundManager)
+- Easier migration for apps
+- Matches Android/Flutter/React Native API exactly
+
+### 2.3 File Migration Map (iOS)
 
 **IMPORTANT - SOURCE LOCATION:**
 - **Original Source:** `/legacy/mahabharata-mobile-swift-v2012/` (DO NOT MODIFY)
