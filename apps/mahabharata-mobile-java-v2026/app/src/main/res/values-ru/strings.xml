@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Махабхарата</string>
+	<string name="error_common">Не удалось загрузить данные с сервера</string>
+	<string name="error_connection">Соединение с сервером не может быть установлено. Пожалуйста, проверьте настройки интернет-соединения или повторите попытку чуть позже.</string>
+	<string name="billing_unavailable">Сервис покупки не доступен на этом устройстве.</string>
+	<string name="products_not_found">Продукты для покупки не найдены.</string>
+	<string name="purchase_error">Ошибка покупки продукта. Пожалуйста, проверьте настройки интернет-соединения или повторите попытку чуть позже.</string>
+	<string name="open">открыть</string>
+
+	<!-- Unlicensed dialog messages -->
+	<string name="unlicensed_dialog_title">Приложение не лицензировано</string>
+	<string name="unlicensed_body">Это приложение не лицензировано. Загрузите его через Play Market.</string>
+	<string name="unlicensed_retry_body">Не удалось проверить лицензию. Проверьте, доступно ли сетевое подключение.</string>
+	<string name="buy_button">Скачать</string>
+	<string name="retry">Повторить</string>
+	<string name="exit">Выход</string>
+
+	<!-- Menu -->
+	<string name="new_releases">Новые выпуски</string>
+	<string name="comics">Комикс</string>
+	<string name="quotes">Цитатник</string>
+	<string name="puzzle">Пазл</string>
+	<string name="musics">Музыка</string>
+	<string name="season_template">Книга %d</string>
+	<string name="episode_template">Глава %d</string>
+	<string name="free">Бесплатно</string>
+	<string name="paid">Куплено</string>
+	<string name="available">Доступно</string>
+	<string name="read">Читать</string>
+	<string name="watch">Смотреть</string>
+	<string name="subscribe">Подписаться на новости</string>
+	<string name="privacy_policy">Политика приватности</string>
+	<string name="already_subscribed">Подписка оформлена</string>
+	<string name="status_request">Запрос статуса</string>
+	<string name="prices_updating">Идет обновление цен. Пожалуйста подождите.</string>
+	<string name="delete_episode">Вы уверены, что хотите удалить этот эпизод?</string>
+	<string name="delete_music">Вы уверены, что хотите удалить эту музыку?</string>
+	<string name="yes">Да</string>
+	<string name="no">Нет</string>
+	<string name="share_chapter">Поделиться главой</string>
+	<string name="share_quote">Поделиться цитатой</string>
+	<string name="comment">Комментарий</string>
+	<string name="cancel">Отмена</string>
+	<string name="share">Поделиться</string>
+	<string name="share_default_text">Скачай Mahabharata App и читай уникальный комикс</string>
+	<string name="share_quote_default_text">Скачай Mahabharata App и читай цитаты</string>
+	<string name="soon">Скоро</string>
+	<string name="share_text">Присоединяйся и читай уникальный комикс Махабхарата: Боги и Герои! Переходи по этой ссылке %s, чтобы БЕСПЛАТНО загрузить приложение и погрузиться в САМУЮ БОЛЬШУЮ историю, которую когда-либо рассказывали!</string>
+	<plurals name="episodes">
+		<item quantity="one">%d глава</item>
+		<item quantity="few">%d главы</item>
+		<item quantity="many">%d глав</item>
+	</plurals>
+
+	<!-- Comics -->
+	<string name="helpful_text">Нажми на экран, чтобы\nвыключить музыку\n\nЛистай вниз, чтобы читать\nкомикс</string>
+	<string name="continue_from_last_position">Продолжить с последней позиции?</string>
+	<string name="loading">Загрузка…</string>
+
+	<!-- Puzzle -->
+	<string name="download">Скачать</string>
+	<string name="update">Обновить</string>
+	<string name="puzzle_title">Пазл \"Битва на Курукшетре\"</string>
+	<string name="puzzle_description">When an envious cousin turns into tyrant and usurps the kingdom…
+A daring archer and his brothers must overcome all odds after being exiled to the dark forest where they meet gods and sages who instruct them in the art of war.
+Armed by the gods of thunder and destruction, they return to face the wicked king, his allies and demon hordes.
+Their goals? Revenge against the tyrant. They must regain the golden city of elephants for their righteous brother the true king, and his fair lady.
+Outnumbered and outmanned, the band of five brothers ride against the ferocious despot and his legions in the greatest battle of the ancient world: Kurukshetra.</string>
+
+	<!-- Subscriptions -->
+	<string name="subscriptions_helpful_text">При оформлении подписки вам будут доступны все эпизоды Махабхарата на протяжении действия подписки</string>
+</resources>

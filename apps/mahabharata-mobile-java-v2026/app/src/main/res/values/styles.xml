@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<style name="MenuTheme" parent="Theme.AppCompat.NoActionBar">
+		<item name="colorPrimary">@color/maroon</item>
+		<item name="colorPrimaryDark">@color/maroon_dark</item>
+		<item name="colorAccent">@color/yellow</item>
+		<item name="colorButtonNormal">@color/yellow</item>
+
+		<item name="android:textViewStyle">@style/TextViewStyleEx</item>
+
+		<item name="autoCompleteTextViewStyle">@style/AutoCompleteTextViewStyleEx</item>
+		<item name="buttonStyle">@style/ButtonStyleEx</item>
+		<item name="editTextStyle">@style/EditTextStyleEx</item>
+		<item name="bottomSheetStyle">@style/BottomSheet</item>
+	</style>
+
+	<style name="AppTheme" parent="MenuTheme">
+		<item name="android:windowFullscreen">true</item>
+	</style>
+
+	<style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+		<item name="colorControlNormal">@color/yellow</item>
+	</style>
+
+	<style name="Dialog" parent="Theme.AppCompat.Dialog">
+		<item name="android:windowIsTranslucent">true</item>
+		<item name="android:windowBackground">@android:color/transparent</item>
+		<item name="android:windowNoTitle">true</item>
+		<item name="colorPrimary">@color/maroon</item>
+		<item name="colorPrimaryDark">@color/maroon_dark</item>
+		<item name="colorAccent">@color/yellow</item>
+
+		<item name="autoCompleteTextViewStyle">@style/AutoCompleteTextViewStyleEx</item>
+		<item name="buttonStyle">@style/ButtonStyleEx</item>
+		<item name="editTextStyle">@style/EditTextStyleEx</item>
+		<item name="android:textViewStyle">@style/TextViewStyleEx</item>
+	</style>
+
+	<style name="Dialog.NoShadow">
+		<item name="android:backgroundDimEnabled">false</item>
+	</style>
+
+	<style name="BottomSheet" parent="Theme.Design.BottomSheetDialog">
+		<item name="background">@color/gradient_light</item>
+		<item name="cornerRadius">@dimen/corner_bottom_sheet</item>
+	</style>
+
+	<style name="AutoCompleteTextViewStyleEx" parent="Base.Widget.AppCompat.AutoCompleteTextView">
+		<item name="fontFamily">@font/proxima_regular</item>
+	</style>
+
+	<style name="ButtonStyleEx" parent="Base.Widget.AppCompat.Button">
+		<item name="fontFamily">@font/proxima_bold</item>
+	</style>
+
+	<style name="EditTextStyleEx" parent="Base.Widget.AppCompat.EditText">
+		<item name="fontFamily">@font/proxima_regular</item>
+	</style>
+
+	<style name="TextViewStyleEx" parent="android:Widget.TextView">
+		<item name="fontFamily">@font/proxima_regular</item>
+	</style>
+
+	<style name="TitleTextAppearance" parent="android:style/TextAppearance">
+		<item name="fontFamily">@font/proxima_medium</item>
+		<item name="android:textSize">20sp</item>
+	</style>
+</resources>

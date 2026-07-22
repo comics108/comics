@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:fillViewport="true">
+
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+
+		<androidx.appcompat.widget.AppCompatTextView
+			android:id="@+id/tv_description"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="9dp"
+			android:layout_marginLeft="11dp"
+			android:layout_marginRight="11dp"
+			android:layout_marginTop="16dp"
+			android:background="@drawable/roll"
+			android:paddingBottom="52dp"
+			android:paddingLeft="36dp"
+			android:paddingRight="36dp"
+			android:paddingTop="54dp"
+			android:text="@string/puzzle_description"
+			android:textColor="@color/white"
+			android:textSize="13sp"/>
+
+		<ProgressBar
+			android:id="@+id/progress_bar"
+			style="?android:attr/progressBarStyleHorizontal"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignBottom="@+id/btn_puzzle"
+			android:layout_alignLeft="@+id/btn_puzzle"
+			android:layout_alignRight="@+id/btn_puzzle"
+			android:layout_alignTop="@+id/btn_puzzle"
+			android:max="100"
+			android:progressDrawable="@drawable/yellow_rect"/>
+
+		<FrameLayout
+			android:id="@+id/btn_puzzle"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_below="@id/tv_description"
+			android:layout_centerHorizontal="true"
+			android:layout_margin="16dp"
+			android:background="@drawable/yellow_button"
+			android:clickable="true"
+			android:foreground="@drawable/rect_selector"
+			android:paddingBottom="10dp"
+			android:paddingTop="10dp">
+
+			<androidx.appcompat.widget.AppCompatTextView
+				android:id="@+id/tv_puzzle"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:gravity="center_horizontal"
+				android:paddingLeft="10dp"
+				android:paddingRight="10dp"
+				android:text="@string/puzzle_title"
+				android:textAllCaps="true"
+				android:textColor="@color/yellow"
+				android:textSize="14sp"/>
+		</FrameLayout>
+	</RelativeLayout>
+</ScrollView>

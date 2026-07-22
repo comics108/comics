@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:background="?selectableItemBackground"
+	android:clickable="true">
+
+	<androidx.appcompat.widget.AppCompatTextView
+		android:id="@+id/tv_number"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="16dp"
+		android:layout_marginTop="16dp"
+		android:fontFamily="@font/proxima_bold"
+		android:paddingLeft="5dp"
+		android:paddingRight="5dp"
+		android:textColor="@color/yellow"
+		android:textSize="12sp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="@+id/guideline"
+		app:layout_constraintTop_toTopOf="parent"
+		tools:text="2"/>
+
+	<androidx.appcompat.widget.AppCompatImageView
+		android:id="@+id/iv_music"
+		android:layout_width="14dp"
+		android:layout_height="14dp"
+		android:visibility="invisible"
+		app:layout_constraintBottom_toBottomOf="@+id/tv_number"
+		app:layout_constraintLeft_toLeftOf="@+id/tv_number"
+		app:layout_constraintRight_toRightOf="@+id/tv_number"
+		app:layout_constraintTop_toTopOf="@+id/tv_number"
+		tools:srcCompat="@drawable/ic_equalizer"/>
+
+	<androidx.constraintlayout.widget.Guideline
+		android:id="@+id/guideline"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		app:layout_constraintGuide_begin="45dp"
+		app:layout_constraintGuide_end="45dp"/>
+
+	<androidx.appcompat.widget.AppCompatTextView
+		android:id="@+id/tv_name"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="10dp"
+		android:textColor="@color/white"
+		android:textSize="16sp"
+		app:layout_constraintBottom_toTopOf="@+id/tv_author"
+		app:layout_constraintHorizontal_bias="0"
+		app:layout_constraintLeft_toRightOf="@+id/guideline"
+		app:layout_constraintRight_toLeftOf="@+id/btn_action"
+		app:layout_constraintTop_toTopOf="parent"
+		app:layout_constraintVertical_chainStyle="packed"
+		app:layout_constraintWidth_default="wrap"
+		tools:text="Maha-mantra"/>
+
+	<androidx.appcompat.widget.AppCompatTextView
+		android:id="@+id/tv_author"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="10dp"
+		android:textColor="@color/yellow"
+		android:textSize="12sp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintHorizontal_bias="0"
+		app:layout_constraintLeft_toRightOf="@+id/guideline"
+		app:layout_constraintRight_toLeftOf="@+id/btn_action"
+		app:layout_constraintTop_toBottomOf="@+id/tv_name"
+		app:layout_constraintWidth_default="wrap"
+		tools:text="Bhakti Lalita Dev"/>
+
+	<com.ironwaterstudio.controls.ImageViewEx
+		android:id="@+id/btn_action"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="2dp"
+		android:layout_marginTop="2dp"
+		android:clickable="true"
+		android:foreground="@drawable/circle_selector"
+		android:padding="17dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:srcMain="@drawable/icn_del"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

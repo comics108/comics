@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:background="?selectableItemBackground"
+	android:clickable="true"
+	android:orientation="horizontal"
+	android:padding="16dp">
+
+	<androidx.appcompat.widget.AppCompatTextView
+		android:id="@+id/tv_title"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_vertical"
+		android:layout_weight="1"
+		android:textColor="@color/yellow"
+		android:textSize="15sp"
+		app:fontFamily="@font/proxima_medium"
+		tools:text="Subs name"/>
+
+	<androidx.appcompat.widget.AppCompatTextView
+		android:id="@+id/tv_price"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_vertical"
+		android:background="@drawable/static_yellow_rect"
+		android:paddingBottom="5dp"
+		android:paddingLeft="10dp"
+		android:paddingRight="10dp"
+		android:paddingTop="5dp"
+		android:textColor="@color/yellow"
+		android:textSize="12sp"
+		tools:text="18 rub"/>
+</LinearLayout>

@@ -1,0 +1,94 @@
+/* 
+  Localizable.strings
+  Mahabharata
+
+  Created by Roman Developer on 7/19/17.
+  Copyright © 2017 Iron Water Studio. All rights reserved.
+*/
+
+/* NetworkErrorManager localization messages */
+"NetworkErrorManager.NetworkErrorCheckOrWait"="Соединение с сервером не может быть установлено. Пожалуйста, проверьте настройки интернет-соединения или повторите попытку чуть позже.";
+"NetworkErrorManager.NetworkErrorCheck"="Соединение с сервером не может быть установлено. Пожалуйста, проверьте настройки интернет-соединения.";
+"NetworkErrorManager.NetworkErrorTimedOut"="Превышен лимит времени ожидания ответа от сервера. Пожалуйста, проверьте настройки интернет-соединения.";
+"NetworkErrorManager.NetworkErrorHostIsNotAvailable"="Не удалось установить соединение с сервером, сервер недоступен.";
+"NetworkErrorManager.NetworkErrorWrongRequest"="Сервер не доступен или неправильный запрос. Обратитесь к администрации ресурса.";
+// Buttons localizations
+"NetworkErrorManager.Cancel"="Отмена";
+"NetworkErrorManager.Retry"="Повторить";
+"NetworkErrorManager.Ok"="OK";
+
+"Mahabharata" = "Махабхарата";
+
+"TabBar.Comics" = "Комикс";
+"TabBar.Quotes" = "Цитатник";
+"TabBar.Puzzle" = "Пазл";
+"TabBar.Music" = "Музыка";
+
+"Seasons.BuyBook" = "КУПИТЬ ВСЮ КНИГУ %d";
+"Seasons.Bought" = "КУПЛЕНО";
+
+"Season.BuyBook" = "КУПИТЬ ВСЕ ГЛАВЫ - %@";
+"Season.Bought" = "КУПЛЕНО";
+"Season.Free" = "БЕСПЛАТНО";
+
+"Seasons.Header.Title" = "НОВЫЕ ВЫПУСКИ";
+
+"Episodes.Episode" = "Глава";
+"Episodes.Read" = "Читать";
+"Episodes.Watch" = "Смотреть";
+"Episodes.Bought" = "Куплено";
+"Episodes.Free" = "Бесплатно";
+"Episodes.Soon" = "Скоро";
+//Not in design, for safety when price is not retrieved
+"Episodes.Buy" = "Купить";
+"Episodes.Subscribe" = "Подписаться на новости";
+"Episodes.Unpacking" = "Распаковка";
+
+"Purchases.Off" = "Покупки на вашем устройстве отключены. Для включения перейдите в настройки устройства";
+"Purchases.Restore" = "Восстановить покупки";
+"Go" = "Перейти";
+"Cancel" = "Отмена";
+
+"About.Title" = "О приложении";
+"About.Text" = "Эпос Махабхарата\n
+В древнем мире, где демонические цари правили с летающих дирижаблей и вызывали атомное оружие мантрами – противостояние между королевскими двоюродными братьями заканчивается величайшей битвой потерянных цивилизаций: битвой на Курукшетре.\n
+Приложение Mahabharata\n
+Величайшая история, которая никогда не была рассказана таким способом современному миру.\n
+Это первый современный и уникальный пересказ, в котором древние традиции индийской мифологии встретили современные цифровые технологии.";
+
+"Episodes.AreYouSureToDelete" = "Вы действительно хотите удалить главу %@?";
+"Episodes.Yes" = "Да";
+"Episodes.No" = "Нет";
+
+"Episode.Click" = "Нажми на экран, чтобы выключить музыку";
+"Episode.Scroll" = "Листай вниз, чтобы читать комикс";
+"Episode.Language.Ru" = "РУС";
+"Episode.Language.En" = "En";
+"Episode.Language.Hindi" = "हिन्दी";
+"Episode.ConfirmRestorePosition" = "Продолжить с последней позиции?";
+"Episode.Yes" = "Да";
+"Episode.No" = "Нет";
+
+"Episodes.ReadNow" = "ЧИТАТЬ";
+"Episodes.GetEarlyAccess" = "РАННИЙ ДОСТУП";
+"Episodes.DonateToSupport" = "ПОЖЕРТВОВАТЬ";
+
+"Quotes.Share" = "Поделиться";
+
+"Share.Quote.Title" = "Поделиться цитатой";
+"Share.Quote.Prompt" = "Скачай Mahabharata app и читай цитаты";
+
+"Share.Link" = "https://itunes.apple.com/us/app/mahabharata-gods-heroes/id1376581290?l=ru&ls=1&mt=8";
+"Share.Share" = "Поделиться";
+"Share.Cancel" = "Отмена";
+
+"Share.Episode.Title" = "Поделиться главой";
+"Share.Episode.PromptFormat" = "Присоединяйся и читай уникальный комикс Махабхарата: Боги и Герои! Переходи по этой ссылке %@, чтобы БЕСПЛАТНО загрузить приложение и погрузиться в САМУЮ БОЛЬШУЮ историю, которую когда-либо рассказывали!";
+
+"Music.Title" = "Музыка для мантр";
+"Music.AreYouSureToDelete" = "Вы действительно хотите удалить трек %@?";
+"Music.Yes" = "Да";
+"Music.No" = "Нет";
+
+"Seasons.BookName" = "Проклятие Амбы\nКнига %d";
+"Seasons.ComingSoon" = "Скоро будет";

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<com.fulldome.mahabharata.controls.ZoomFrameLayout
+		android:id="@+id/zoom_layout"
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="@color/maroon"/>
+
+	<com.fulldome.mahabharata.controls.SoundBadge
+		android:id="@+id/sound_badge"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center"
+		android:background="@drawable/circle_maroon"
+		android:elevation="5dp"
+		android:padding="10dp"
+		android:src="@drawable/icn_sound_on"/>
+</FrameLayout>

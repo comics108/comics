@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<com.fulldome.mahabharata.controls.ZoomFrameLayout
+		android:id="@+id/zoom_layout"
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="@color/black"
+		app:fitMode="horizontal"
+		app:zoomEnabled="false">
+
+		<RelativeLayout
+			android:id="@+id/v_header"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:background="@drawable/shadow_bottom"
+			android:paddingBottom="20dp">
+
+			<androidx.appcompat.widget.AppCompatImageView
+				android:id="@+id/iv_header"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:adjustViewBounds="true"
+				android:scaleType="centerCrop"
+				app:srcCompat="@drawable/bg_guide"/>
+
+			<FrameLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_alignBottom="@id/iv_header"
+				android:layout_alignParentTop="true">
+
+				<androidx.appcompat.widget.AppCompatTextView
+					android:id="@+id/tv_helpful_text"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_gravity="center_vertical"
+					android:layout_marginLeft="8dp"
+					android:layout_marginRight="8dp"
+					android:drawableBottom="@drawable/icn_bottom"
+					android:drawablePadding="11dp"
+					android:drawableTop="@drawable/icn_tap"
+					android:gravity="center_horizontal"
+					android:text="@string/helpful_text"
+					android:textColor="@color/white"
+					android:textSize="12sp"/>
+			</FrameLayout>
+
+			<RadioGroup
+				android:id="@+id/rg_language"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_below="@id/iv_header"
+				android:layout_centerHorizontal="true"
+				android:layout_marginTop="20dp"
+				android:orientation="horizontal"/>
+
+			<androidx.appcompat.widget.AppCompatTextView
+				android:id="@+id/tv_chapter"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_below="@id/rg_language"
+				android:layout_centerHorizontal="true"
+				android:layout_marginLeft="16dp"
+				android:layout_marginRight="16dp"
+				android:layout_marginTop="32dp"
+				android:textColor="@color/yellow"
+				android:textSize="16sp"
+				app:fontFamily="@font/proxima_medium"
+				tools:text="Chapter 1"/>
+
+			<androidx.appcompat.widget.AppCompatTextView
+				android:id="@+id/tv_name"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/tv_chapter"
+				android:layout_centerHorizontal="true"
+				android:layout_marginLeft="16dp"
+				android:layout_marginRight="16dp"
+				android:layout_marginTop="11dp"
+				android:gravity="center"
+				android:textColor="@color/white"
+				android:textSize="22sp"
+				tools:text="Introduction. Legend of Asthika."/>
+		</RelativeLayout>
+
+		<FrameLayout
+			android:id="@+id/v_footer"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_gravity="bottom"
+			android:clickable="true"
+			android:foreground="?selectableItemBackground">
+
+			<RelativeLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:background="@drawable/shadow_top"
+				android:paddingTop="20dp">
+
+				<androidx.cardview.widget.CardView
+					android:id="@+id/cv_next_poster"
+					android:layout_width="65dp"
+					android:layout_height="94dp"
+					android:layout_margin="24dp"
+					app:cardBackgroundColor="@color/maroon"
+					app:cardCornerRadius="4dp"
+					app:cardElevation="4dp"
+					app:contentPadding="@dimen/card_margin">
+
+					<com.ironwaterstudio.controls.ImageViewEx
+						android:id="@+id/iv_next_poster"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
+						app:autoSize="true"
+						app:cacheMode="memory"
+						app:mask="@drawable/card_mask"
+						app:srcDefault="@color/maroon_dark"/>
+				</androidx.cardview.widget.CardView>
+
+				<RelativeLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_alignBottom="@id/cv_next_poster"
+					android:layout_alignTop="@id/cv_next_poster"
+					android:layout_gravity="center_vertical"
+					android:layout_marginRight="24dp"
+					android:layout_toRightOf="@id/cv_next_poster"
+					android:orientation="vertical"
+					android:paddingBottom="5dp"
+					android:paddingTop="5dp">
+
+					<androidx.appcompat.widget.AppCompatTextView
+						android:id="@+id/tv_next_chapter"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_above="@+id/tv_next_name"
+						android:layout_alignParentTop="true"
+						android:layout_marginBottom="10dp"
+						android:textColor="@color/yellow"
+						android:textSize="12sp"
+						app:fontFamily="@font/proxima_medium"
+						tools:text="Episode 2"/>
+
+					<androidx.appcompat.widget.AppCompatTextView
+						android:id="@+id/tv_next_name"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_centerVertical="true"
+						android:textColor="@color/white"
+						android:textSize="16sp"
+						tools:text="Initialization"/>
+
+					<androidx.appcompat.widget.AppCompatTextView
+						android:id="@+id/tv_soon"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_below="@+id/tv_next_name"
+						android:layout_gravity="bottom"
+						android:text="@string/soon"
+						android:textAllCaps="true"
+						android:textColor="@color/yellow"
+						android:textSize="12sp"/>
+
+					<FrameLayout
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_alignParentBottom="true"
+						android:layout_below="@+id/tv_next_name">
+
+						<androidx.appcompat.widget.AppCompatTextView
+							android:id="@+id/tv_next_state"
+							android:layout_width="wrap_content"
+							android:layout_height="22dp"
+							android:layout_gravity="bottom"
+							android:layout_marginTop="5dp"
+							android:background="@drawable/yellow_rect"
+							android:gravity="center"
+							android:minWidth="70dp"
+							android:paddingBottom="5dp"
+							android:paddingLeft="12dp"
+							android:paddingRight="12dp"
+							android:paddingTop="5dp"
+							android:textColor="@color/yellow"
+							android:textSize="10sp"
+							app:fontFamily="@font/proxima_medium"
+							tools:text="Free"/>
+					</FrameLayout>
+				</RelativeLayout>
+			</RelativeLayout>
+		</FrameLayout>
+	</com.fulldome.mahabharata.controls.ZoomFrameLayout>
+
+	<com.fulldome.mahabharata.controls.SoundBadge
+		android:id="@+id/sound_badge"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center"
+		android:background="@drawable/circle_maroon"
+		android:elevation="5dp"
+		android:padding="10dp"
+		android:src="@drawable/icn_sound_on"/>
+</FrameLayout>

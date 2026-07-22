@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Episodes.Count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@episode@</string>
+		<key>episode</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>%d глав</string>
+			<key>one</key>
+			<string>%d глава</string>
+			<key>two</key>
+			<string>%d главы</string>
+			<key>few</key>
+			<string>%d главы</string>
+			<key>many</key>
+			<string>%d глав</string>
+			<key>other</key>
+			<string>%d глав</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

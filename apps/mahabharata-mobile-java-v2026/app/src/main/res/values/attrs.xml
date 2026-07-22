@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<declare-styleable name="ZoomFrameLayout">
+		<attr name="fitMode" format="enum">
+			<enum name="vertical" value="0"/>
+			<enum name="horizontal" value="1"/>
+		</attr>
+		<attr name="zoomEnabled" format="boolean"/>
+	</declare-styleable>
+
+	<declare-styleable name="ImageViewEx">
+		<attr name="cacheMode">
+			<flag name="none" value="0x00000000"/>
+			<flag name="file" value="0x00000010"/>
+			<flag name="memory" value="0x00000020"/>
+		</attr>
+		<attr name="cachePeriod" format="integer"/>
+		<attr name="autoSize" format="boolean"/>
+		<attr name="srcMain" format="reference"/>
+		<attr name="scaleType" format="enum">
+			<enum name="matrix" value="0"/>
+			<enum name="fitXY" value="1"/>
+			<enum name="fitStart" value="2"/>
+			<enum name="fitCenter" value="3"/>
+			<enum name="fitEnd" value="4"/>
+			<enum name="center" value="5"/>
+			<enum name="centerCrop" value="6"/>
+			<enum name="centerInside" value="7"/>
+		</attr>
+		<attr name="srcDefault" format="reference"/>
+		<attr name="scaleTypeDefault" format="enum">
+			<enum name="matrix" value="0"/>
+			<enum name="fitXY" value="1"/>
+			<enum name="fitStart" value="2"/>
+			<enum name="fitCenter" value="3"/>
+			<enum name="fitEnd" value="4"/>
+			<enum name="center" value="5"/>
+			<enum name="centerCrop" value="6"/>
+			<enum name="centerInside" value="7"/>
+		</attr>
+		<attr name="animation" format="reference"/>
+		<attr name="edgeWidth" format="dimension"/>
+		<attr name="edgeColor" format="color"/>
+		<attr name="cornerRadius" format="dimension"/>
+		<attr name="mask" format="reference"/>
+		<attr name="imageTint" format="color"/>
+		<attr name="imageTintDefault" format="color"/>
+		<attr name="showProgress" format="boolean"/>
+	</declare-styleable>
+</resources>

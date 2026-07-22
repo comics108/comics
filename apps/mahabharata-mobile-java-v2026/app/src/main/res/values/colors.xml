@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="maroon">#27141f</color>
+    <color name="maroon_dark">#0f0411</color>
+    <color name="gradient_light">#2B1622</color>
+    <color name="gradient_dark">#120613</color>
+    <color name="background_dark">#110613</color>
+
+    <color name="card_color">#27141f</color>
+
+    <color name="yellow_dark">#AD986B</color>
+    <color name="yellow">#f5dfb8</color>
+    <color name="yellow_80">#ccf5dfb8</color>
+    <color name="yellow_70">#b2f5dfb8</color>
+    <color name="yellow_22">#3af5dfb8</color>
+    <color name="yellow_10">#19f5dfb8</color>
+
+    <color name="white">#ffffff</color>
+    <color name="white_60">#99ffffff</color>
+
+    <color name="black">#000000</color>
+
+    <color name="red">#ff0000</color>
+    <color name="dark_green">#226245</color>
+</resources>

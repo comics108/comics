@@ -1,0 +1,95 @@
+/* 
+  Localizable.strings
+  Mahabharata
+
+  Created by Roman Developer on 7/19/17.
+  Copyright © 2017 Iron Water Studio. All rights reserved.
+*/
+
+/* NetworkErrorManager localization messages */
+"NetworkErrorManager.NetworkErrorCheckOrWait" = "सर्व्हर कनेक्शन त्रुटी. कृपया, तुमचे नेटवर्क कनेक्शन तपासा किंवा नंतर पुन्हा प्रयत्न करा.";
+"NetworkErrorManager.NetworkErrorCheck" = "सर्व्हर कनेक्शन त्रुटी. कृपया तुमचे नेटवर्क कनेक्शन तपासा.";
+"NetworkErrorManager.NetworkErrorTimedOut" = "कनेक्शन कालबाह्य झाले आहे. कृपया, तुमचे नेटवर्क कनेक्शन तपासा किंवा नंतर पुन्हा प्रयत्न करा.";
+"NetworkErrorManager.NetworkErrorHostIsNotAvailable" = "सर्व्हर कनेक्शन अयशस्वी झाले, होस्ट उपलब्ध नाही.";
+"NetworkErrorManager.NetworkErrorWrongRequest" = "सर्व्हर उपलब्ध नाही किंवा विनंती अयशस्वी झाली. कृपया होस्ट प्रशासकाशी संपर्क साधा.";
+
+// Buttons localizations
+"NetworkErrorManager.Cancel" = "रद्द करा";
+"NetworkErrorManager.Retry" = "पुन्हा प्रयत्न करा";
+"NetworkErrorManager.Ok"="OK";
+
+"Mahabharata" = "Mahabharata";
+
+"TabBar.Comics" = "कॉमिक्स";
+"TabBar.Quotes" = "कोट";
+"TabBar.Puzzle" = "कोडे";
+"TabBar.Music" = "संगीत";
+
+"Seasons.BuyBook" = "पुस्तक विकत घ्या %d";
+"Seasons.Bought" = "विकत घेतले";
+
+"Season.BuyBook" = "सर्व प्रकरणे खरेदी करा - %@";
+"Season.Bought" = "विकत घेतले";
+"Season.Free" = "फुकट";
+
+"Seasons.Header.Title" = "नवीन प्रकाशन";
+
+"Episodes.Episode" = "धडा";
+"Episodes.Read" = "वाचा";
+"Episodes.Bought" = "विकत घेतले";
+"Episodes.Free" = "फुकट";
+"Episodes.Soon" = "लवकरच";
+//Not in design, for safety when price is not retrieved
+"Episodes.Buy" = "खरेदी करा";
+"Episodes.Subscribe" = "वृत्तपत्राची सदस्यता घ्या";
+"Episodes.Unpacking" = "अनपॅक करत आहे";
+
+"Purchases.Off" = "तुमच्या डिव्हाइसवरील खरेदी बंद आहेत. सक्षम करण्यासाठी, तुमच्या डिव्हाइस सेटिंग्जवर जा.";
+"Purchases.Restore" = "खरेदी पुनर्संचयित";
+"Go" = "जा";
+"Cancel" = "रद्द करा";
+"OK" = "OK";
+
+"About.Title" = "बद्दल";
+"About.Text" = "महाभारत महाकाव्य\n
+...In an ancient world where demonic kings rule from flying airships using mantra-guided atomic weapons to terrorize the populace, the rivalry between royal cousins ends in the greatest conflict of lost civilizations: the Battle of Kurukshetra.\n
+Mahabharata App\n
+The greatest story never told such way to a western world.\n
+It’s the first modern and unique retelling that maintains the ancient traditions of Indian mythology with using of modern digital technologies.";
+
+"Episodes.AreYouSureToDelete" = "तुमची खात्री आहे की धडा हटवायचा आहे %@?";
+"Episodes.Yes" = "होय";
+"Episodes.No" = "नाही";
+
+"Episodes.ReadNow" = "आता वाचा";
+"Episodes.GetEarlyAccess" = "लवकर प्रवेश मिळवा";
+"Episodes.DonateToSupport" = "समर्थनासाठी देणगी द्या";
+
+"Episode.Click" = "स्क्रीनवर टॅप करा जी\ध्वनी बंद करते";
+"Episode.Scroll" = "कॉमिक्सची यादी करण्यासाठी खाली स्क्रोल करा";
+"Episode.Language.Ru" = "РУС";
+"Episode.Language.En" = "En";
+"Episode.Language.Hindi" = "हिन्दी";
+"Episode.ConfirmRestorePosition" = "शेवटच्या स्थितीतून सुरू ठेवायचे?";
+"Episode.Yes" = "होय";
+"Episode.No" = "नाही";
+
+"Quotes.Share" = "शेअर करा";
+
+"Share.Quote.Title" = "शेअर कोट";
+"Share.Quote.Prompt" = "महाभारत अॅप इन्स्टॉल करा आणि कोट्स वाचा";
+
+"Share.Link" = "https://itunes.apple.com/us/app/mahabharata-gods-heroes/id1376581290?l=us&ls=1&mt=8";
+"Share.Share" = "शेअर करा";
+"Share.Cancel" = "रद्द करा";
+
+"Share.Episode.Title" = "अध्याय सामायिक करा";
+"Share.Episode.PromptFormat" = "महाभारत देव आणि नायक वाचण्यात मला सामील व्हा! विनामूल्य अॅप डाउनलोड %@ करण्यासाठी या दुव्याचे अनुसरण करा आणि कधीही सांगितलेल्या महान कथेत हरवून जा!";
+"Music.Title" = "मंत्रांसाठी संगीत";
+
+"Music.AreYouSureToDelete" = "तुमची खात्री आहे की ट्रॅक हटवायचा आहे %@?";
+"Music.Yes" = "होय";
+"Music.No" = "नाही";
+
+"Seasons.BookName" = "अंबाचा शाप\n पुस्तक %d";
+"Seasons.ComingSoon" = "लवकरच येत आहे";

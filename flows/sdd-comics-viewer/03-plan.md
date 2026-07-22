@@ -25,7 +25,7 @@ This plan breaks down the architecture restructuring into atomic, testable tasks
 - **Complexity**: XS
 - **Dependencies**: None
 - **Actions**:
-  - Create `/libs/comics-viewer-android/`
+  - Create `/libs/comics_viewer/comics-viewer-android/`
   - Create directory structure: `src/main/java/net/nativemind/comics/viewer/{comics,puzzle}/{model,view,util}/`
   - Create `src/main/res/`
   - Create `src/test/java/`
@@ -224,7 +224,7 @@ This plan breaks down the architecture restructuring into atomic, testable tasks
 - **Complexity**: XS
 - **Dependencies**: None
 - **Actions**:
-  - Create `/libs/comics-viewer-ios/`
+  - Create `/libs/comics_viewer/comics-viewer-ios/`
   - Create `Sources/ComicsViewer/{Comics,Puzzle}/{Models,Views,Utils}/`
   - Create `Tests/ComicsViewerTests/`
 - **Verification**: Directory structure exists

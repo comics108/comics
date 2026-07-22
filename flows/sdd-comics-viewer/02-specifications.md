@@ -64,7 +64,7 @@ This specification defines the restructuring of comics and puzzle rendering code
 ### 1.1 Directory Structure
 
 ```
-/libs/comics-viewer-android/
+/libs/comics_viewer/comics-viewer-android/
 ├── build.gradle
 ├── src/
 │   ├── main/
@@ -163,7 +163,7 @@ This specification defines the restructuring of comics and puzzle rendering code
 
 ### 1.3 Build Configuration (Android)
 
-**File:** `/libs/comics-viewer-android/build.gradle`
+**File:** `/libs/comics_viewer/comics-viewer-android/build.gradle`
 
 ```gradle
 plugins {
@@ -218,7 +218,7 @@ dependencies {
 }
 ```
 
-**File:** `/libs/comics-viewer-android/src/main/AndroidManifest.xml`
+**File:** `/libs/comics_viewer/comics-viewer-android/src/main/AndroidManifest.xml`
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -255,7 +255,7 @@ Replace: net.nativemind.comics.viewer.util
 ### 2.1 Directory Structure
 
 ```
-/libs/comics-viewer-ios/
+/libs/comics_viewer/comics-viewer-ios/
 ├── Package.swift
 ├── Sources/
 │   └── ComicsViewer/
@@ -331,7 +331,7 @@ Replace: net.nativemind.comics.viewer.util
 
 ### 2.3 Build Configuration (iOS)
 
-**File:** `/libs/comics-viewer-ios/Package.swift`
+**File:** `/libs/comics_viewer/comics-viewer-ios/Package.swift`
 
 ```swift
 // swift-tools-version: 5.9

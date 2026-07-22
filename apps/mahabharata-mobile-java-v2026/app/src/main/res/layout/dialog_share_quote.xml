@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:layout_margin="5dp"
+	app:cardBackgroundColor="@color/maroon"
+	app:cardCornerRadius="4dp"
+	app:cardElevation="4dp">
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical">
+
+		<androidx.appcompat.widget.AppCompatTextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center_horizontal"
+			android:padding="24dp"
+			android:text="@string/share_quote"
+			android:textColor="@color/yellow"
+			android:textSize="20sp"
+			app:fontFamily="@font/proxima_medium"/>
+
+		<androidx.appcompat.widget.AppCompatEditText
+			android:id="@+id/et_comment"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="20dp"
+			android:layout_marginRight="20dp"
+			android:hint="@string/comment"
+			android:inputType="textAutoComplete|textCapSentences|textMultiLine"
+			android:maxHeight="80dp"
+			android:text="@string/share_default_text"
+			android:textColor="@color/white"
+			android:textColorHint="@color/white_60"
+			android:textSize="16sp"
+			app:backgroundTint="@color/yellow"/>
+
+		<androidx.cardview.widget.CardView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_margin="24dp"
+			app:cardBackgroundColor="@color/maroon"
+			app:cardCornerRadius="4dp"
+			app:cardElevation="4dp"
+			app:contentPadding="@dimen/card_margin">
+
+			<com.ironwaterstudio.controls.ImageViewEx
+				android:id="@+id/iv_quote"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				app:animation="@anim/fade_in"
+				app:autoSize="true"
+				app:cacheMode="memory"
+				app:mask="@drawable/card_mask"
+				app:scaleType="centerCrop"
+				app:srcDefault="@color/maroon_dark"/>
+		</androidx.cardview.widget.CardView>
+
+		<RelativeLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:padding="8dp">
+
+			<androidx.appcompat.widget.AppCompatTextView
+				android:id="@+id/btn_cancel"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_toLeftOf="@+id/btn_share"
+				android:background="?selectableItemBackground"
+				android:clickable="true"
+				android:padding="11dp"
+				android:text="@string/cancel"
+				android:textAllCaps="true"
+				android:textColor="@color/yellow"
+				android:textSize="14sp"
+				app:fontFamily="@font/proxima_bold"/>
+
+			<androidx.appcompat.widget.AppCompatTextView
+				android:id="@+id/btn_share"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_alignParentRight="true"
+				android:background="?selectableItemBackground"
+				android:clickable="true"
+				android:padding="11dp"
+				android:text="@string/share"
+				android:textAllCaps="true"
+				android:textColor="@color/yellow"
+				android:textSize="14sp"
+				app:fontFamily="@font/proxima_bold"/>
+		</RelativeLayout>
+	</LinearLayout>
+</androidx.cardview.widget.CardView>

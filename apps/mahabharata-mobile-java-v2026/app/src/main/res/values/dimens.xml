@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--Base-->
+    <dimen name="zero">0dp</dimen>
+
+    <dimen name="small_50">4dp</dimen>
+    <dimen name="small_100">8dp</dimen>
+    <dimen name="small_150">12dp</dimen>
+
+    <dimen name="medium_100">16dp</dimen>
+    <dimen name="medium_150">24dp</dimen>
+
+    <dimen name="large_100">32dp</dimen>
+    <dimen name="large_150">48dp</dimen>
+
+    <dimen name="huge_100">64dp</dimen>
+
+
+    <!-- Main -->
+    <integer name="cache_period">30</integer>
+    <dimen name="divider_size">1dp</dimen>
+
+    <!-- Card -->
+    <dimen name="card_max_elevation">6dp</dimen>
+    <dimen name="card_min_elevation">2dp</dimen>
+    <dimen name="card_corner_radius">4dp</dimen>
+    <dimen name="card_margin">-2dp</dimen>
+
+    <!-- Tabs -->
+    <dimen name="tab_indicator_height">2dp</dimen>
+
+    <!-- Buttons -->
+    <dimen name="corner_radius">4dp</dimen>
+    <dimen name="corner_drag_line">@dimen/small_50</dimen>
+    <dimen name="corner_bottom_sheet">@dimen/large_100</dimen>
+
+    <!-- Quotes -->
+    <dimen name="quote_margin">16dp</dimen>
+
+    <dimen name="width_episode">228dp</dimen>
+    <dimen name="width_poster">72dp</dimen>
+    <dimen name="width_episode_image">@dimen/width_poster</dimen>
+    <dimen name="width_drag_line">@dimen/large_150</dimen>
+
+    <dimen name="height_poster">128dp</dimen>
+    <dimen name="height_episode">@dimen/height_poster</dimen>
+    <dimen name="height_drag_line">@dimen/small_100</dimen>
+    <dimen name="height_peek_socials">@dimen/large_150</dimen>
+
+    <dimen name="text_size_big">28sp</dimen>
+</resources>

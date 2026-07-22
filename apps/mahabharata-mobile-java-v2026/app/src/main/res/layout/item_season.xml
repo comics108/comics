@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/btn_season"
+        android:layout_width="match_parent"
+        android:layout_height="128dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="horizontal">
+
+        <com.ironwaterstudio.controls.ImageViewEx
+            android:id="@+id/iv_poster"
+            android:layout_width="72dp"
+            android:layout_height="match_parent"
+            app:autoSize="true"
+            app:cacheMode="memory|file"
+            app:cachePeriod="@integer/cache_period"
+            app:scaleType="centerCrop"
+            app:scaleTypeDefault="center"
+            app:srcDefault="@color/maroon_dark" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingLeft="15dp">
+
+            <TextView
+                android:id="@+id/tv_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                tools:text="Первый сезон:\nАдипарва" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/yellow"
+                android:textSize="16sp"
+                tools:text="3 эпизода" />
+
+            <Button
+                android:id="@+id/b_read"
+                android:layout_width="124dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/round_background"
+                android:text="READ NOW"
+                android:textColor="@color/yellow"
+                android:textSize="9dp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

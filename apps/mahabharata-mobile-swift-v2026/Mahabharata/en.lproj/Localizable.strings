@@ -1,0 +1,96 @@
+/* 
+  Localizable.strings
+  Mahabharata
+
+  Created by Roman Developer on 7/19/17.
+  Copyright © 2017 Iron Water Studio. All rights reserved.
+*/
+
+/* NetworkErrorManager localization messages */
+"NetworkErrorManager.NetworkErrorCheckOrWait" = "Server connection error. Please, check your network connection or try again later.";
+"NetworkErrorManager.NetworkErrorCheck" = "Server connection error. Please, check your network connection.";
+"NetworkErrorManager.NetworkErrorTimedOut" = "Connection is timed out. Please, check your network connection or try again later.";
+"NetworkErrorManager.NetworkErrorHostIsNotAvailable" = "Server connection failed, host is not available.";
+"NetworkErrorManager.NetworkErrorWrongRequest" = "Server is not available or request failed. Please contact host administrator.";
+
+// Buttons localizations
+"NetworkErrorManager.Cancel" = "Cancel";
+"NetworkErrorManager.Retry" = "Retry";
+"NetworkErrorManager.Ok"="OK";
+
+"Mahabharata" = "Mahabharata";
+
+"TabBar.Comics" = "Comics";
+"TabBar.Quotes" = "Quotes";
+"TabBar.Puzzle" = "Puzzle";
+"TabBar.Music" = "Music";
+
+"Seasons.BuyBook" = "BUY THE BOOK %d";
+"Seasons.Bought" = "BOUGHT";
+
+"Season.BuyBook" = "BUY ALL CHAPTERS - %@";
+"Season.Bought" = "BOUGHT";
+"Season.Free" = "FREE";
+
+"Seasons.Header.Title" = "NEW RELEASE";
+
+"Episodes.Episode" = "Chapter";
+"Episodes.Read" = "Read";
+"Episodes.Watch" = "Watch";
+"Episodes.Bought" = "Bought";
+"Episodes.Free" = "Free";
+"Episodes.Soon" = "Soon";
+//Not in design, for safety when price is not retrieved
+"Episodes.Buy" = "Buy";
+"Episodes.Subscribe" = "Subscribe on newsletter";
+"Episodes.Unpacking" = "Unpacking";
+
+"Purchases.Off" = "Purchases on your device are off. To enable, go to your device settings.";
+"Purchases.Restore" = "Restore purchases";
+"Go" = "Go";
+"Cancel" = "Cancel";
+"OK" = "OK";
+
+"About.Title" = "About";
+"About.Text" = "Mahabharata epic\n
+...In an ancient world where demonic kings rule from flying airships using mantra-guided atomic weapons to terrorize the populace, the rivalry between royal cousins ends in the greatest conflict of lost civilizations: the Battle of Kurukshetra.\n
+Mahabharata App\n
+The greatest story never told such way to a western world.\n
+It’s the first modern and unique retelling that maintains the ancient traditions of Indian mythology with using of modern digital technologies.";
+
+"Episodes.AreYouSureToDelete" = "Are you sure to delete chapter %@?";
+"Episodes.Yes" = "Yes";
+"Episodes.No" = "No";
+
+"Episodes.ReadNow" = "READ NOW";
+"Episodes.GetEarlyAccess" = "GET EARLY ACCESS";
+"Episodes.DonateToSupport" = "DONATE TO SUPPORT";
+
+"Episode.Click" = "Tap on screen to turn off sounds";
+"Episode.Scroll" = "Scroll down to list comics";
+"Episode.Language.Ru" = "РУС";
+"Episode.Language.En" = "En";
+"Episode.Language.Hindi" = "हिन्दी";
+"Episode.ConfirmRestorePosition" = "Continue from the last position?";
+"Episode.Yes" = "Yes";
+"Episode.No" = "No";
+
+"Quotes.Share" = "Share";
+
+"Share.Quote.Title" = "Share quote";
+"Share.Quote.Prompt" = "Install Mahabharata app and read quotes";
+
+"Share.Link" = "https://itunes.apple.com/us/app/mahabharata-gods-heroes/id1376581290?l=us&ls=1&mt=8";
+"Share.Share" = "Share";
+"Share.Cancel" = "Cancel";
+
+"Share.Episode.Title" = "Share chapter";
+"Share.Episode.PromptFormat" = "Join me in reading Mahabharata Gods & Heroes! Follow this link %@ to download the app for FREE and get lost in the GREATEST story EVER told!";
+
+"Music.Title" = "Music for Mantras";
+"Music.AreYouSureToDelete" = "Are you sure to delete track %@?";
+"Music.Yes" = "Yes";
+"Music.No" = "No";
+
+"Seasons.BookName" = "The Amba’s Curse\nBook %d";
+"Seasons.ComingSoon" = "Coming soon";

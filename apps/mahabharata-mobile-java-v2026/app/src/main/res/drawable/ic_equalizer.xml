@@ -1,0 +1,147 @@
+<animated-vector xmlns:aapt="http://schemas.android.com/aapt"
+				 xmlns:android="http://schemas.android.com/apk/res/android"
+				 xmlns:tools="http://schemas.android.com/tools"
+				 tools:ignore="NewApi">
+	<aapt:attr name="android:drawable">
+		<vector
+			android:width="24dp"
+			android:height="24dp"
+			android:viewportHeight="14.0"
+			android:viewportWidth="14.0">
+
+			<path
+				android:name="equalizer"
+				android:fillColor="#F5DFB8"
+				android:fillType="evenOdd"
+				android:pathData="M1,12L3,12A1,1 0,0 1,4 13L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,13A1,1 0,0 1,1 12z, M6,12L8,12A1,1 0,0 1,9 13L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,13A1,1 0,0 1,6 12z, M11,12L13,12A1,1 0,0 1,14 13L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,13A1,1 0,0 1,11 12z"
+				android:strokeColor="#00000000"
+				android:strokeWidth="1"/>
+		</vector>
+	</aapt:attr>
+
+	<target android:name="equalizer">
+		<aapt:attr name="android:animation">
+			<set android:ordering="sequentially">
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,10L3,10A1,1 0,0 1,4 11L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,11A1,1 0,0 1,1 10z, M6,3L8,3A1,1 0,0 1,9 4L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,4A1,1 0,0 1,6 3z, M11,5L13,5A1,1 0,0 1,14 6L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,6A1,1 0,0 1,11 5z"
+					android:valueTo="M1,12L3,12A1,1 0,0 1,4 13L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,13A1,1 0,0 1,1 12z, M6,4L8,4A1,1 0,0 1,9 5L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,5A1,1 0,0 1,6 4z, M11,7L13,7A1,1 0,0 1,14 8L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,8A1,1 0,0 1,11 7z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,12L3,12A1,1 0,0 1,4 13L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,13A1,1 0,0 1,1 12z, M6,4L8,4A1,1 0,0 1,9 5L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,5A1,1 0,0 1,6 4z, M11,7L13,7A1,1 0,0 1,14 8L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,8A1,1 0,0 1,11 7z"
+					android:valueTo="M1,5L3,5A1,1 0,0 1,4 6L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,6A1,1 0,0 1,1 5z, M6,7L8,7A1,1 0,0 1,9 8L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,8A1,1 0,0 1,6 7z, M11,10L13,10A1,1 0,0 1,14 11L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,11A1,1 0,0 1,11 10z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,5L3,5A1,1 0,0 1,4 6L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,6A1,1 0,0 1,1 5z, M6,7L8,7A1,1 0,0 1,9 8L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,8A1,1 0,0 1,6 7z, M11,10L13,10A1,1 0,0 1,14 11L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,11A1,1 0,0 1,11 10z"
+					android:valueTo="M1,0L3,0A1,1 0,0 1,4 1L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,1A1,1 0,0 1,1 0z, M6,10L8,10A1,1 0,0 1,9 11L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,11A1,1 0,0 1,6 10z, M11,5L13,5A1,1 0,0 1,14 6L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,6A1,1 0,0 1,11 5z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,0L3,0A1,1 0,0 1,4 1L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,1A1,1 0,0 1,1 0z, M6,10L8,10A1,1 0,0 1,9 11L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,11A1,1 0,0 1,6 10z, M11,5L13,5A1,1 0,0 1,14 6L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,6A1,1 0,0 1,11 5z"
+					android:valueTo="M1,3L3,3A1,1 0,0 1,4 4L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,4A1,1 0,0 1,1 3z, M6,8L8,8A1,1 0,0 1,9 9L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,9A1,1 0,0 1,6 8z, M11,8L13,8A1,1 0,0 1,14 9L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,9A1,1 0,0 1,11 8z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,3L3,3A1,1 0,0 1,4 4L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,4A1,1 0,0 1,1 3z, M6,8L8,8A1,1 0,0 1,9 9L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,9A1,1 0,0 1,6 8z, M11,8L13,8A1,1 0,0 1,14 9L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,9A1,1 0,0 1,11 8z"
+					android:valueTo="M1,9L3,9A1,1 0,0 1,4 10L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,10A1,1 0,0 1,1 9z, M6,7L8,7A1,1 0,0 1,9 8L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,8A1,1 0,0 1,6 7z, M11,2L13,2A1,1 0,0 1,14 3L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,3A1,1 0,0 1,11 2z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,9L3,9A1,1 0,0 1,4 10L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,10A1,1 0,0 1,1 9z, M6,7L8,7A1,1 0,0 1,9 8L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,8A1,1 0,0 1,6 7z, M11,2L13,2A1,1 0,0 1,14 3L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,3A1,1 0,0 1,11 2z"
+					android:valueTo="M1,6L3,6A1,1 0,0 1,4 7L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,7A1,1 0,0 1,1 6z, M6,1L8,1A1,1 0,0 1,9 2L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,2A1,1 0,0 1,6 1z, M11,0L13,0A1,1 0,0 1,14 1L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,1A1,1 0,0 1,11 0z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,6L3,6A1,1 0,0 1,4 7L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,7A1,1 0,0 1,1 6z, M6,1L8,1A1,1 0,0 1,9 2L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,2A1,1 0,0 1,6 1z, M11,0L13,0A1,1 0,0 1,14 1L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,1A1,1 0,0 1,11 0z"
+					android:valueTo="M1,0L3,0A1,1 0,0 1,4 1L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,1A1,1 0,0 1,1 0z, M6,6L8,6A1,1 0,0 1,9 7L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,7A1,1 0,0 1,6 6z, M11,4L13,4A1,1 0,0 1,14 5L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,5A1,1 0,0 1,11 4z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,0L3,0A1,1 0,0 1,4 1L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,1A1,1 0,0 1,1 0z, M6,6L8,6A1,1 0,0 1,9 7L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,7A1,1 0,0 1,6 6z, M11,4L13,4A1,1 0,0 1,14 5L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,5A1,1 0,0 1,11 4z"
+					android:valueTo="M1,7L3,7A1,1 0,0 1,4 8L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,8A1,1 0,0 1,1 7z, M6,12L8,12A1,1 0,0 1,9 13L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,13A1,1 0,0 1,6 12z, M11,2L13,2A1,1 0,0 1,14 3L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,3A1,1 0,0 1,11 2z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,7L3,7A1,1 0,0 1,4 8L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,8A1,1 0,0 1,1 7z, M6,12L8,12A1,1 0,0 1,9 13L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,13A1,1 0,0 1,6 12z, M11,2L13,2A1,1 0,0 1,14 3L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,3A1,1 0,0 1,11 2z"
+					android:valueTo="M1,9L3,9A1,1 0,0 1,4 10L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,10A1,1 0,0 1,1 9z, M6,5L8,5A1,1 0,0 1,9 6L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,6A1,1 0,0 1,6 5z, M11,10L13,10A1,1 0,0 1,14 11L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,11A1,1 0,0 1,11 10z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,9L3,9A1,1 0,0 1,4 10L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,10A1,1 0,0 1,1 9z, M6,5L8,5A1,1 0,0 1,9 6L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,6A1,1 0,0 1,6 5z, M11,10L13,10A1,1 0,0 1,14 11L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,11A1,1 0,0 1,11 10z"
+					android:valueTo="M1,3L3,3A1,1 0,0 1,4 4L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,4A1,1 0,0 1,1 3z, M6,0L8,0A1,1 0,0 1,9 1L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,1A1,1 0,0 1,6 0z, M11,5L13,5A1,1 0,0 1,14 6L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,6A1,1 0,0 1,11 5z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,3L3,3A1,1 0,0 1,4 4L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,4A1,1 0,0 1,1 3z, M6,0L8,0A1,1 0,0 1,9 1L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,1A1,1 0,0 1,6 0z, M11,5L13,5A1,1 0,0 1,14 6L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,6A1,1 0,0 1,11 5z"
+					android:valueTo="M1,0L3,0A1,1 0,0 1,4 1L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,1A1,1 0,0 1,1 0z, M6,2L8,2A1,1 0,0 1,9 3L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,3A1,1 0,0 1,6 2z, M11,2L13,2A1,1 0,0 1,14 3L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,3A1,1 0,0 1,11 2z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,0L3,0A1,1 0,0 1,4 1L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,1A1,1 0,0 1,1 0z, M6,2L8,2A1,1 0,0 1,9 3L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,3A1,1 0,0 1,6 2z, M11,2L13,2A1,1 0,0 1,14 3L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,3A1,1 0,0 1,11 2z"
+					android:valueTo="M1,11L3,11A1,1 0,0 1,4 12L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,12A1,1 0,0 1,1 11z, M6,5L8,5A1,1 0,0 1,9 6L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,6A1,1 0,0 1,6 5z, M11,0L13,0A1,1 0,0 1,14 1L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,1A1,1 0,0 1,11 0z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,11L3,11A1,1 0,0 1,4 12L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,12A1,1 0,0 1,1 11z, M6,5L8,5A1,1 0,0 1,9 6L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,6A1,1 0,0 1,6 5z, M11,0L13,0A1,1 0,0 1,14 1L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,1A1,1 0,0 1,11 0z"
+					android:valueTo="M1,3L3,3A1,1 0,0 1,4 4L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,4A1,1 0,0 1,1 3z, M6,8L8,8A1,1 0,0 1,9 9L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,9A1,1 0,0 1,6 8z, M11,3L13,3A1,1 0,0 1,14 4L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,4A1,1 0,0 1,11 3z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,3L3,3A1,1 0,0 1,4 4L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,4A1,1 0,0 1,1 3z, M6,8L8,8A1,1 0,0 1,9 9L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,9A1,1 0,0 1,6 8z, M11,3L13,3A1,1 0,0 1,14 4L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,4A1,1 0,0 1,11 3z"
+					android:valueTo="M1,5L3,5A1,1 0,0 1,4 6L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,6A1,1 0,0 1,1 5z, M6,0L8,0A1,1 0,0 1,9 1L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,1A1,1 0,0 1,6 0z, M11,10L13,10A1,1 0,0 1,14 11L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,11A1,1 0,0 1,11 10z"
+					android:valueType="pathType"/>
+
+				<objectAnimator
+					android:duration="100"
+					android:interpolator="@android:interpolator/linear"
+					android:propertyName="pathData"
+					android:valueFrom="M1,5L3,5A1,1 0,0 1,4 6L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,6A1,1 0,0 1,1 5z, M6,0L8,0A1,1 0,0 1,9 1L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,1A1,1 0,0 1,6 0z, M11,10L13,10A1,1 0,0 1,14 11L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,11A1,1 0,0 1,11 10z"
+					android:valueTo="M1,10L3,10A1,1 0,0 1,4 11L4,13A1,1 0,0 1,3 14L1,14A1,1 0,0 1,0 13L0,11A1,1 0,0 1,1 10z, M6,3L8,3A1,1 0,0 1,9 4L9,13A1,1 0,0 1,8 14L6,14A1,1 0,0 1,5 13L5,4A1,1 0,0 1,6 3z, M11,5L13,5A1,1 0,0 1,14 6L14,13A1,1 0,0 1,13 14L11,14A1,1 0,0 1,10 13L10,6A1,1 0,0 1,11 5z"
+					android:valueType="pathType"/>
+			</set>
+		</aapt:attr>
+	</target>
+</animated-vector>

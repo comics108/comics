@@ -126,8 +126,8 @@ The goal is to restructure the architecture by extracting comics and puzzle rend
   - React Native: Turbo Modules or legacy bridge for both platforms
 
 - **File Organization**:
-  - Android Library: `/libs/comics-viewer-android/`
-  - iOS Swift Package: `/libs/comics-viewer-ios/`
+  - Android Library: `/libs/comics_viewer/comics-viewer-android/`
+  - iOS Swift Package: `/libs/comics_viewer/comics-viewer-ios/`
   - Flutter Plugin: `/libs/comics_viewer/flutter_comics_viewer/`
   - React Native Module: `/libs/comics_viewer/react-native-comics-viewer/`
 
@@ -243,7 +243,7 @@ User must choose approach for bundle ID handling:
 
 ### Phase 1: Extract Android Library
 
-1. Create `/libs/comics-viewer-android/` structure
+1. Create `/libs/comics_viewer/comics-viewer-android/` structure
 2. Move comics rendering code from mahabharata-mobile-java-v2026
 3. Move puzzle rendering code from mahabharata-mobile-java-v2026
 4. Fix package names: `com.fulldome.mahabharata` → `net.nativemind.comics.viewer`
@@ -253,7 +253,7 @@ User must choose approach for bundle ID handling:
 
 ### Phase 2: Extract iOS Swift Package
 
-1. Create `/libs/comics-viewer-ios/` with Package.swift
+1. Create `/libs/comics_viewer/comics-viewer-ios/` with Package.swift
 2. Move comics rendering code from mahabharata-mobile-swift-v2026
 3. Move puzzle rendering code from mahabharata-mobile-swift-v2026
 4. Fix imports and module references

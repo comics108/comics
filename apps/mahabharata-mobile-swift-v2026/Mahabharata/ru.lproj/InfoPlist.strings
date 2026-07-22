@@ -1,0 +1,12 @@
+/* 
+  Localizable.strings
+  Mahabharata
+
+  Created by Roman Developer on 7/19/17.
+  Copyright © 2017 Iron Water Studio. All rights reserved.
+*/
+
+CFBundleDisplayName = "Махабхарата";
+
+"NSPhotoLibraryUsageDescription" = "Пожалуйста, разрешите доступ к вашей галерее, чтобы мы могли использовать ее при, например, расшаривании комиксов и цитат.";
+"NSPhotoLibraryAddUsageDescription" = "Пожалуйста, разрешите доступ к вашей галерее, чтобы вы могли сохранять в нее изображения.";
