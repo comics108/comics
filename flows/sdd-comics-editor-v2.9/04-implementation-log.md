@@ -11,46 +11,77 @@
 | 1.2 Ретаргет Comics.Editor | Done | net10.0-windows; 1 фикс кода (Logger.cs, 2 строки) |
 | 1.3 Ретаргет Comics.Core | Done | net10.0; shim SystemWebCompat.cs; исключён PushManager.cs; Logger.cs фикс |
 | 1.4 Обновить решение | Done | Пересоздано как Comics.slnx (в старом sln был несуществующий Comics.Web) |
-| 2.1 Flutter-каркас | In Progress | |
-| 2.2 UI макета | Pending | |
-| 3.1 Comics.Editor.Headless | Pending | |
-| 3.2 CoreClient + UI | Pending | |
-| 3.3 Скрипт публикации | Pending | |
-| 4.1 Comics.Editor.Flutter | Pending | |
-| 4.2 Windows-плагин C++ | Pending | |
-| 5.1 README | Pending | |
-| 5.2 Инварианты | Pending | |
+| 2.1 Flutter-каркас | Done | flutter create (windows,macos,linux); pubspec 2.9.0 |
+| 2.2 UI макета | Done | Копия в lib/src/ui; main.dart с платформенным переключением; smoke-тест |
+| 3.1 Comics.Editor.Headless | Done | NDJSON stdio; линк не-UI исходников; WpfShims (Point, MessageBox) |
+| 3.2 CoreClient + UI | Done | core_client, models_mapping (merge в raw JSON); Browse…/Save подключены |
+| 3.3 Скрипт публикации | Done | tool/build_headless.sh/.ps1; self-contained + копия в бандл |
+| 4.1 Comics.Editor.Flutter | Done | EditorHost (полный MainWindow в STA-потоке) + MethodChannelHandler; собирается |
+| 4.2 Windows-плагин C++ | Done (подготовка) | editor_plugin (static lib) + CMake + регистрация в runner; interop — TODO на Windows |
+| 5.1 README | Done | Структура, сборка, чек-лист Windows, список минорных фиксов |
+| 5.2 Инварианты | Done | v2.8/design/libs — рабочие файлы не тронуты; .git интактны; сборки зелёные |
 
 ## Session Log
 
 ### Session 2026-07-23 - Claude
 
 **Started at**: Phase 1, Task 1.1
-**Context**: План утверждён; dotnet 10.0.302 и Flutter установлены на macOS; образец: `libs/comics_viewer/flutter_comics_viewer/example/assets/sample.comics` (zip, 19 МБ)
+**Context**: План утверждён; dotnet 10.0.302, Flutter на macOS; образец: `test/fixtures/sample.comics` (копия из flutter_comics_viewer example)
 
 #### Completed
 
-- Task 1.1: `Comics.sln`, `Comics.Core/`, `Comics.Editor/`, `Utils/` перемещены в `native/` (обычный mv, git не использовался). В корне остался только `.git`.
-- Task 1.2: `Comics.Editor.csproj` переписан в SDK-style (`net10.0-windows`, UseWPF, EnableWindowsTargeting, GenerateAssemblyInfo=false; сохранены ApplicationIcon, linked Utils-файлы 7za/ImageMagick, Resource app.ico); `packages.config` удалён; пакеты: log4net 2.0.8, Newtonsoft.Json 13.0.3.
-  - **Фикс кода (минорный)**: `IWS/Utils/Logger.cs` — 2 строки: `XmlConfigurator.Configure()` → `Configure(LogManager.GetRepository(assembly))`, `LogManager.GetLogger(name)` → `GetLogger(assembly, name)` (в netstandard-сборке log4net нет старых перегрузок).
-  - Verified: `dotnet build` — Build succeeded, 0 Errors (16 warnings: устаревшие crypto-API, уязвимости log4net 2.0.8 — код не меняем).
-- Task 1.3: `Comics.Core.csproj` — SDK-style `net10.0`; пакеты EF 6.5.1, log4net, Newtonsoft, System.Configuration.ConfigurationManager, System.Drawing.Common.
-  - **Обвязка**: новый файл `Compat/SystemWebCompat.cs` — shim `System.Web.Hosting.HostingEnvironment.MapPath` + `System.Web.HttpPostedFileBase`, чтобы `ImageManager.cs`/`ImageMagick.cs` компилировались без изменений (ImageManager используется моделями DAL — исключить нельзя).
-  - **Исключение**: `Utils/PushManager.cs` — `<Compile Remove>` (PushSharp 4.0.10 только net45); файл сохранён.
-  - **Фикс кода (минорный)**: `Utils/Logger.cs` — те же 2 строки, что в 1.2.
-  - Verified: `dotnet build` — Build succeeded, 0 Errors.
-- Task 1.4: старый `Comics.sln` ссылался на несуществующий `Comics.Web` → пересоздан: `dotnet new sln` (создаёт **Comics.slnx** — новый XML-формат .NET 10) + оба проекта.
-  - Verified: `dotnet build Comics.slnx` — Build succeeded, 0 Errors.
+- **Phase 1**: C# перемещён в `native/`; оба csproj → SDK-style .NET 10; `dotnet build Comics.slnx` — 0 ошибок.
+  - Минорные фиксы кода: `Logger.cs` (2 строки, log4net netstandard API) в Comics.Editor и Comics.Core.
+  - Обвязка: `Comics.Core/Compat/SystemWebCompat.cs` (shim HostingEnvironment/HttpPostedFileBase).
+  - Исключение: `Comics.Core/Utils/PushManager.cs` (PushSharp net45-only), файл сохранён.
+- **Phase 2**: `flutter create .`; UI макета скопирован в `lib/src/ui` (импорты относительные — без правок); `main.dart`: Windows → WpfEditorView (заглушка до interop), иначе → EditorScreen макета. `flutter analyze` — 0 ошибок; smoke-тест зелёный; debug-бандл macOS собирается; приложение запускается.
+- **Phase 3**: `Comics.Editor.Headless` (net10.0, NDJSON stdio: ping/openComics/saveComics/exportPackage/imageInfo) поверх линкованных исходников; zip — System.IO.Compression (кроссплатформенно, формат тот же); `WpfShims.cs` (Point + MessageBox→stderr).
+  - **Критичная находка**: data.json использует `$type: "Comics.Editor.Models.*, Comics.Editor"` (TypeNameHandling.Auto) → имя сборки headless обязано быть `Comics.Editor`, иначе десериализация молча возвращает null (FromJson глотает исключения).
+  - Dart: `core_client.dart` (процесс + NDJSON, поиск бинарника: env → бандл → dev-publish), `models_mapping.dart` (merge правок в исходный JSON — поля вне UI-моделей не теряются), контроллер: openPath/saveToPath; UI: Browse… → диалог пути, Save → реальное сохранение.
+  - `tool/build_headless.sh` — self-contained publish (osx-arm64 проверен) + копия в macOS-бандл.
+  - Интеграционный тест: open→edit→save→reopen на sample.comics — зелёный (высота меняется, слои/звуки/width изображений сохраняются).
+- **Phase 4**: `Comics.Editor.Flutter` написан заново против реального API v2.9 (в плагине-образце обвязка ссылалась на несуществующие методы Load/Save у ComicsViewModel): `EditorHost.ShowMainWindow()` — полный MainWindow в отдельном STA/Dispatcher-потоке, `MethodChannelHandler` (create/dispose). Собирается на macOS (EnableWindowsTargeting). C++: `windows/editor_plugin` (канал `comics_editor`, static lib, CMake с dotnet publish в `<build>/dotnet/`), зарегистрирован в runner (flutter_window.cpp). Interop C++→.NET — TODO на Windows (hostfxr рекомендован в README).
+- **Phase 5**: README переписан; инварианты проверены (см. ниже).
 
 #### Deviations from Plan
 
-- Решение теперь `Comics.slnx` (а не `.sln`) — формат по умолчанию в .NET 10 SDK; старый `Comics.sln` удалён (в нём был мёртвый Comics.Web).
-- Вместо исключения ImageManager/ImageMagick — shim `SystemWebCompat.cs` (меньше исключений, единственный excluded — PushManager.cs).
+- Решение — `Comics.slnx` вместо `.sln` (формат .NET 10 SDK; старый sln содержал мёртвый Comics.Web).
+- ImageManager/ImageMagick в Comics.Core не исключались — вместо этого shim SystemWebCompat.cs (меньше исключений).
+- Headless: AssemblyName = `Comics.Editor` (требование формата $type) — вместо планового `comics-editor-headless`.
+- Comics.Editor.Flutter не скопирован из libs-плагина, а написан заново (обвязка плагина не соответствовала реальному API v2.9).
+- Этап 1 v1 — полный MainWindow отдельным окном (EditorHost), встраивание ComicsControl как PlatformView — следующий шаг на Windows (зафиксировано в README).
+- Zip в headless — System.IO.Compression вместо 7za.exe (кроссплатформенность; 7za остаётся для WPF на Windows).
 
 #### Discoveries
 
-- WPF-проект действительно компилируется на macOS через `EnableWindowsTargeting` (запуск — только Windows).
-- Старый код удивительно чистый: на весь Comics.Editor только 2 строки несовместимости (log4net).
+- `Comics.Editor` не ссылается на `Comics.Core` — подтверждено сборкой; Core нужен только для AC-4.
+- Весь старый C#-код потребовал ровно 2×2 строки фиксов — остальное решено обвязкой.
+- `FileManager.TempFolder` содержит литеральный `\` (`"Comics Editor\Temp"`) — на unix это папка с backslash в имени; работает корректно (оба конца используют одну константу), не трогаем.
 
-**Ended at**: Phase 2, Task 2.1 (in progress)
-**Handoff notes**: Далее `flutter create .` в корне v2.9, затем копия UI макета.
+**Ended at**: все фазы завершены (Windows-часть — подготовлена, доделка по README)
+**Handoff notes**: для этапа 1 нужна Windows-машина: реализовать interop в `windows/editor_plugin/editor_plugin.cpp` (hostfxr → Comics.Editor.Flutter.dll), затем `flutter run -d windows`. Чек-лист — README, раздел «Windows».
+
+---
+
+## Deviations Summary
+
+| Planned | Actual | Reason |
+|---------|--------|--------|
+| Comics.sln обновить | Пересоздан как Comics.slnx | Формат .NET 10; мёртвая ссылка на Comics.Web |
+| Исключить ImageManager/ImageMagick из Core | Shim SystemWebCompat.cs | ImageManager используется DAL-моделями — исключить нельзя |
+| AssemblyName headless произвольный | Ровно `Comics.Editor` | $type в data.json (TypeNameHandling.Auto) |
+| Копия Comics.Editor.Flutter из libs | Написан заново | Обвязка плагина ссылалась на несуществующий API |
+| PlatformView-встраивание WPF | v1: полный MainWindow отдельным окном | Честный zero-rewrite; встраивание — на Windows-машине |
+
+## Learnings
+
+- TypeNameHandling.Auto делает имя сборки частью формата данных — при любом переносе кода в новую сборку это ломается молча (FromJson глотает исключения). Проверять на реальных файлах, не на пустых.
+- EnableWindowsTargeting позволяет держать WPF-код компилируемым в CI/на macOS — ошибок «до Windows» почти не остаётся.
+
+## Completion Checklist
+
+- [x] All tasks completed or explicitly deferred (Windows interop — deferred по решению пользователя)
+- [x] Tests passing (`flutter test`: 3/3, включая интеграционный round-trip; `dotnet build`: 0 ошибок)
+- [x] No regressions (v2.8/design/libs не тронуты; .git интактны)
+- [x] Documentation updated (README + этот flow)
+- [x] Status updated to COMPLETE (кроме отложенной Windows-проверки)

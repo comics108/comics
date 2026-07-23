@@ -6,7 +6,7 @@ IMPLEMENTATION
 
 ## Phase Status
 
-IN PROGRESS (Phase 1: реструктуризация и ретаргет C#)
+COMPLETE (кроме отложенной Windows-доделки: interop C++→.NET и проверка на Windows-машине — по решению пользователя шаг Windows-сборки пропущен)
 
 ## Last Updated
 
@@ -14,29 +14,30 @@ IN PROGRESS (Phase 1: реструктуризация и ретаргет C#)
 
 ## Blockers
 
-- None
+- Нет (Windows-часть отложена сознательно; чек-лист — README apps/comics-editor-v2.9, раздел «Windows»)
 
 ## Progress
 
 - [x] Requirements drafted
-- [x] Requirements approved (2026-07-23, с поправкой: Windows-сборку на macOS пропускаем)
+- [x] Requirements approved (2026-07-23; Windows-сборку на macOS пропускаем)
 - [x] Specifications drafted
-- [x] Specifications approved (2026-07-23; self-contained headless, NDJSON, структура подтверждена)
+- [x] Specifications approved (2026-07-23; self-contained headless, NDJSON)
 - [x] Plan drafted
-- [x] Plan approved (2026-07-23; образец: libs/comics_viewer/flutter_comics_viewer/example/assets/sample.comics)
-- [x] Implementation started  ← current
-- [ ] Implementation complete
+- [x] Plan approved (2026-07-23)
+- [x] Implementation started
+- [x] Implementation complete (Windows interop — deferred, подготовлен полностью)
 
 ## Context Notes
 
 Key decisions and context for resuming:
 
-- `apps/comics-editor-v2.9` = копия `legacy/comics-editor-v2.8` (WPF, .NET Framework 4.5.2, старые csproj + packages.config). v2.8 — read-only. В формулировке задачи опечатка «работы вести в v2.8» — принято как v2.9.
-- Задача: обвязка + перемещение папок, C#-код не переписывать; .NET можно поднять до последнего, минорные фиксы разрешены.
-- Существующий задел: `libs/comics_editor/flutter_comics_editor` — PlatformView-плагин (Windows-only), своя копия native C# + Comics.Editor.Flutter (net9.0-windows); C++/CLI-слой не завершён (нужен Windows). См. flows sdd-flutter-comics-editor-pview/-ffi.
-- WPF не работает вне Windows. Решение пользователя (2026-07-23): двухэтапный план — этап 1: Windows, полный WPF как есть внутри Flutter (ничего не дописывать в C#); этап 2: macOS/Linux с Flutter-UI из `design/comics-editor-maket-dart-v3` (чистый Dart-макет, UI-паритет с v2.8).
-- Решения пользователя по открытым вопросам (2026-07-23): v2.9 — самодостаточное приложение (плагин flutter_comics_editor — только образец); **git не трогать вообще** (включая вложенный .git — пользователь делает всё с git вручную); целевой .NET — **10**; данные на этапе 2 — **headless Comics.Core** на кросс-платформенном .NET.
-- Текущая машина — macOS; WPF-сборку можно проверить только на Windows.
+- Итоговая структура: apps/comics-editor-v2.9 = Flutter-приложение; C# в native/ (Comics.slnx: Comics.Editor net10.0-windows, Comics.Core net10.0, + обвязка Comics.Editor.Flutter и Comics.Editor.Headless); UI макета в lib/src/ui; мост в lib/src/bridge.
+- Минорные фиксы C#: только Logger.cs (2×2 строки, log4net) + shim SystemWebCompat.cs + исключён PushManager.cs. Полный список — README.
+- **AssemblyName headless = `Comics.Editor` обязательно** — data.json хранит `$type: "..., Comics.Editor"`.
+- Headless: NDJSON stdio (ping/openComics/saveComics/exportPackage/imageInfo), self-contained publish (tool/build_headless.sh), zip через System.IO.Compression.
+- Проверено на macOS: dotnet build 0 ошибок; flutter analyze 0 ошибок; flutter test 3/3 (включая round-trip open→edit→save→reopen на test/fixtures/sample.comics); приложение запускается.
+- Git не трогался (правило пользователя); вложенный .git в v2.9 на месте; v2.8/design/libs не изменены.
+- Для Windows: реализовать interop в windows/editor_plugin/editor_plugin.cpp (hostfxr → Comics.Editor.Flutter.dll → MethodChannelHandler; "create" → EditorHost.ShowMainWindow() = полный WPF-редактор). Следующий шаг после этого — PlatformView-встраивание ComicsControl.
 
 ## Fork History
 
@@ -44,12 +45,6 @@ Key decisions and context for resuming:
 
 ## Next Actions
 
-1. Получить «plan approved» (или правки); заодно спросить про образец файла комикса для проверки open/save
-2. Начать реализацию с Phase 1 (перемещение в native/, ретаргет csproj), лог в 04-implementation-log.md
-
-## Key Findings (SPECIFICATIONS)
-
-- `Comics.Editor` НЕ ссылается на `Comics.Core` (0 ProjectReference) — вся логика файлов в Comics.Editor (Models, Utils/FileManager, Utils/ZipUtils, IWS/Utils). Comics.Core (EF6, PushSharp) — серверный, редактору не нужен в рантайме.
-- Headless-ядро этапа 2 = новый консольный проект, линкующий не-UI исходники Comics.Editor через <Compile Include> (без перемещения/переписывания). JSON-RPC (NDJSON) через stdio. Дистрибуция — **self-contained publish** per-platform (решение пользователя 2026-07-23), .NET SDK нужен только на сборочной машине.
-- Плагин flutter_comics_editor: заимствуем windows/CMakeLists, editor_plugin.cpp, Comics.Editor.Flutter/*.cs (net9→net10). C++/CLI-слой там не завершён — работа на Windows-машине, отложено.
-- PushSharp скорее всего не совместим с .NET 10 → минорный фикс: <Compile Remove> PushManager.cs в Comics.Core (задокументировать). EF6 → PackageReference 6.5.*.
+1. (Windows-машина) README → раздел «Windows»: собрать slnx, реализовать interop, `flutter run -d windows`
+2. (опционально) Проверка на Linux: `tool/build_headless.sh linux-x64` + `flutter run -d linux`
+3. (опционально) PlatformView-встраивание ComicsControl вместо отдельного окна
