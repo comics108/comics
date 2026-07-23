@@ -1,7 +1,7 @@
 # Requirements: comics-editor-v2.9 — Flutter-обвязка для существующего C# редактора
 
-> Version: 1.0
-> Status: DRAFT
+> Version: 1.2
+> Status: APPROVED
 > Last Updated: 2026-07-23
 
 ## Problem Statement
@@ -50,7 +50,7 @@
 
 3. **Этап 2 (macOS/Linux). Given** машина с macOS или Linux
    **When** выполняется `flutter run -d macos` / `-d linux`
-   **Then** запускается приложение с интерфейсом из `design/comics-editor-maket-dart-v3` (макет перенесён/подключён в приложение).
+   **Then** запускается приложение с интерфейсом из `design/comics-editor-maket-dart-v3` (макет перенесён/подключён в приложение), а данные (открытие/сохранение комиксов) обслуживает headless-ядро `Comics.Core` на кросс-платформенном .NET 10.
 
 4. **Given** C#-проекты `Comics.Core` / `Comics.Editor`
    **When** выполняется `dotnet build` под последний .NET
@@ -62,9 +62,8 @@
 
 ### Should Have
 
-- Переиспользование наработок `libs/comics_editor/flutter_comics_editor` (PlatformView-архитектура, MethodChannelHandler) вместо дублирования.
+- Заимствование наработок `libs/comics_editor/flutter_comics_editor` (PlatformView-архитектура, MethodChannelHandler) как образца — при этом v2.9 самодостаточен.
 - Скрипт/README со сборочными шагами по платформам.
-- Удаление вложенного `.git` внутри `apps/comics-editor-v2.9` (артефакт копирования из v2.8), чтобы папка стала обычной частью основного репозитория.
 
 ### Won't Have (This Iteration)
 
@@ -76,19 +75,22 @@
 
 ## Constraints
 
-- **Технические**: C#-код — as is; разрешены только минорные фиксы «чтобы завелось» (target framework, csproj-формат, пакеты). WPF (`Comics.Editor`) работает только на Windows даже на .NET 9/10 (`net*-windows`).
+- **Технические**: C#-код — as is; разрешены только минорные фиксы «чтобы завелось» (target framework, csproj-формат, пакеты). Целевой .NET — **.NET 10**. WPF (`Comics.Editor`) работает только на Windows даже на современном .NET (`net10.0-windows`).
+- **Git**: агент не выполняет git-команды и не трогает `.git` (в т.ч. вложенный в v2.9) — все операции с git пользователь делает вручную.
 - **Платформа**: Flutter desktop: Windows, macOS, Linux.
 - **Рабочая зона**: только `apps/comics-editor-v2.9` (плюс этот flow-каталог). `legacy/comics-editor-v2.8` — read-only. *(В исходной формулировке пользователя опечатка: «работы вести только в папке comics-editor-v2.8» — принято как v2.9, т.к. v2.8 явно объявлена неприкасаемой.)*
 - **Зависимости**: `Utils/7za.exe`, `Utils/ImageMagick` — Windows-бинарники; на macOS/Linux потребуются платформенные аналоги (уровень обвязки, не переписывание).
-- **Окружение**: текущая машина — macOS; сборка/проверка WPF-части возможна только на Windows (тот же блокер, что и в `sdd-flutter-comics-editor-pview`).
+- **Окружение**: текущая машина — macOS; сборка/проверка WPF-части возможна только на Windows (тот же блокер, что и в `sdd-flutter-comics-editor-pview`). **Решение пользователя (2026-07-23): шаг фактической Windows-сборки допустимо пропустить** — этап 1 готовится «до упора» на macOS (структура, обвязка, csproj, CMake), а сборка/проверка на Windows выполняется позже на Windows-машине.
 
 ## Open Questions
 
-- [x] **Q1. Объём функциональности на macOS/Linux** — РЕШЕНО (2026-07-23): двухэтапный план. Этап 1 — Windows с полным WPF как есть; этап 2 — macOS/Linux с Flutter-интерфейсом из `design/comics-editor-maket-dart-v3`.
-- [ ] **Q2. Отношение к `libs/comics_editor/flutter_comics_editor`**: приложение v2.9 использует этот плагин как зависимость (и тогда чей C#-код канонический — плагина или apps/v2.9?), или v2.9 самодостаточно и плагин остаётся отдельным экспериментом?
-- [ ] **Q3. Вложенный `.git`** в `apps/comics-editor-v2.9` — удалить при реструктуризации? (Сейчас git видит папку как один нетрекаемый путь.)
-- [ ] **Q4. Целевая версия .NET** — «последний»: .NET 9 (как в flutter_comics_editor) или .NET 10?
-- [ ] **Q5. Данные на этапе 2**: макет содержит Dart-контроллер с UI-паритетом v2.8, но открытие/сохранение реальных файлов комиксов на macOS/Linux — через Dart-реализацию макета, через headless C#-ядро (Comics.Core на кросс-платформенном .NET), или на этапе 2 достаточно UI-макета без реального I/O?
+Все вопросы решены пользователем 2026-07-23:
+
+- [x] **Q1. Объём функциональности на macOS/Linux**: двухэтапный план. Этап 1 — Windows с полным WPF как есть; этап 2 — macOS/Linux с Flutter-интерфейсом из `design/comics-editor-maket-dart-v3`.
+- [x] **Q2. Отношение к `libs/comics_editor/flutter_comics_editor`**: v2.9 — **самодостаточное приложение**; весь C#-код и обвязка живут в `apps/comics-editor-v2.9`, архитектура PlatformView и готовые файлы плагина заимствуются как образец. Плагин остаётся отдельным экспериментом.
+- [x] **Q3. Вложенный `.git`**: **не трогать**. Все операции с git пользователь выполняет вручную; агент не выполняет никаких git-команд и не удаляет/не изменяет `.git`.
+- [x] **Q4. Целевая версия .NET**: **.NET 10**.
+- [x] **Q5. Данные на этапе 2**: **headless C#-ядро** — `Comics.Core` собирается под кросс-платформенный .NET 10 и обслуживает Flutter-UI на macOS/Linux (обвязка, без переписывания логики).
 
 ## References
 
@@ -102,6 +104,6 @@
 
 ## Approval
 
-- [ ] Reviewed by:
-- [ ] Approved on:
-- [ ] Notes:
+- [x] Reviewed by: Anton
+- [x] Approved on: 2026-07-23
+- [x] Notes: «Requirements approved». Поправка: если Windows-сборку невозможно выполнить на macOS — шаг фактической сборки Windows-версии пропускается (подготовка делается полностью, проверка — позже на Windows).
