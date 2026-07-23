@@ -1,0 +1,19 @@
+name: comics_editor
+description: Comics Editor 3.0 — adaptive Flutter recreation (phone / tablet / desktop).
+publish_to: "none"
+version: 3.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
