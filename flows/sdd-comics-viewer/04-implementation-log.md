@@ -56,22 +56,26 @@
 - ✅ PieceState.java
 - ✅ PieceView.java
 
-### In Progress
+#### 1.6 Build and Test Android Library ✅
 
-Testing Android library build (Task 1.6.1)
+- **1.6.1** Ran full build (`./gradlew build`): assemble (debug+release), unit tests, lint — all succeed with 0 errors
+- **1.6.2** `consumer-rules.pro` created (proguard-rules.pro already existed from earlier work)
+
+### Fixes Required to Get a Clean Build
+
+The library as migrated referenced several things that only existed in the host app or an external dependency that no longer resolves. Fixed by bundling replacements/stand-ins directly in the library, since the whole point is zero app dependencies:
+
+- **Gradle/AGP mismatch**: wrapper was Gradle 7.2 but build.gradle uses AGP 8.1.0 (needs Gradle 8+). Bumped `gradle-wrapper.properties` to `gradle-8.4-bin.zip`. Also fixed CRLF line endings in `gradlew` (`env: bash\r: No such file or directory`).
+- **`com.android.vending.expansion:expansion:3.0.0` doesn't resolve** (not published to Maven Central/Google, was only available as a vendored source module `:zip_file` in the old app). Removed the dependency and added a minimal in-library reimplementation at `com/android/vending/expansion/zipfile/ZipResourceFile.java` (same package/API as the original — `getInputStream()`, `getAssetFileDescriptor()`) so `ComicsDescriptor` needed no changes.
+- **Ironwater framework had dead/unresolvable references** left over from HTTP functionality that Task 1.3 explicitly said not to migrate: `Request.java` referenced `ResponseInfo`, `ServiceLoader`, `CallListener` (never migrated); `CacheManager` referenced `LruBitmapCache` (not migrated); `JsonSerializer`/`ApiResult` referenced `HttpHelper`/`R` from the app. Trimmed `Request`/`ActionRequest`/`ServiceCallTask` down to the synchronous/AsyncTask call path actually used by `ImageManager` (local bitmap loading only, no HTTP), added a minimal `OnCallListener` interface and `LruBitmapCache` (thin `LruCache<K,Bitmap>` wrapper) under `ironwater/`, and added `ApiResult.CODE_CACHE` constant to replace the removed `ResponseInfo.CODE_CACHE`/`getErrorStringRes()` (which depended on app string resources).
+- **`com.fulldome.mahabharata.R`/`BuildConfig` references**: `ZoomFrameLayout` needed `R.styleable.ZoomFrameLayout` — added `src/main/res/values/attrs.xml` declaring it in the library's own `net.nativemind.comics.viewer.R`. `Piece.java` used `BuildConfig.HOST` for building download URLs and `R.string.app_name` for the download notification title — replaced with a static `Piece.setHost(String)` (host app sets this) and `context.getApplicationInfo().loadLabel(...)` respectively.
+- **`BaseState`/`DownloadInfo` never migrated**: `Piece implements BaseState` and uses `DownloadInfo`, but only the puzzle model files were migrated per the plan. Added `comics/util/BaseState.java` and `comics/util/DownloadInfo.java` (ported from the app's Kotlin `DownloadInfo`, converted to Java for consistency with the rest of the util package).
+- **`Comics.setPreview()`/`.dispose()`/static `toggleSoundsSettings()` didn't exist** on the library's simplified `Comics` model (Settings dependency was intentionally stripped per Task 1.2.1). `ComicsViewController`/`PuzzleViewController` (written after the migration, not part of the original app) called these anyway. Preview visibility is a per-`LayersView` concern, not per-`Comics`, so added `LayersView.setShowPreview()`/`needShowPreview()` override instead and updated both controllers to call it. Replaced `.dispose()` calls with the existing `cancelLayerTasks()` + `release()` pair. Removed the static settings toggle from `Puzzle.toggleSounds()` in favor of the already-present instance-level `Comics.toggleSounds()`.
+- Manifest cleanup: removed the deprecated `package=` attribute from `AndroidManifest.xml` (namespace is already set via `build.gradle`).
 
 ### Next Steps
 
-1. ✅ Build and test Android library
-2. Fix any compilation errors
-3. Begin Phase 2: iOS Swift Package extraction
-
-### Notes
-
-- Successfully removed app-specific dependencies (Settings, Analytics)
-- Comics model now manages sound state internally via `soundEnabled` flag
-- Layer model uses `languageIndex` parameter instead of Settings dependency
-- All package renames completed for migrated files
+1. Begin Phase 2: iOS Swift Package extraction
 
 ### Issues/Blockers
 
@@ -174,6 +178,27 @@ None currently
 Status: IN PROGRESS
 
 ### Completed Tasks
+
+#### 3.1 Update Android App (mahabharata-mobile-java-v2026) ✅
+
+**Baseline finding**: the app was already unbuildable before this work — `settings.gradle` included `:zip_file` and `:samskara` modules whose directories don't exist in this repo copy. `:samskara` is harmless (never referenced by a dependency), but `:zip_file` (the old APK-expansion ZIP reader) is `implementation project(path: ':zip_file')` in `app/build.gradle`, so `:app:assembleDevDebug` failed immediately with "Could not resolve project :zip_file". Fixed as part of this task since `:zip_file`'s only consumer, `ComicsDescriptor`, is one of the classes being deleted in favor of the library.
+
+**3.1.1 Toolchain alignment (new, not in original plan)**: comics-viewer-android was built in Phase 1 against AGP 8.1.0/Gradle 8.4/compileSdk 34 in isolation. The app is on AGP 7.1.2/Gradle 7.2/compileSdk 32/Kotlin 1.7.10, and Android does not support mixing AGP versions across modules of one Gradle build. Downgraded the library's `build.gradle` and `gradle-wrapper.properties` to match the app's toolchain exactly (AGP 7.1.2, Gradle 7.2, compileSdk 32, Kotlin 1.7.10, Java 8, androidx/gson versions matching what the app already resolves) and re-verified `./gradlew build` still passes standalone. Bumped the app's `minSdkVersion` 16→21 to satisfy the library's `minSdk 21` floor (AGP fails the merge otherwise).
+
+**3.1.2 Wired the dependency**: `settings.gradle` gets `include ':comics-viewer-android'` with `projectDir` remapped to `../../libs/comics_viewer/comics-viewer-android` (library lives in a different top-level directory tree); `app/build.gradle` swaps `implementation project(':zip_file')` for `implementation project(':comics-viewer-android')`.
+
+**3.1.3 Updated ~10 consumer files** (`ApplicationEx`, `DataService`, `InitDescriptorRequest`, `InitDescriptorResult`, `PuzzleActivity`, `PuzzlePreviewFragment`, `PiecesViewController`, `ComicsActivity`, the app's own `utils/ComicsUtils.kt`) to import the library's classes instead of the app's own copies, plus two layout XMLs (`activity_puzzle.xml`, `activity_comics.xml`) that referenced `com.fulldome.mahabharata.controls.ZoomFrameLayout` by fully-qualified class name. Deleted the app's duplicate `<declare-styleable name="ZoomFrameLayout">` from `attrs.xml` (class moved to the library, which declares its own).
+
+**Behavioral gaps found and bridged** (the library intentionally dropped Settings/Analytics coupling in Phase 1 — matching that in the app required real logic, not just renames):
+- `Comics.create(Context, BaseState)` (took a `BaseState`, checked `isDownloaded()`/`getSavedFile()` internally) was replaced by the library's `ComicsUtils.create(Context, File)` (Kotlin object member, so Java call sites need `ComicsUtils.INSTANCE.create(...)`). Callers (`InitDescriptorRequest`, `ComicsActivity`) now resolve the file explicitly before calling.
+- `Comics.toggleSounds()`/`Puzzle.toggleSounds()` used to flip a single app-wide `Settings.isSoundOn()` and log analytics; the library versions only flip a local per-instance flag. Added `ComicsUtils.toggleGlobalSound()` (app-side, in `com.fulldome.mahabharata.utils.ComicsUtils`) that owns the Settings/analytics side effect and returns the new value; call sites (`ComicsActivity`, `PiecesViewController`) now do `comics.setSoundEnabled(ComicsUtils.toggleGlobalSound())`. Added `Puzzle.setSoundEnabled(boolean)` to the library (mirroring `Comics.setSoundEnabled`) so `PiecesViewController` has a symmetric call.
+- Freshly created `Comics` default `soundEnabled = true` regardless of the user's saved preference (no more dynamic `Settings` read). Added an explicit sync at both places a `Comics` gets attached to something the user sees: `ComicsActivity.initComics()` and `InitDescriptorResult.prepare()` (puzzle pieces) now call `comics.setSoundEnabled(Settings.getInstance().isSoundOn())` right after assignment.
+- `Layer` dropped its `Settings.shared.language` read in favor of an explicit `setLanguageIndex(int)` per layer (Task 1.2.1's design). Added `Comics.setLanguageIndex(int)` (loops `getLayers()`) to the library, and `ComicsActivity` now calls it both at `initComics()` (initial sync from `Settings.getLanguage().ordinal()`) and in the language-radio-button change listener (previously just called `cancelLayerTasks()`/`reloadLayers()`, which reloads images but wouldn't have picked a different language without this).
+- `ImageManager.ImageCallListener`/`SimpleCallListener` in the library use the library's own trimmed `net.nativemind.comics.viewer.ironwater.server.data.ApiResult` (added during the Phase 1 build fix), which is a different type from the app's `com.ironwaterstudio.server.data.ApiResult`. `PiecesViewController`'s anonymous `ImageManager.ImageCallListener` override needed its `ApiResult` import switched to the library's type or it fails to override with "cannot be converted" / "does not override a method from a supertype".
+
+**Deleted** (~22 files, all now served by the library): `model/visual/{Comics,Layer,Image,Sound}.java`, `model/visual/animation/*.java` (8 files), `model/LayerAnimTypeAdapter.java`, `model/ComicsDescriptor.java`, `model/puzzle/{Puzzle,Puzzles,Piece,PieceState}.java`, `controls/{LayersView,TileImageView,ZoomFrameLayout,PieceView}.java`, `utils/ImageManager.java`.
+
+**Verification**: `./gradlew :app:assembleDevDebug` and `:app:assembleDevRelease` (R8/minify on) both build clean. Installed the debug APK on a running emulator (`adb install` + `am start`) — app launches and reaches the network-gated splash screen with no crash/exception in logcat. Could not exercise the actual comics/puzzle screens: `SplashActivity` blocks on `DataService.updateDevice()` against `comics.dev.ironwaterstudio.com`, which isn't reachable from this sandbox, and there's no cached season/puzzle data to bypass it with. So sound/language/puzzle behavior is verified by code inspection against the pre-migration behavior, not by hearing/seeing it run — flagging this as the one part of Task 3.1.4 a human still needs to do with real backend access.
 
 #### 3.2 Update iOS App (mahabharata-mobile-swift-v2026) ✅
 
