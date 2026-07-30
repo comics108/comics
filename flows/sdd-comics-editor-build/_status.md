@@ -6,7 +6,7 @@ IMPLEMENTATION
 
 ## Phase Status
 
-IN PROGRESS (Phase 2/3: локальная верификация Docker Build, затем `docker-build.yml`; параллельно — Windows CI баг MSB1008, вне Plan scope, отслеживается здесь по решению пользователя)
+Docker Build (Phase 1-4) — DONE, см. `04-implementation-log.md` Progress Tracker. Windows CI MSB1008 — РЕШЕНО (не багфикс, custom target отключён от `ALL` как неиспользуемый — см. Blockers).
 
 ## Last Updated
 
@@ -14,8 +14,7 @@ IN PROGRESS (Phase 2/3: локальная верификация Docker Build, 
 
 ## Blockers
 
-- Docker Build verification для Linux — в процессе (см. Progress)
-- Windows CI (`build-windows` в `build.yml`) падает с `MSB1008` — round-1 фиксы (CRLF/`call`/`echo`) не сработали: диагностика показала, что `publish_csharp.cmd` вообще не запускается (падение раньше, в MSBuild при обработке `editor_plugin_csharp.vcxproj`). Добавлен temporary-шаг дампа сгенерированного `.vcxproj` при падении — ждём нового CI-лога с этим дампом.
+- Нет активных блокеров. Windows CI MSB1008: после 4 раундов диагностики выяснилось, что сгенерированный `<Command>` в `.vcxproj` синтаксически корректен (root cause в MSBuild/CMake на `windows-2025-vs2026` toolset так и не подтверждён), но публикуемая custom-target'ом `Comics.Editor.Flutter.dll` **ничем не потребляется** — hostfxr/nethost interop в `editor_plugin.cpp` ещё не реализован (явный TODO/`not_implemented`-заглушка). Решение (подтверждено пользователем): `add_custom_target(editor_plugin_csharp ALL ...)` закомментирован в `windows/editor_plugin/CMakeLists.txt` (не удалён), temporary diagnostic-шаг убран из `build.yml`. Вернуть custom target, когда появится реальный hostfxr-вызов, и на этот раз сразу проверять реальным Windows CI, не полагаясь на macOS-локальную верификацию.
 
 ## Progress
 
@@ -26,17 +25,16 @@ IN PROGRESS (Phase 2/3: локальная верификация Docker Build, 
 - [x] Plan drafted
 - [x] Plan approved (2026-07-25)
 - [x] Implementation started
-- [x] Task 1.1 `docker/linux-build.Dockerfile` — собран и проверен (toolchain-уровень: flutter/dotnet/cmake версии)
-- [x] Task 1.2 `docker/android-build.Dockerfile` — собран однажды до фиксов `--system`/`chmod`; **требует пересборки и повторной проверки**
-- [x] Task 2.1 `tool/docker-build.sh` — создан, `--platform linux/amd64` зафиксирован
+- [x] Task 1.1 `docker/linux-build.Dockerfile` — собран и полностью верифицирован (`tool/docker-build.sh linux` — все 6 тестов зелёные)
+- [x] Task 1.2 `docker/android-build.Dockerfile` — пересобран (`--system`/`chmod` + pre-baked NDK/CMake/platform-35) и полностью верифицирован
+- [x] Task 2.1 `tool/docker-build.sh` — создан, `--platform linux/amd64`, `HOME`/`GRADLE_USER_HOME`/`JAVA_TOOL_OPTIONS`, персистентный Gradle-кэш (`.docker-cache/gradle/`)
 - [x] Task 2.1 верификация: `tool/docker-build.sh linux` полный прогон на реальном репозитории — **пройден полностью** (все 6 тестов, включая `core_client_test.dart`)
-- [ ] Task 2.1 верификация: `tool/docker-build.sh android` полный прогон
-- [ ] Task 3.1/3.2 `.github/workflows/docker-build.yml` — не создан
-- [ ] Task 4.1 `docker/README.md` — не создан
-- [ ] Task 4.2 финальное обновление `_status.md`/`04-implementation-log.md`
-- [ ] Implementation complete
-- [x] **Windows CI MSB1008** (вне scope Docker Build, отслеживается здесь) — правки применены: CRLF в `publish_csharp.cmd`, явный `call` в `CMakeLists.txt`, диагностический `echo`. Не подтверждено реальным CI-прогоном.
-- [ ] **Windows CI MSB1008** — дождаться нового CI-лога после коммита/пуша пользователем; если снова упадёт — разобрать по `echo`-диагностике, не гадать заново
+- [x] Task 2.1 верификация: `tool/docker-build.sh android` полный прогон — **пройден полностью** (APK собран, тесты зелёные; `assembleRelease` 700s→92s после pre-bake SDK-компонентов)
+- [x] Task 3.1/3.2 `.github/workflows/docker-build.yml` — создан (`docker-build-linux`/`docker-build-android`, триггеры main/nightly/release, публикация артефактов; `build.yml` не тронут)
+- [x] Task 4.1 `docker/README.md` — создан
+- [x] Task 4.2 финальное обновление `_status.md`/`04-implementation-log.md` — сделано
+- [x] Implementation complete (Docker Build, Plan scope) — финальная приёмка `docker-build.yml` ждёт реального CI-прогона (не выполнимо локально агентом)
+- [x] **Windows CI MSB1008** — root cause не подтверждён, но выяснено, что custom target публикует неиспользуемый артефакт (hostfxr interop — TODO). Custom target закомментирован в `CMakeLists.txt`, diagnostic-шаг убран из `build.yml`. Ждём коммита/пуша пользователем и финального зелёного CI-прогона для подтверждения.
 
 ## Context Notes
 
@@ -83,12 +81,9 @@ Key decisions and context for resuming:
 
 ## Next Actions
 
-1. **Windows MSB1008**: пользователь коммитит/пушит правки (`publish_csharp.cmd`, `CMakeLists.txt`), перезапускает `build-windows`, присылает новый лог — при повторном падении разбирать по `echo`-диагностике (см. `04-implementation-log.md`), не гадать заново
-2. Дождаться результата фонового прогона `tool/docker-build.sh linux` (verification на реальном репозитории)
-3. Пересобрать `comics-editor-android-build:local` (фиксы `--system`/`chmod`) и прогнать `tool/docker-build.sh android`
-4. Создать `.github/workflows/docker-build.yml` (Task 3.1/3.2) — два job, триггеры main/nightly/release, публикация артефактов
-5. `docker/README.md` (Task 4.1)
-6. Финально обновить `_status.md`/`04-implementation-log.md` (Task 4.2)
+1. **Windows MSB1008**: пользователь коммитит/пушит `windows/editor_plugin/CMakeLists.txt` + `.github/workflows/build.yml` (проверить `git status`/`git diff` перед пушем), перезапускает `build-windows` — ожидается зелёный прогон (custom target больше не в `ALL`)
+2. Когда будет реализован hostfxr/nethost interop в `editor_plugin.cpp` — раскомментировать custom target в `CMakeLists.txt`, проверить СРАЗУ реальным Windows CI
+3. Docker Build (Phase 1-4) завершён — ничего не осталось после подтверждения п.1
 
 ## Pinned Versions (зафиксировано на Plan)
 
@@ -96,7 +91,7 @@ Key decisions and context for resuming:
 - Flutter: 3.44.6 (flutter_linux_3.44.6-stable.tar.xz)
 - .NET SDK: 10.0.302 (точная версия, не floating)
 - JDK: Temurin 17 (через Adoptium APT-репозиторий)
-- Android: platforms;android-36, build-tools;36.0.0, commandlinetools-linux-9862592_latest.zip (проверено — HTTP 200, актуальная сборка из repository2-3.xml Google)
+- Android: platforms;android-36, build-tools;36.0.0, commandlinetools-linux-9862592_latest.zip (проверено — HTTP 200, актуальная сборка из repository2-3.xml Google); дополнительно pre-baked для Flutter Gradle-плагина (иначе качалось бы заново на каждом `docker run`): platforms;android-35, build-tools;35.0.0, ndk;28.2.13676358, cmake;3.22.1
 
 ## Decisions (2026-07-25)
 

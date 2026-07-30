@@ -32,6 +32,12 @@
 
 Статус: см. `04-implementation-log.md` — применены defensive-фиксы (CRLF line endings в `publish_csharp.cmd`, явный `call` при вызове .cmd из CMake custom-build-step, диагностический `echo` резолвленных путей/команды) без подтверждённого точного root cause; ждём результата следующего реального Windows CI-прогона.
 
+### Дополнение: macOS-артефакт из `build.yml` не запускается — invalid code signature (2026-07-25, в ходе Implementation)
+
+Пользователь скачал `comics_editor.app`, собранный `build-macos` job'ом (Native Build), и он не запускался. Диагностика (`spctl -a -vvv`, `codesign -dv`, содержимое `Contents/_CodeSignature/CodeResources`) показала: `flutter build macos --release` (Xcode build phase) ad-hoc подписывает `.app`, а `tool/build_headless.sh` затем копирует headless-бинарник (`Comics.Editor`) в `Contents/Resources/comics-core/` **после** подписи — resource seal ломается, т.к. новые файлы в него не входят. Локально не проявлялось: у свежесобранного приложения нет `com.apple.quarantine`, поэтому Gatekeeper не валидирует seal при первом запуске; у скачанной через браузер копии — есть (`xattr` подтвердил), поэтому Gatekeeper блокирует запуск с «a sealed resource is missing or invalid».
+
+Как и с MSB1008: не входит в scope Docker-контейнеризации (macOS не контейнеризируется), но по тому же решению пользователя — ведётся здесь, а не в отдельном flow. Фикс: `tool/build_headless.sh` теперь переподписывает `.app` (`codesign --force --deep --sign -`, ad-hoc — как и было) сразу после копирования headless-ядра. Один общий скрипт, чинит и локальные сборки, и `build.yml`.
+
 ## Известные факты о платформах (входные данные для проектирования)
 
 | Платформа | Тулчейн | Можно контейнеризировать? |

@@ -86,6 +86,30 @@
 **Ended at**: diagnostic-шаг починен (добавлен `-File`), ждём результата с реальным содержимым `.vcxproj`.
 **Handoff notes**: если в следующем логе появится реальный `<CustomBuildStep>` — сравнить `<Command>` с ожидаемым (`cmd /c call "...publish_csharp.cmd" "...\dotnet"`) и `editor_plugin.vcxproj` (для контраста, чтобы понять, чем структурно отличается «работающий» custom-build от «падающего»/непроверенного до этого момента custom-target-without-outputs.
 
+### Session 2026-07-25 (продолжение 3) — Claude (round 4: реальный vcxproj получен → решение отключить custom target)
+
+**Started at**: пользователь прислал новый CI-лог с полным дампом `editor_plugin_csharp.vcxproj` (diagnostic-шаг сработал).
+
+#### Discoveries
+- **Сгенерированный `<Command>` полностью корректен** — стандартный CMake-boilerplate (`setlocal` / `cmd /c call D:/.../publish_csharp.cmd D:/.../dotnet` / errorlevel-forwarding), сверен построчно с соседним рабочим `<CustomBuild>` в том же файле (regenerate-check правило вызова `cmake.exe --check-stamp-file`) — идентичная форма, никаких синтаксических отличий, кавычки/пути в порядке. Т.е. проблема не в том, ЧТО мы передаём в CMake COMMAND — предыдущие 3 раунда фиксов (CRLF, `call`, echo-диагностика) были не по адресу, потому что сама команда никогда не была источником ошибки.
+- Раннер — `windows-2025-vs2026`: `ToolsVersion="18.0"`, `PlatformToolset=v145`, `VCToolsVersion=14.51.36231` — это новейший/preview-тулсет Visual Studio (VS "18"/2026). Похоже на нестабильность/баг именно в обработке `<CustomBuild>`-элементов custom-build-степов в этом конкретном (очень новом) MSBuild/CMake-generator сочетании — причина так и не подтверждена даже с полным XML на руках.
+- **Ключевая находка, снявшая вопрос «чинить или нет»**: проверено, что публикуемая `Comics.Editor.Flutter.dll` **вообще ничем не потребляется** на сегодня:
+  - `windows/editor_plugin/editor_plugin.cpp:11-16` — явный `// TODO(Windows): interop к .NET — вариант A (рекомендуемый): hostfxr / nethost...`, `HandleMethodCall` безусловно возвращает `result->Error("not_implemented", ...)`.
+  - `lib/src/bridge/wpf_editor_view.dart:8-9` — «Пока слой не собран на Windows-машине... виджет показывает заглушку».
+  - Т.е. custom target собирал артефакт, который прямо сейчас не грузится никаким кодом — блокировал 100% Windows CI ради ещё не реализованной фичи.
+- Пользователь подтвердил (`AskUserQuestion`): отключить custom target из `ALL`, не продолжать чинить баг MSBuild дальше.
+
+#### Completed
+- `apps/comics-editor-v2.9/windows/editor_plugin/CMakeLists.txt`: `add_custom_target(editor_plugin_csharp ALL ...)` + `add_dependencies(...)` закомментированы (не удалены — вернуть, когда появится реальный hostfxr/nethost-вызов в `editor_plugin.cpp`, который реально грузит `Comics.Editor.Flutter.dll`). Комментарий обновлён с полной историей (4 раунда, находка про stub, ссылка на конкретные файлы/строки TODO).
+- `apps/comics-editor-v2.9/.github/workflows/build.yml`: temporary diagnostic-шаг (`Dump generated custom-build vcxproj`) удалён — свою задачу выполнил.
+- `publish_csharp.cmd` — оставлен в репозитории как есть (не используется сейчас, пригодится при реализации interop).
+
+#### In Progress
+- Ожидание: пользователь коммитит/пушит (`CMakeLists.txt`, `build.yml`), перезапускает `build-windows` — должен пройти, т.к. custom target с проблемным custom-build-step больше не входит в `ALL`.
+
+**Ended at**: MSB1008 investigation закрыт — не багфикс, а отключение неиспользуемого custom target.
+**Handoff notes**: когда кто-то будет реализовывать hostfxr/nethost interop в `editor_plugin.cpp` (см. TODO там) — раскомментировать `add_custom_target`/`add_dependencies` в `windows/editor_plugin/CMakeLists.txt` и на этот раз **сразу проверить реальным Windows CI-прогоном** (не полагаться на macOS-локальную верификацию) — история этого бага началась именно с того, что предыдущий фикс (`sdd-comics-editor-v2.9-android-ios`) никогда не был проверен на реальной Windows-машине. Если MSB1008 повторится тогда — этот implementation-log (raunds 1-4) содержит полную историю попыток и подтверждённый факт, что сам `<Command>` синтаксически корректен, так что имеет смысл сразу смотреть в сторону версии MSBuild/VS toolset на раннере, а не в сторону содержимого команды.
+
 #### Deviations from Plan
 - Это не часть Plan (`03-plan.md`, APPROVED, scope = Docker Linux/Android) — Windows/`build.yml` явно вне scope Docker-контейнеризации. Ведётся в этом же flow по прямому решению пользователя (не форкать отдельный SDD), задокументировано как дополнение к Requirements, не как изменение Acceptance Criteria Docker Build.
 
@@ -97,6 +121,34 @@
 1. Windows: после коммита/пуша и повторного прогона `build-windows` — прислать новый лог. Если снова `MSB1008`, `echo`-диагностика в логе покажет точный `CSPROJ`/`OUT_DIR`/собранную команду — сверить с ожидаемым, это должно локализовать причину куда точнее.
 2. Docker Build: продолжить с `tool/docker-build.sh linux` verification (Task 2.1), затем Task 2.1 android re-verify, затем Phase 3 (`docker-build.yml`), Phase 4 (документация) — см. `_status.md` Next Actions.
 
+### Session 2026-07-25 (продолжение 2) — Claude (Docker Build: полная верификация + Phase 3-4)
+
+**Started at**: Phase 2 verification (Task 2.1 linux), диск хоста только что почищен пользователем.
+**Context**: Продолжение с того места, где предыдущая сессия остановилась на Docker Desktop I/O-ошибке/ENOSPC.
+
+#### Completed
+- Диагностика и устранение (см. также `_status.md`, «Отладка: полный прогон tool/docker-build.sh linux»): Docker Desktop I/O-ошибка/ENOSPC → зависший демон (полный restart) → отсутствующий `HOME` для `--user` (`--env HOME=/tmp`) → `UseVirtualizationFrameworkRosetta: false` (пользователь включил вручную) → транзиентный Dart VM `EINTR` (retry).
+- **Найден и исправлен реальный баг в прикладном коде**, заблокировавший верификацию: `CoreClient.resolveBinary()` выбирал бинарник ядра без учёта `Platform.operatingSystem`, из-за чего Linux-контейнер пытался запустить macOS-бинарник. Не относится к scope этого flow (business logic) — вынесено и исправлено в отдельном flow `sdd-comics-editor-v2.9-fixes1` по решению пользователя, здесь только зафиксирован факт и ссылка.
+- `tool/docker-build.sh linux` — **полный зелёный прогон** на реальном репозитории (все 6 тестов, включая `core_client_test.dart`).
+- Тот же класс проблемы (`--user` без passwd-записи) для Android/Java: `user.home` резолвился JVM в буквальное `"?"` → Gradle писал кэш в несуществующий путь. Фикс: `GRADLE_USER_HOME`/`JAVA_TOOL_OPTIONS=-Duser.home=/tmp`.
+- Второй Docker Desktop hang (тот же класс — диск снова забился, на этот раз раздутыми локальными образами `comics-editor-{linux,android}-build:local`, выросшими до 11-12GB каждый из-за накопленного за сессию build cache) — restart + `docker rmi` + `docker builder prune -af` освободили ~40GB.
+- `tool/docker-build.sh android` — **полный зелёный прогон** (APK собран, тесты зелёные), но `assembleRelease` занял ~700s из-за холодного скачивания NDK/CMake/Build-Tools 35/Platform 35 (запрашивает сам Flutter Gradle-плагин, `flutter.ndkVersion`/`flutter.compileSdkVersion` — независимо от того, что наш код NDK не использует).
+  - **Оптимизация**: (a) персистентный bind-mounted Gradle-кэш (`.docker-cache/gradle/`, gitignored) вместо `GRADLE_USER_HOME=/tmp` (стирался на каждом `--rm`-запуске); (b) `docker/android-build.Dockerfile` теперь ставит NDK 28.2.13676358/CMake 3.22.1/platform-35/build-tools 35.0.0 на этапе сборки образа, не полагаясь на Gradle auto-download в рантайме. После пересборки образа — `assembleRelease` 700s → 92s, повторный прогон снова полностью зелёный.
+- Task 3.1/3.2: создан `.github/workflows/docker-build.yml` — два независимых job (`docker-build-linux`, `docker-build-android`), триггеры `push:main`/`schedule` (cron `0 3 * * *`)/`release:published`, `docker/build-push-action@v6` с `cache-from/to: type=gha`, `upload-artifact` (`retention-days: 90`), условное прикрепление к GitHub Release при `github.event_name == 'release'`. `build.yml` не тронут. YAML-синтаксис проверен (`python3 -c "import yaml..."`).
+- Task 4.1: создан `docker/README.md` — таблица Native vs Docker Build, таблица платформ, быстрый старт, известные ограничения машины (Rosetta/qemu, EINTR), описание файлов и Gradle-кэша.
+- Verified by: реальные прогоны `tool/docker-build.sh linux`/`android` на этой машине (`--platform linux/amd64` через Rosetta) — оба полностью зелёные; `docker-build.yml` — синтаксическая валидация + построчная сверка команд с `tool/docker-build.sh` (финальная приёмка — реальный CI-прогон, как и предполагалось в Plan).
+
+#### Deviations from Plan
+- Task 1.2/2.1 verification обнаружили баг в прикладном коде (`resolveBinary()`), не предусмотренный Plan — исправлен в отдельном flow (`sdd-comics-editor-v2.9-fixes1`), не здесь, чтобы не смешивать build-инфраструктуру с business logic.
+- Добавлена оптимизация Android-образа (pre-baked NDK/CMake/platform-35), не описанная явно в исходном Plan/Specifications — естественное продолжение Task 1.2/2.1 (тот же файл, тот же smoke-test), не отдельная фича.
+
+#### Discoveries
+- Локальная x64-верификация (через Rosetta, не qemu) на Apple Silicon реально работает и ловит реальные баги (resolveBinary, MSB4184/qemu-несовместимость), которые не были видны раньше — подтверждает изначальную гипотезу requirements о ценности одинаковой среды локально/CI.
+- Docker Desktop на этой машине дважды зависал по одной и той же причине (диск хоста забивается образами/build cache быстрее, чем ожидалось, из-за итеративной отладки) — оба раза чинилось полным restart (`quit`+`kill -9`+relaunch) + освобождением места. Не баг в этом репозитории, но стоит иметь в виду при следующей похожей отладке.
+
+**Ended at**: Phase 1-4 Docker Build — все задачи Plan выполнены и верифицированы локально.
+**Handoff notes**: финальная приёмка `docker-build.yml` — реальный CI-прогон (push в main или ручной `workflow_dispatch`, если понадобится добавить триггер для ручного теста) — не заблокирован, но не выполнен агентом (нет доступа к git/CI). Windows CI MSB1008 — отдельная, не относящаяся к Docker Build нить, остаётся открытой (см. предыдущие session log записи выше).
+
 ---
 
 ## Deviations Summary
@@ -105,15 +157,19 @@
 |---------|--------|--------|
 | Log вести параллельно с Docker-работой (Task 1.1/1.2/2.1) | Не велся до этой сессии | Предыдущая сессия обновляла только `_status.md`, не этот файл — восстановлено ретроспективно, без детализации внутренних шагов сборки образов |
 | Windows/`build.yml` — вне scope этого flow (Plan) | Диагностика/фикс MSB1008 ведутся здесь же | Прямое решение пользователя: все build-процессы обсуждаются только в этом SDD, не форкать новый flow |
+| `resolveBinary()` баг найден при Docker Build verification | Исправлен в отдельном flow `sdd-comics-editor-v2.9-fixes1`, не здесь | Business logic вне scope Plan этого flow — только диагностика/факт зафиксированы здесь |
+| Android SDK — только `platforms;android-36`/`build-tools;36.0.0` (Plan) | Добавлены также `platforms;android-35`/`build-tools;35.0.0`/`ndk;28.2.13676358`/`cmake;3.22.1` | Обнаружено в ходе verification: сам Flutter Gradle-плагин запрашивает свои дефолты независимо от нашего пина — без pre-bake Gradle качал бы их заново на каждом запуске (~700s) |
 
 ## Learnings
 
 - Комментарий в коде, объясняющий «почему» какой-то фикс был применён, не заменяет верификацию — предыдущий фикс MSB1008 был закоммичен с уверенным объяснением, но никогда не проходил через реальный сценарий (Windows CI), который он должен был чинить. Тесты/сборки, доступные на машине разработчика (macOS), не покрывали платформо-специфичный путь (`flutter build windows`, MSBuild custom-build-step) — стоит явно помечать в implementation-log, что именно проверено, а что нет, а не только «тесты зелёные».
+- `--user UID:GID` без соответствующей `/etc/passwd`-записи ломает любой инструмент, читающий домашнюю директорию через системный вызов (`getpwuid`), а не через `$HOME` напрямую — задело и Flutter (`HOME` резолвился в `/`), и JVM/Gradle (`user.home` резолвился в буквальное `"?"`). Не intuitivно из одного лишь симптома — стоит проверять оба класса причин сразу при следующем похожем баге.
+- Диск — реальный, наблюдаемый риск локальной Docker-верификации на этой машине: итеративная отладка (пересборки образов, build cache) быстро съедает десятки GB и дважды приводила к зависанию демона. `docker system df`/`df -h` стоит проверять проактивно при длинных отладочных сессиях, не только когда что-то уже упало.
 
 ## Completion Checklist
 
-- [ ] All tasks completed or explicitly deferred
-- [ ] Tests passing
-- [ ] No regressions
-- [ ] Documentation updated if needed
-- [ ] Status updated to COMPLETE
+- [x] Docker Build (Task 1.1–4.2, Plan scope) — все задачи выполнены, верифицированы локально
+- [x] Tests passing (`tool/docker-build.sh linux`/`android`, оба полностью зелёные)
+- [x] No regressions (нативные тесты на macOS тоже перепроверены после `resolveBinary()` фикса)
+- [x] Documentation updated (`docker/README.md`, `_status.md`, этот лог)
+- [x] Status updated to COMPLETE (Docker Build часть; Windows CI MSB1008 — отдельная незакрытая нить, не блокирует этот flow)
