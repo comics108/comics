@@ -116,9 +116,13 @@ skipping them every time.
   Criteria 5).
 - Any *new* screenshot content (composing/exporting fresh images) — this flow wires up what
   already exists, it doesn't design new marketing material.
-- Full per-locale *text* metadata (name/description/keywords/promotional_text) for App Store
-  Connect / Play Console — out of scope; this flow is screenshots/images only. (Both stores allow
-  screenshots to exist per-locale independent of localized text, so this isn't blocking.)
+- ~~Full per-locale *text* metadata (name/description/keywords/promotional_text) for App Store
+  Connect / Play Console — out of scope; this flow is screenshots/images only.~~ **Superseded
+  2026-07-31**: user explicitly asked for this to be filled in after all, having analyzed every
+  `flows/sdd-*`/`flows/vdd-*` requirements doc + the app's own README for product positioning —
+  see `04-implementation-log.md`'s corresponding session entry for the full account (name,
+  subtitle, description, keywords, promotional_text, category, copyright, review contact, privacy/
+  support URLs — same 5 locales as screenshots, plus mirrored into the macOS lane's own metadata).
 
 ## Decisions (2026-07-31, resolved via AskUserQuestion)
 

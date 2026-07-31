@@ -212,3 +212,32 @@
 
 #### Deviations from Plan
 - Обе правки (macOS test, Windows CMakeLists.txt) — вне scope `03-plan.md` (Docker Build), ведутся здесь по тому же прецеденту, что и round 1-4 Windows-фиксов: «все build-процессы обсуждаются только в этом SDD, не форкать новый flow» (см. Context Notes в `_status.md`).
+
+### Session 2026-07-31 — Claude (round 6: repo renamed to `apps/comics-editor`; MSB1008 persisted after VERBATIM → switched off the custom-target-only vcxproj entirely)
+
+**Started at**: пользователь вставил новый CI-лог `build-windows` (коммит `316cb80`, раннер `windows-2025-vs2026`), resume этого flow по имени.
+
+#### Discoveries — repo path
+- `apps/comics-editor-v2.9/` в этой сессии не существует — репозиторий переименован в `apps/comics-editor/` (тот же проект: `pubspec.yaml` `name: comics_editor`, та же структура `windows/editor_plugin/` и т.д.). Переименование сделано пользователем вручную (git — только руками, см. memory `git-manual-only`), вне этой сессии. Пути в этом логе и в `_status.md` выше (написанные до переименования) ссылаются на старый `comics-editor-v2.9` — читать их с поправкой на новый путь `apps/comics-editor/`.
+
+#### Discoveries — Windows MSB1008 (round 6)
+- Идентичная ошибка, тот же файл (`editor_plugin_csharp.vcxproj`), несмотря на применённый round 5 (`VERBATIM`) — VERBATIM не помог.
+- **Решающая находка**: в этом логе (полный вывод `flutter build windows --release` от `Resolving dependencies...` до ошибки, 18.0s общей длительности шага) НИ ОДНОЙ строки `[publish_csharp]` — те же диагностические `echo`, что были в `publish_csharp.cmd` с round 1, снова не появились. Это третье подтверждение (после round 2 и теперь round 6) того же факта: наш скрипт вообще не начинает выполняться. Значит падение происходит либо в обёртке `cmd /c call "...publish_csharp.cmd" ...` до входа в сам `.cmd`-файл, либо ещё раньше — на этапе обработки MSBuild'ом самого `<CustomBuild>`-элемента для `editor_plugin_csharp.rule`.
+- Пересмотрена сама структура, а не содержимое команды: `add_custom_target(${PLUGIN_NAME}_csharp ALL ...)` заставляет CMake Visual Studio generator создать ОТДЕЛЬНЫЙ `.vcxproj` для этого target, единственное "содержимое" которого — служебный `.rule`-файл (никаких реальных `ClCompile`-элементов, обычных для нормального C++-проекта). Раунды 1-5 все были content-level фиксами ОДНОГО И ТОГО ЖЕ подозреваемого custom-build-step внутри ЭТОГО файла — ни один не сработал, при этом round 4 уже подтвердил, что сгенерированный `<Command>` синтаксически идентичен рабочему `<CustomBuild>` того же файла. Совокупность фактов (команда синтаксически верна, но никогда не запускается, ошибка на уровне `MSBUILD :` без file:line, воспроизводится стабильно только на этом custom-target-only vcxproj, раннер — preview-тулсет VS "18"/2026) указывает на баг в обработке MSBuild'ом именно ЭТОГО КЛАССА vcxproj (utility/custom-target-only, без исходников) на этом конкретном (очень новом) тулсете, а не в содержимом COMMAND.
+- WebSearch подтвердил, что MSB1008 в контексте CMake+MSBuild регулярно всплывает как раз вокруг нестандартных/edge-case инвокаций MSBuild (аргументы командной строки, `.rsp`-файлы с неопределёнными переменными) — общий паттерн: что-то ниже по цепочке вызывает `MSBuild.exe`/аналог с более чем одним позиционным аргументом. Прямого совпадения с этим конкретным repro (CMake custom-target-only vcxproj на VS 2026 preview) не найдено — GitHub issue поиск не дал специфического прецедента для этой комбинации, т.е. это не подтверждённый внешним источником баг (в отличие от round 5's VERBATIM/flutter#67270), а вывод по совокупности локальных улик.
+
+#### Completed — Windows fix (round 6, unverified)
+- `apps/comics-editor/windows/editor_plugin/CMakeLists.txt`: `add_custom_target(${PLUGIN_NAME}_csharp ALL COMMAND ... ) + add_dependencies(${PLUGIN_NAME} ${PLUGIN_NAME}_csharp)` заменены на `add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD COMMAND ... VERBATIM)` — публикация C#-слоя теперь прикреплена как post-build шаг к уже существующему `editor_plugin` (обычная статическая библиотека с реальными исходниками, свой vcxproj не является подозреваемым классом), никакой отдельный vcxproj для публикации больше не создаётся. `windows/runner/CMakeLists.txt` (копирование `${CMAKE_BINARY_DIR}/dotnet` рядом с exe) не менялся — порядок сборки сохраняется естественным образом: `runner` зависит от `editor_plugin` через `target_link_libraries`, значит собирается после его POST_BUILD публикации.
+- Комментарий в `CMakeLists.txt` дополнен полной историей round 6 (найденный факт: скрипт не запускается ни разу за 3 попытки диагностики; вывод о классе vcxproj; ссылка на то, что копирование в runner не требует изменений).
+- Синтаксис проверен локально (`cmake -S . -B build` в изолированном stub-проекте на macOS с симлинками на реальные `.cpp`/`include`/`.cmd` файлы) — конфигурация дошла до Generate step без синтаксических ошибок CMake (единственная ошибка — несвязанный "cannot determine link language", т.к. stub-проект объявлен `LANGUAGES C`, а файлы `.cpp`; это артефакт минимального stub, не проблема самого файла).
+- Verified by: **не проверено** реальным Windows CI — агент работает на macOS, `flutter build windows`/MSBuild недоступны локально.
+
+#### In Progress
+- Ожидание: пользователь коммитит/пушит `windows/editor_plugin/CMakeLists.txt`, перезапускает `build-windows`, присылает новый лог.
+- Если MSB1008 повторится и на этот раз — это будет сильным сигналом, что гипотеза про "класс vcxproj" тоже неверна, и стоит рассмотреть более радикальный обход: вынести публикацию C# полностью из CMake (например, отдельным шагом в `build.yml` после `flutter build windows`, вызывающим `dotnet publish` напрямую из PowerShell, без участия MSBuild/CMake custom-build вообще).
+
+**Ended at**: round 6 fix применён (структурный, не content-level), ждёт реального CI.
+**Handoff notes**: если round 6 не поможет — не пробовать ещё один content-level фикс на том же механизме; следующий шаг — вынести публикацию из CMake в `build.yml` напрямую (см. "In Progress" выше), т.к. 6 раундов (5 content-level + 1 структурный) исчерпывают разумные варианты чинить это внутри CMake/MSBuild custom-build-step на этом тулсете.
+
+#### Deviations from Plan
+- Вне scope `03-plan.md` (Docker Build), продолжение той же нити round 1-5 по решению пользователя (см. Context Notes в `_status.md`).
