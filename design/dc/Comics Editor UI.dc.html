@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#2f2f2e}
+  body{font-family:"Segoe UI",Tahoma,Geneva,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#0645ad}a:hover{color:#0b0080}
+  fieldset{margin:0}
+  legend{padding:0 4px}
+</style>
+</helmet>
+<div style="min-width:3720px;background:#2f2f2e;background-image:radial-gradient(#3a3a39 1px,transparent 1px);background-size:22px 22px;padding:56px 70px 90px;color:#111">
+
+  <div style="max-width:1100px;margin:0 0 46px">
+    <div style="font:700 13px 'Segoe UI',Tahoma,sans-serif;letter-spacing:.16em;color:#8ab4f8;text-transform:uppercase">Recreation · desktop app</div>
+    <h1 style="font:600 40px 'Segoe UI',Tahoma,sans-serif;color:#f3f3f0;margin:8px 0 10px">Comics Editor 2.8 — UI Specification</h1>
+    <p style="font:400 16px/1.5 'Segoe UI',Tahoma,sans-serif;color:#b6b6b2;margin:0;max-width:900px;text-wrap:pretty">Faithful reproduction of the WPF desktop editor (Comics.Editor). Every window, side panel, in-place editor and system dialog drawn as-is — no invented functionality. Windows Aero / .NET default theme. The companion web admin is out of scope.</p>
+  </div>
+
+  <!-- ============ SECTION: MAIN WINDOW STATES ============ -->
+  <div style="font:600 22px 'Segoe UI',Tahoma,sans-serif;color:#f3f3f0;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid #4a4a48">Main window states</div>
+  <div style="font:400 13px 'Segoe UI',Tahoma,sans-serif;color:#8f8f8b;margin:6px 0 26px">MainWindow.xaml — DockPanel: Menu (top) · content area · 300px side panel · selected-item editor.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;margin-bottom:64px">
+
+    <!-- FRAME: Initial (nothing opened) -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Startup — nothing opened</div>
+      <div style="width:560px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <!-- titlebar -->
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 7px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="width:16px;height:16px;border-radius:2px;background:linear-gradient(135deg,#f2b23e,#e07a2f);border:1px solid #b25f1f"></div>
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Comics Editor 2.8</div>
+          <div style="flex:1"></div>
+          <div style="width:29px;height:20px;display:flex;align-items:flex-end;justify-content:center;color:#33475f">﹘</div>
+          <div style="width:29px;height:20px;display:flex;align-items:center;justify-content:center;color:#33475f;font-size:11px">▢</div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <!-- menu (File only; Language + panels collapsed) -->
+        <div style="height:24px;display:flex;align-items:stretch;background:#f0f0f0;border-bottom:1px solid #dcdcdc">
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">File</div>
+        </div>
+        <!-- empty client -->
+        <div style="height:150px;background:#f0f0f0;display:flex;align-items:center;justify-content:center">
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#9a9a96">No document — File ▸ New ▸ Comics / Puzzle, or Open</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME: File menu open -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">File menu (open)</div>
+      <div style="width:360px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 7px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="width:16px;height:16px;border-radius:2px;background:linear-gradient(135deg,#f2b23e,#e07a2f);border:1px solid #b25f1f"></div>
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Comics Editor 2.8</div>
+          <div style="flex:1"></div>
+          <div style="width:29px;height:20px;display:flex;align-items:flex-end;justify-content:center;color:#33475f">﹘</div>
+          <div style="width:29px;height:20px;display:flex;align-items:center;justify-content:center;color:#33475f;font-size:11px">▢</div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="height:24px;display:flex;align-items:stretch;background:#f0f0f0;border-bottom:1px solid #dcdcdc;position:relative">
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111;background:#e3effb;border:1px solid #b4d5f2;border-bottom-color:#e3effb;margin-bottom:-1px">File</div>
+        </div>
+        <div style="position:relative;height:210px;background:#f0f0f0">
+          <!-- dropdown -->
+          <div style="position:absolute;left:0;top:0;width:214px;background:#f2f2f2;border:1px solid #a0a0a0;box-shadow:2px 3px 10px rgba(0,0,0,.28);padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 26px 5px 30px;background:#c5e0f7;border:1px solid #a8d2f0">New<span style="color:#555">▸</span></div>
+            <div style="padding:5px 26px 5px 30px">Open</div>
+            <div style="display:flex;justify-content:space-between;padding:5px 26px 5px 30px">Save<span style="color:#777;font-size:11px">Ctrl+S</span></div>
+            <div style="height:1px;background:#d7d7d7;margin:3px 2px 3px 30px"></div>
+            <div style="padding:5px 26px 5px 30px">Exit</div>
+          </div>
+          <!-- submenu New -->
+          <div style="position:absolute;left:214px;top:0;width:120px;background:#f2f2f2;border:1px solid #a0a0a0;box-shadow:2px 3px 10px rgba(0,0,0,.28);padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">
+            <div style="padding:5px 22px 5px 26px">Comics</div>
+            <div style="padding:5px 22px 5px 26px">Puzzle</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME: Language menu open -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Language menu (open) — visible once a document is loaded</div>
+      <div style="width:360px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 7px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="width:16px;height:16px;border-radius:2px;background:linear-gradient(135deg,#f2b23e,#e07a2f);border:1px solid #b25f1f"></div>
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Comics Editor 2.8 - beach.comics</div>
+          <div style="flex:1"></div>
+          <div style="width:29px;height:20px;display:flex;align-items:flex-end;justify-content:center;color:#33475f">﹘</div>
+          <div style="width:29px;height:20px;display:flex;align-items:center;justify-content:center;color:#33475f;font-size:11px">▢</div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="height:24px;display:flex;align-items:stretch;background:#f0f0f0;border-bottom:1px solid #dcdcdc">
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">File</div>
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111;background:#e3effb;border:1px solid #b4d5f2;border-bottom-color:#e3effb;margin-bottom:-1px">Language</div>
+        </div>
+        <div style="position:relative;height:150px;background:#f0f0f0">
+          <div style="position:absolute;left:44px;top:0;width:120px;background:#f2f2f2;border:1px solid #a0a0a0;box-shadow:2px 3px 10px rgba(0,0,0,.28);padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 22px 5px 8px;background:#c5e0f7;border:1px solid #a8d2f0"><span style="width:14px;color:#1a5fb4">✓</span>En</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 22px 5px 8px"><span style="width:14px"></span>Ru</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 22px 5px 8px"><span style="width:14px"></span>Hi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ HERO: COMICS MODE ============ -->
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;margin-bottom:64px">
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Comics mode — full window (ComicsControl + side panel + Layer editor)</div>
+      <div style="width:1300px;border:1px solid #5c5c5c;box-shadow:0 22px 60px rgba(0,0,0,.6);background:#f0f0f0">
+        <!-- titlebar -->
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 7px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="width:16px;height:16px;border-radius:2px;background:linear-gradient(135deg,#f2b23e,#e07a2f);border:1px solid #b25f1f"></div>
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Comics Editor 2.8 - beach.comics</div>
+          <div style="flex:1"></div>
+          <div style="width:29px;height:20px;display:flex;align-items:flex-end;justify-content:center;color:#33475f">﹘</div>
+          <div style="width:29px;height:20px;display:flex;align-items:center;justify-content:center;color:#33475f;font-size:11px">▢</div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <!-- menu -->
+        <div style="height:24px;display:flex;align-items:stretch;background:#f0f0f0;border-bottom:1px solid #dcdcdc">
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">File</div>
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">Language</div>
+        </div>
+        <!-- client dockpanel -->
+        <div style="display:flex;gap:5px;padding:0 5px 6px;background:#f0f0f0;height:790px">
+
+          <!-- comics canvas: viewbox with gray scrollviewer(black strip) + sounds column -->
+          <div style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:6px">
+            <div style="display:flex;align-items:stretch;height:770px">
+              <!-- ScrollViewer bg #EEEEEE -->
+              <div style="position:relative;width:470px;background:#eeeeee;border:1px solid #9aa0a6;overflow:hidden">
+                <!-- black comics grid -->
+                <div style="position:absolute;left:14px;top:-40px;width:442px;height:820px;background:#000;overflow:hidden">
+                  <!-- layer: sky (full bleed placeholder) -->
+                  <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#26384d 0 12px,#2b405a 12px 24px)"></div>
+                  <div style="position:absolute;left:8px;top:52px;font:11px ui-monospace,monospace;color:#8fb3d6">sky.png</div>
+                  <!-- layer: clouds -->
+                  <div style="position:absolute;left:40px;top:120px;width:230px;height:90px;background:repeating-linear-gradient(135deg,#3a3a3a 0 10px,#454545 10px 20px);opacity:.9"></div>
+                  <div style="position:absolute;left:50px;top:150px;font:11px ui-monospace,monospace;color:#c9c9c9">clouds.png</div>
+                  <!-- layer: hero (SELECTED) -->
+                  <div style="position:absolute;left:120px;top:330px;width:210px;height:300px">
+                    <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#4a3826 0 12px,#57422d 12px 24px)"></div>
+                    <div style="position:absolute;left:10px;top:10px;font:11px ui-monospace,monospace;color:#e7c9a3">hero.png</div>
+                    <!-- selection fill #7FBFFF @0.4 -->
+                    <div style="position:absolute;inset:0;background:rgba(127,191,255,.4);border:1px solid rgba(90,150,220,.9)"></div>
+                    <!-- scale/translate thumbs (black squares) -->
+                    <div style="position:absolute;left:-5px;top:-5px;width:10px;height:10px;background:#000"></div>
+                    <div style="position:absolute;right:-5px;top:-5px;width:10px;height:10px;background:#000"></div>
+                    <div style="position:absolute;left:-5px;bottom:-5px;width:10px;height:10px;background:#000"></div>
+                    <div style="position:absolute;right:-5px;bottom:-5px;width:10px;height:10px;background:#000"></div>
+                    <div style="position:absolute;left:calc(50% - 5px);top:-5px;width:10px;height:10px;background:#000"></div>
+                    <div style="position:absolute;left:calc(50% - 5px);bottom:-5px;width:10px;height:10px;background:#000"></div>
+                    <div style="position:absolute;left:-5px;top:calc(50% - 5px);width:10px;height:10px;background:#000"></div>
+                    <div style="position:absolute;right:-5px;top:calc(50% - 5px);width:10px;height:10px;background:#000"></div>
+                  </div>
+                  <!-- layer: foreground -->
+                  <div style="position:absolute;left:0;bottom:0;width:442px;height:130px;background:repeating-linear-gradient(135deg,#2d3d2a 0 12px,#374a32 12px 24px)"></div>
+                  <div style="position:absolute;left:10px;bottom:56px;font:11px ui-monospace,monospace;color:#b9d3a8">foreground.png</div>
+                </div>
+                <!-- vertical scrollbar -->
+                <div style="position:absolute;right:0;top:0;bottom:0;width:17px;background:#f0f0f0;border-left:1px solid #d4d4d4;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1px 0">
+                  <div style="width:15px;height:15px;background:linear-gradient(#f6f6f6,#e6e6e6);border:1px solid #b0b0b0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#555">▲</div>
+                  <div style="flex:1;width:11px;margin:2px 0;position:relative"><div style="position:absolute;left:0;right:0;top:12%;height:34%;background:linear-gradient(90deg,#e0e0e0,#cdcdcd);border:1px solid #a9a9a9;border-radius:2px"></div></div>
+                  <div style="width:15px;height:15px;background:linear-gradient(#f6f6f6,#e6e6e6);border:1px solid #b0b0b0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#555">▼</div>
+                </div>
+              </div>
+              <!-- sounds timeline column (SoundsControl horizontal) -->
+              <div style="display:flex;height:770px;border:1px solid #9aa0a6;border-left:0">
+                <div style="width:22px;position:relative;border-right:1px solid #d3d3d3">
+                  <div style="position:absolute;left:0;right:0;top:140px;height:180px;background:#cbe5ff;border-top:1px solid #9fccf3;border-bottom:1px solid #9fccf3"></div>
+                  <div style="position:absolute;left:0;right:0;top:230px;bottom:0;writing-mode:vertical-rl;font:10px ui-monospace,monospace;color:#5a6b7d;padding:6px 0 0 5px">wind.mp3</div>
+                </div>
+                <div style="width:22px;position:relative">
+                  <div style="position:absolute;left:0;right:0;top:420px;height:150px;background:#cbe5ff;border-top:1px solid #9fccf3;border-bottom:1px solid #9fccf3"></div>
+                  <div style="position:absolute;left:0;right:0;top:480px;bottom:0;writing-mode:vertical-rl;font:10px ui-monospace,monospace;color:#5a6b7d;padding:6px 0 0 5px">wave.mp3</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 300px side stack: Settings / Layers / Sounds -->
+          <div style="width:300px;display:flex;flex-direction:column;gap:6px;padding-top:6px">
+            <!-- Settings -->
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px 8px 10px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">Settings</legend>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                <span style="font:12px 'Segoe UI',Tahoma,sans-serif;width:44px">Width</span>
+                <input value="1080" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+                <span style="font:12px 'Segoe UI',Tahoma,sans-serif;width:44px;margin-left:8px">Height</span>
+                <input value="1920" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+              </div>
+              <button style="width:64px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Convert</button>
+            </fieldset>
+            <!-- Layers -->
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">Layers</legend>
+              <div style="display:flex;gap:5px;margin-bottom:6px">
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Add</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Up</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Down</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Delete</button>
+              </div>
+              <div style="height:200px;background:#fff;border:1px solid #abadb3;overflow:hidden;font:12px 'Segoe UI',Tahoma,sans-serif">
+                <div style="display:flex;align-items:center;gap:6px;padding:3px 5px"><input type="checkbox" checked style="margin:0">sky.png</div>
+                <div style="display:flex;align-items:center;gap:6px;padding:3px 5px"><input type="checkbox" checked style="margin:0">clouds.png</div>
+                <div style="display:flex;align-items:center;gap:6px;padding:3px 5px;background:#cbe5ff"><input type="checkbox" checked style="margin:0">hero.png</div>
+                <div style="display:flex;align-items:center;gap:6px;padding:3px 5px"><input type="checkbox" checked style="margin:0">foreground.png</div>
+              </div>
+            </fieldset>
+            <!-- Sounds -->
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">Sounds</legend>
+              <div style="display:flex;gap:5px;margin-bottom:6px">
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Add</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Up</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Down</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Delete</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:#cbe5ff;border:1px solid #6a97c4;border-radius:2px">Mute</button>
+              </div>
+              <div style="height:200px;background:#fff;border:1px solid #abadb3;overflow:hidden;font:12px 'Segoe UI',Tahoma,sans-serif">
+                <div style="padding:3px 5px;background:#cbe5ff">wind.mp3</div>
+                <div style="padding:3px 5px">wave.mp3</div>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- selected item editor: LayerControl (vertical) -->
+          <div style="width:300px;display:flex;flex-direction:column;gap:6px;padding-top:6px">
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Layer</legend>
+              <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#333;line-height:1.9">
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span style="width:58px">File (En):</span><input value="hero.png" readonly style="width:150px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><button style="width:25px;padding:2px 0;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">...</button></div>
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px"><span style="width:58px">Popup (En):</span><input value="" readonly style="width:150px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><button style="width:25px;padding:2px 0;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">...</button></div>
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span style="width:58px">File (Ru):</span><input value="hero.png" readonly style="width:150px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><button style="width:25px;padding:2px 0;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">...</button></div>
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px"><span style="width:58px">Popup (Ru):</span><input value="" readonly style="width:150px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><button style="width:25px;padding:2px 0;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">...</button></div>
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span style="width:58px">File (Hi):</span><input value="" readonly style="width:150px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><button style="width:25px;padding:2px 0;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">...</button></div>
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px"><span style="width:58px">Popup (Hi):</span><input value="" readonly style="width:150px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><button style="width:25px;padding:2px 0;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">...</button></div>
+                <label style="display:flex;align-items:center;gap:6px;padding-left:60px"><input type="checkbox" style="margin:0">Preview</label>
+              </div>
+            </fieldset>
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Animations</legend>
+              <div style="display:flex;gap:5px">
+                <div style="width:190px;height:150px;background:#fff;border:1px solid #abadb3;overflow:hidden;font:12px 'Segoe UI',Tahoma,sans-serif">
+                  <div style="padding:3px 5px;background:#cbe5ff">Translate</div>
+                  <div style="padding:3px 5px">Rotate</div>
+                  <div style="padding:3px 5px">Alpha</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <button style="width:65px;padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Translate</button>
+                  <button style="width:65px;padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Rotate</button>
+                  <button style="width:65px;padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Scale</button>
+                  <button style="width:65px;padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Alpha</button>
+                  <button style="width:65px;padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Delete</button>
+                </div>
+              </div>
+            </fieldset>
+            <!-- selected anim editor: Translate -->
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Translate</legend>
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif">
+                <span style="width:52px">Start</span><input value="0" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+                <span style="width:34px;margin-left:8px">End</span><input value="200" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;font:12px 'Segoe UI',Tahoma,sans-serif">
+                <span style="width:52px">X</span><input value="0" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+                <span style="width:34px;margin-left:8px">Y</span><input value="120" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+              </div>
+            </fieldset>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PUZZLE MODE ============ -->
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;margin-bottom:64px">
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Puzzle mode — full window (PuzzleControl: zoomable board + zoom slider + horizontal sounds)</div>
+      <div style="width:1160px;border:1px solid #5c5c5c;box-shadow:0 22px 60px rgba(0,0,0,.6);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 7px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="width:16px;height:16px;border-radius:2px;background:linear-gradient(135deg,#f2b23e,#e07a2f);border:1px solid #b25f1f"></div>
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Comics Editor 2.8 - island.puzzle</div>
+          <div style="flex:1"></div>
+          <div style="width:29px;height:20px;display:flex;align-items:flex-end;justify-content:center;color:#33475f">﹘</div>
+          <div style="width:29px;height:20px;display:flex;align-items:center;justify-content:center;color:#33475f;font-size:11px">▢</div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="height:24px;display:flex;align-items:stretch;background:#f0f0f0;border-bottom:1px solid #dcdcdc">
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif">File</div>
+          <div style="display:flex;align-items:center;padding:0 9px;font:12px 'Segoe UI',Tahoma,sans-serif">Language</div>
+        </div>
+        <div style="display:flex;gap:5px;padding:6px 5px;background:#f0f0f0;height:560px">
+          <!-- puzzle canvas -->
+          <div style="flex:1;display:flex;align-items:flex-start;gap:6px;padding-top:0">
+            <div style="display:flex;flex-direction:column">
+              <div style="display:flex;align-items:flex-start;gap:6px">
+                <!-- scrollviewer 400 tall, both scrollbars -->
+                <div style="position:relative;width:560px;height:400px;background:#eeeeee;border:1px solid #9aa0a6;overflow:hidden">
+                  <div style="position:absolute;left:16px;top:16px;width:520px;height:520px;background:#000">
+                    <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#243a4d 0 14px,#2c4557 14px 28px)"></div>
+                    <div style="position:absolute;left:120px;top:120px;width:230px;height:200px">
+                      <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#4a3826 0 12px,#57422d 12px 24px)"></div>
+                      <div style="position:absolute;inset:0;background:rgba(127,191,255,.4);border:1px solid rgba(90,150,220,.9)"></div>
+                      <div style="position:absolute;left:-5px;top:-5px;width:10px;height:10px;background:#000"></div>
+                      <div style="position:absolute;right:-5px;top:-5px;width:10px;height:10px;background:#000"></div>
+                      <div style="position:absolute;left:-5px;bottom:-5px;width:10px;height:10px;background:#000"></div>
+                      <div style="position:absolute;right:-5px;bottom:-5px;width:10px;height:10px;background:#000"></div>
+                    </div>
+                    <div style="position:absolute;left:12px;top:12px;font:11px ui-monospace,monospace;color:#8fb3d6">piece_bg.png</div>
+                  </div>
+                  <!-- v scrollbar -->
+                  <div style="position:absolute;right:0;top:0;bottom:17px;width:17px;background:#f0f0f0;border-left:1px solid #d4d4d4"></div>
+                  <!-- h scrollbar -->
+                  <div style="position:absolute;left:0;right:17px;bottom:0;height:17px;background:#f0f0f0;border-top:1px solid #d4d4d4"></div>
+                  <div style="position:absolute;right:0;bottom:0;width:17px;height:17px;background:#f0f0f0;border-left:1px solid #d4d4d4;border-top:1px solid #d4d4d4"></div>
+                </div>
+                <!-- vertical zoom slider 0.125..1 -->
+                <div style="display:flex;flex-direction:column;align-items:center;height:200px;padding-top:0">
+                  <div style="width:2px;flex:1;background:#a9a9a9;position:relative;margin:4px 0">
+                    <div style="position:absolute;left:-6px;top:60px;width:14px;height:9px;background:linear-gradient(#fdfdfd,#e6e6e6);border:1px solid #707070;border-radius:2px"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- SoundsControl horizontal (vertical orientation of anims stacked) below board -->
+              <div style="margin-top:6px;display:flex;flex-direction:column;border:1px solid #9aa0a6;width:560px">
+                <div style="height:20px;position:relative;border-bottom:1px solid #d3d3d3">
+                  <div style="position:absolute;top:0;bottom:0;left:120px;width:170px;background:#cbe5ff;border-left:1px solid #9fccf3;border-right:1px solid #9fccf3"></div>
+                  <div style="position:absolute;left:126px;top:3px;font:10px ui-monospace,monospace;color:#5a6b7d">theme.mp3</div>
+                </div>
+                <div style="height:20px;position:relative">
+                  <div style="position:absolute;top:0;bottom:0;left:300px;width:120px;background:#cbe5ff;border-left:1px solid #9fccf3;border-right:1px solid #9fccf3"></div>
+                  <div style="position:absolute;left:306px;top:3px;font:10px ui-monospace,monospace;color:#5a6b7d">click.mp3</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- side panels (same 300) condensed -->
+          <div style="width:280px;display:flex;flex-direction:column;gap:6px">
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px 8px 10px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Settings</legend>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif">
+                <span style="width:44px">Width</span><input value="1024" readonly style="width:70px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+                <span style="width:44px;margin-left:6px">Height</span><input value="768" readonly style="width:70px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+              </div>
+              <button style="width:64px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Convert</button>
+            </fieldset>
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Layers</legend>
+              <div style="display:flex;gap:5px;margin-bottom:6px">
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Add</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Up</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Down</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Delete</button>
+              </div>
+              <div style="height:150px;background:#fff;border:1px solid #abadb3;overflow:hidden;font:12px 'Segoe UI',Tahoma,sans-serif">
+                <div style="display:flex;align-items:center;gap:6px;padding:3px 5px;background:#cbe5ff"><input type="checkbox" checked style="margin:0">piece_bg.png</div>
+                <div style="display:flex;align-items:center;gap:6px;padding:3px 5px"><input type="checkbox" checked style="margin:0">piece_01.png</div>
+                <div style="display:flex;align-items:center;gap:6px;padding:3px 5px"><input type="checkbox" checked style="margin:0">piece_02.png</div>
+              </div>
+            </fieldset>
+            <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+              <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Sounds</legend>
+              <div style="display:flex;gap:5px;margin-bottom:6px">
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Add</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Up</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Down</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Delete</button>
+                <button style="width:50px;padding:3px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Mute</button>
+              </div>
+              <div style="height:150px;background:#fff;border:1px solid #abadb3;overflow:hidden;font:12px 'Segoe UI',Tahoma,sans-serif">
+                <div style="padding:3px 5px">theme.mp3</div>
+                <div style="padding:3px 5px">click.mp3</div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION: EDITORS ============ -->
+  <div style="font:600 22px 'Segoe UI',Tahoma,sans-serif;color:#f3f3f0;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid #4a4a48">Selected-item editors & animation panels</div>
+  <div style="font:400 13px 'Segoe UI',Tahoma,sans-serif;color:#8f8f8b;margin:6px 0 26px">Rendered in the right-most pane. Layer editor animation types share the Start/End frame range (AnimControl).</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start;margin-bottom:56px">
+
+    <!-- Sound editor -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Sound editor (SoundControl)</div>
+      <div style="width:320px;background:#f0f0f0;border:1px solid #cfcfcf;box-shadow:0 12px 32px rgba(0,0,0,.4);padding:8px;display:flex;flex-direction:column;gap:6px">
+        <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+          <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Sound</legend>
+          <div style="display:flex;align-items:center;gap:5px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:34px">File:</span><input value="wind.mp3" readonly style="width:170px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><button style="width:25px;padding:2px 0;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">...</button></div>
+        </fieldset>
+        <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+          <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Animations</legend>
+          <div style="display:flex;gap:5px">
+            <div style="width:200px;height:150px;background:#fff;border:1px solid #abadb3;overflow:hidden;font:12px 'Segoe UI',Tahoma,sans-serif">
+              <div style="padding:3px 5px;background:#cbe5ff">Sound</div>
+              <div style="padding:3px 5px">Sound</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <button style="width:65px;padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Add</button>
+              <button style="width:65px;padding:2px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Delete</button>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:8px">
+          <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Sound</legend>
+          <div style="display:flex;align-items:center;gap:5px;font:12px 'Segoe UI',Tahoma,sans-serif">
+            <span style="width:52px">Start</span><input value="1200" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+            <span style="width:34px;margin-left:8px">End</span><input value="1500" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px">
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <!-- Anim editors group -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Layer animation editors (ContentControl swaps by anim type)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;width:700px">
+        <!-- Translate -->
+        <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:9px;background:#f0f0f0;box-shadow:0 8px 22px rgba(0,0,0,.35);width:absolute">
+          <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Translate</legend>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:44px">Start</span><input value="0" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px">End</span><input value="200" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+          <div style="display:flex;align-items:center;gap:5px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:44px">X</span><input value="0" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px">Y</span><input value="120" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+        </fieldset>
+        <!-- Rotate -->
+        <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:9px;background:#f0f0f0;box-shadow:0 8px 22px rgba(0,0,0,.35)">
+          <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Rotate</legend>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:56px">Start</span><input value="0" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px">End</span><input value="200" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:56px">Center X</span><input value="105" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px;white-space:nowrap">Center Y</span><input value="150" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+          <div style="display:flex;align-items:center;gap:5px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:56px">Angle</span><input value="45" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+        </fieldset>
+        <!-- Scale -->
+        <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:9px;background:#f0f0f0;box-shadow:0 8px 22px rgba(0,0,0,.35)">
+          <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Scale</legend>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:56px">Start</span><input value="0" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px">End</span><input value="200" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:56px">Center X</span><input value="105" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px;white-space:nowrap">Center Y</span><input value="150" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+          <div style="display:flex;align-items:center;gap:5px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:56px">Scale X</span><input value="1.5" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px;white-space:nowrap">Scale Y</span><input value="1.5" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+        </fieldset>
+        <!-- Alpha -->
+        <fieldset style="border:1px solid #d5dfe5;border-radius:3px;padding:9px;background:#f0f0f0;box-shadow:0 8px 22px rgba(0,0,0,.35)">
+          <legend style="font:12px 'Segoe UI',Tahoma,sans-serif">Alpha</legend>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:44px">Start</span><input value="0" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"><span style="width:26px;margin-left:8px">End</span><input value="200" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+          <div style="display:flex;align-items:center;gap:5px;font:12px 'Segoe UI',Tahoma,sans-serif"><span style="width:44px">Alpha</span><input value="0.5" readonly style="width:80px;background:#fff;border:1px solid #abadb3;font:12px 'Segoe UI',Tahoma,sans-serif;padding:2px 3px"></div>
+        </fieldset>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SECTION: DIALOGS ============ -->
+  <div style="font:600 22px 'Segoe UI',Tahoma,sans-serif;color:#f3f3f0;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid #4a4a48">System dialogs</div>
+  <div style="font:400 13px 'Segoe UI',Tahoma,sans-serif;color:#8f8f8b;margin:6px 0 26px">Standard Windows Open / Save file dialogs (filters differ per action) and the duplicate-file error message box.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start">
+
+    <!-- Open dialog -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Open — File ▸ Open</div>
+      <div style="width:520px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 9px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Open</div><div style="flex:1"></div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <span style="color:#555">◀ ▶</span>
+          <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px;color:#333">Computer ▸ Projects ▸ comics</div>
+          <div style="background:#fff;border:1px solid #abadb3;padding:3px 6px;color:#888;width:90px">Search 🔍</div>
+        </div>
+        <div style="display:flex;height:230px">
+          <div style="width:150px;background:#f6f6f6;border-right:1px solid #e0e0e0;font:12px 'Segoe UI',Tahoma,sans-serif;color:#333;padding:6px 0">
+            <div style="padding:3px 12px;color:#666">★ Favorites</div>
+            <div style="padding:3px 12px 3px 24px">Desktop</div>
+            <div style="padding:3px 12px 3px 24px">Downloads</div>
+            <div style="padding:3px 12px;color:#666;margin-top:6px">💻 Computer</div>
+            <div style="padding:3px 12px 3px 24px;background:#dcebfc">comics</div>
+          </div>
+          <div style="flex:1;background:#fff;font:12px 'Segoe UI',Tahoma,sans-serif;padding:6px 0">
+            <div style="display:flex;align-items:center;gap:7px;padding:3px 12px;background:#dcebfc"><span>📄</span>beach.comics</div>
+            <div style="display:flex;align-items:center;gap:7px;padding:3px 12px"><span>📄</span>city.comics</div>
+            <div style="display:flex;align-items:center;gap:7px;padding:3px 12px"><span>🧩</span>island.puzzle</div>
+            <div style="display:flex;align-items:center;gap:7px;padding:3px 12px"><span>🧩</span>maze.puzzle</div>
+          </div>
+        </div>
+        <div style="padding:10px;border-top:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="width:66px">File name:</span>
+            <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px">beach.comics</div>
+            <div style="width:230px;background:#fff;border:1px solid #abadb3;padding:3px 6px;display:flex;justify-content:space-between;color:#333">Comics and puzzle files (*.comics, *.puzzle)<span>▼</span></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Open</button>
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save As dialog -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Save As — File ▸ Save (new / untitled doc)</div>
+      <div style="width:520px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 9px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Save As</div><div style="flex:1"></div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <span style="color:#555">◀ ▶</span>
+          <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px;color:#333">Computer ▸ Projects ▸ comics</div>
+          <div style="background:#fff;border:1px solid #abadb3;padding:3px 6px;color:#888;width:90px">Search 🔍</div>
+        </div>
+        <div style="display:flex;height:230px">
+          <div style="width:150px;background:#f6f6f6;border-right:1px solid #e0e0e0;font:12px 'Segoe UI',Tahoma,sans-serif;color:#333;padding:6px 0">
+            <div style="padding:3px 12px;color:#666">★ Favorites</div>
+            <div style="padding:3px 12px 3px 24px">Desktop</div>
+            <div style="padding:3px 12px 3px 24px">Downloads</div>
+            <div style="padding:3px 12px;color:#666;margin-top:6px">💻 Computer</div>
+            <div style="padding:3px 12px 3px 24px;background:#dcebfc">comics</div>
+          </div>
+          <div style="flex:1;background:#fff;font:12px 'Segoe UI',Tahoma,sans-serif;padding:6px 0">
+            <div style="display:flex;align-items:center;gap:7px;padding:3px 12px"><span>📄</span>beach.comics</div>
+            <div style="display:flex;align-items:center;gap:7px;padding:3px 12px"><span>📄</span>city.comics</div>
+          </div>
+        </div>
+        <div style="padding:10px;border-top:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="width:66px">File name:</span>
+            <div style="flex:1;background:#fff;border:1px solid #569de5;box-shadow:0 0 0 1px #a3ccf0;padding:3px 6px">untitled.comics</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="width:66px">Save as type:</span>
+            <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px;display:flex;justify-content:space-between;color:#333">Comics files (*.comics)<span>▼</span></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Save</button>
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add image dialog -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Add layer / change image — filter: Image files (*.jpg, *.png)</div>
+      <div style="width:420px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 9px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Open</div><div style="flex:1"></div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <span style="color:#555">◀ ▶</span>
+          <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px;color:#333">comics ▸ layers</div>
+        </div>
+        <div style="height:150px;background:#fff;font:12px 'Segoe UI',Tahoma,sans-serif;padding:6px 0;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px 10px;padding-left:12px">
+          <div style="width:70px;text-align:center;padding:4px 0"><div style="width:52px;height:52px;margin:0 auto;background:repeating-linear-gradient(135deg,#c9d4df 0 6px,#dbe3ec 6px 12px);border:1px solid #b7c0ca"></div><div style="font-size:11px;margin-top:3px">sky.png</div></div>
+          <div style="width:70px;text-align:center;padding:4px 0;background:#dcebfc"><div style="width:52px;height:52px;margin:0 auto;background:repeating-linear-gradient(135deg,#c9b79f 0 6px,#d8c8b2 6px 12px);border:1px solid #b7c0ca"></div><div style="font-size:11px;margin-top:3px">hero.png</div></div>
+          <div style="width:70px;text-align:center;padding:4px 0"><div style="width:52px;height:52px;margin:0 auto;background:repeating-linear-gradient(135deg,#a8c39c 0 6px,#bcd2b1 6px 12px);border:1px solid #b7c0ca"></div><div style="font-size:11px;margin-top:3px">tree.jpg</div></div>
+        </div>
+        <div style="padding:10px;border-top:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="width:60px">File name:</span>
+            <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px">hero.png</div>
+            <div style="width:150px;background:#fff;border:1px solid #abadb3;padding:3px 6px;display:flex;justify-content:space-between;color:#333">Image files (*.jpg, *.png)<span>▼</span></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Open</button>
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add audio dialog -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Add sound — filter: Audio files (*.mp3)</div>
+      <div style="width:420px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 9px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Open</div><div style="flex:1"></div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <span style="color:#555">◀ ▶</span>
+          <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px;color:#333">comics ▸ sounds</div>
+        </div>
+        <div style="height:150px;background:#fff;font:12px 'Segoe UI',Tahoma,sans-serif;padding:6px 0">
+          <div style="display:flex;align-items:center;gap:7px;padding:3px 12px"><span>🎵</span>wind.mp3</div>
+          <div style="display:flex;align-items:center;gap:7px;padding:3px 12px;background:#dcebfc"><span>🎵</span>wave.mp3</div>
+          <div style="display:flex;align-items:center;gap:7px;padding:3px 12px"><span>🎵</span>theme.mp3</div>
+        </div>
+        <div style="padding:10px;border-top:1px solid #dcdcdc;font:12px 'Segoe UI',Tahoma,sans-serif">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="width:60px">File name:</span>
+            <div style="flex:1;background:#fff;border:1px solid #abadb3;padding:3px 6px">wave.mp3</div>
+            <div style="width:150px;background:#fff;border:1px solid #abadb3;padding:3px 6px;display:flex;justify-content:space-between;color:#333">Audio files (*.mp3)<span>▼</span></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Open</button>
+            <button style="width:78px;padding:4px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#f5f5f5,#e9e9e9);border:1px solid #707070;border-radius:2px">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error messagebox -->
+    <div>
+      <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#b9b9b5;margin:0 0 8px 2px">Duplicate-file error (Image.cs)</div>
+      <div style="width:360px;border:1px solid #5c5c5c;box-shadow:0 16px 44px rgba(0,0,0,.55);background:#f0f0f0">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding:0 4px 0 9px;background:linear-gradient(#fbfdff,#dfe8f4);border-bottom:1px solid #b6c4d6">
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#26476b">Error</div><div style="flex:1"></div>
+          <div style="width:43px;height:20px;display:flex;align-items:center;justify-content:center;background:#e6564a;color:#fff;font-size:12px">✕</div>
+        </div>
+        <div style="padding:22px 20px 16px;display:flex;align-items:center;gap:16px">
+          <div style="width:32px;height:32px;border-radius:50%;background:#e74c3c;color:#fff;display:flex;align-items:center;justify-content:center;font:700 22px 'Segoe UI',Tahoma,sans-serif;flex:none">✕</div>
+          <div style="font:12px 'Segoe UI',Tahoma,sans-serif;color:#111">File with this name already exists.</div>
+        </div>
+        <div style="padding:0 16px 16px;display:flex;justify-content:center">
+          <button style="width:88px;padding:5px 0;font:12px 'Segoe UI',Tahoma,sans-serif;background:linear-gradient(#eaf3fc,#d6e9fb);border:1px solid #3c7fb1;border-radius:2px">OK</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

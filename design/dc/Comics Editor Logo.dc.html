@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/styles.css">
+  <script src="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/_ds_bundle.js"></script>
+  <style>body{margin:0;background:#fff}a{color:#00ace8}a:hover{color:#0091c4}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:40px;padding:56px 24px;font-family:'Roboto',sans-serif">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+    <div style="font-size:22px;font-weight:500;color:#212121">Comics Editor — логотип</div>
+    <div style="font-size:14px;font-weight:300;color:#9b9b9b">Балун-запятая со вписанным леттеринг-смайликом</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:center;justify-content:center">
+    <!-- Primary badge -->
+    <svg width="320" height="320" viewBox="0 0 400 400">
+      <circle cx="200" cy="200" r="196" fill="{{ ringColor }}"></circle>
+      <circle cx="200" cy="200" r="182" fill="{{ discColor }}"></circle>
+      <g>{{ arcText }}</g>
+      <!-- comma balloon -->
+      <g transform="translate(0,20)">
+        <circle cx="200" cy="188" r="88" fill="{{ balloonColor }}"></circle>
+        <path d="M 250 243 C 274 292 258 328 206 344 C 236 312 234 284 209 260 Z" fill="{{ balloonColor }}"></path>
+        <!-- lettering smiley -->
+        <g stroke="{{ faceColor }}" stroke-width="13" stroke-linecap="round" fill="none">
+          <path d="M 168 162 q 2 14 -1 24"></path>
+          <path d="M 230 160 q 4 13 1 25"></path>
+          <path d="M 152 216 q 44 44 96 -6"></path>
+        </g>
+      </g>
+    </svg>
+    <!-- Mark only -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+      <svg width="160" height="160" viewBox="0 0 400 400">
+        <circle cx="200" cy="172" r="120" fill="{{ balloonColor }}"></circle>
+        <path d="M 272 250 C 308 322 284 372 208 396 C 252 350 250 302 216 268 Z" fill="{{ balloonColor }}"></path>
+        <g stroke="{{ faceColor }}" stroke-width="17" stroke-linecap="round" fill="none">
+          <path d="M 156 136 q 3 18 -1 32"></path>
+          <path d="M 240 134 q 5 17 1 33"></path>
+          <path d="M 134 208 q 60 60 132 -8"></path>
+        </g>
+      </svg>
+      <div style="font-size:13px;color:#9b9b9b;font-weight:300">Знак без бейджа</div>
+    </div>
+    <!-- Small sizes -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+      <div style="display:flex;align-items:flex-end;gap:20px">
+        <svg width="96" height="96" viewBox="0 0 400 400">
+          <circle cx="200" cy="200" r="196" fill="{{ ringColor }}"></circle>
+          <circle cx="200" cy="200" r="182" fill="{{ discColor }}"></circle>
+          <g transform="translate(0,-4)">
+            <circle cx="200" cy="188" r="104" fill="{{ balloonColor }}"></circle>
+            <path d="M 262 250 C 292 312 272 352 212 372 C 248 330 246 292 218 262 Z" fill="{{ balloonColor }}"></path>
+            <g stroke="{{ faceColor }}" stroke-width="15" stroke-linecap="round" fill="none">
+              <path d="M 162 158 q 3 16 -1 28"></path>
+              <path d="M 236 156 q 5 15 1 29"></path>
+              <path d="M 142 222 q 52 52 116 -7"></path>
+            </g>
+          </g>
+        </svg>
+        <svg width="48" height="48" viewBox="0 0 400 400">
+          <circle cx="200" cy="200" r="196" fill="{{ ringColor }}"></circle>
+          <circle cx="200" cy="200" r="182" fill="{{ discColor }}"></circle>
+          <g transform="translate(0,-4)">
+            <circle cx="200" cy="188" r="104" fill="{{ balloonColor }}"></circle>
+            <g stroke="{{ faceColor }}" stroke-width="18" stroke-linecap="round" fill="none">
+              <path d="M 162 158 q 3 16 -1 28"></path>
+              <path d="M 236 156 q 5 15 1 29"></path>
+              <path d="M 142 222 q 52 52 116 -7"></path>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div style="font-size:13px;color:#9b9b9b;font-weight:300">App icon · без текста</div>
+    </div>
+  </div>
+  <div style="max-width:560px;font-size:14px;line-height:1.5;font-weight:300;color:#616161;border-top:1px solid #e0e0e0;padding-top:20px">
+    Форма — запятая-балун (тело реплики + хвост), внутри — рукописный смайлик как знак леттеринга. Палитра HolySpots: циан #00ace8 на чёрном диске, белая дуговая надпись Roboto Bold.
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;wordmark&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;COMICS EDITOR&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#00ace8&quot;,&quot;options&quot;:[&quot;#00ace8&quot;,&quot;#47bfed&quot;,&quot;#fe835d&quot;,&quot;#60aae5&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;inverted&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const inverted = this.props.inverted ?? false;
+    const word = this.props.wordmark ?? 'COMICS EDITOR';
+    const n = word.length, spread = Math.min(160, n * 12.5), r = 138;
+    const arcText = [...word].map((ch, i) => {
+      const a = (n === 1 ? 0 : -spread / 2 + i * (spread / (n - 1))) * Math.PI / 180;
+      const x = (200 + r * Math.sin(a)).toFixed(1), y = (200 - r * Math.cos(a)).toFixed(1);
+      return React.createElement('text', {
+        key: i,
+        transform: `translate(${x} ${y}) rotate(${(a * 180 / Math.PI).toFixed(1)})`,
+        fontFamily: 'Roboto, sans-serif', fontSize: 44, fontWeight: 700,
+        fill: '#ffffff', textAnchor: 'middle'
+      }, ch);
+    });
+    return {
+      arcText,
+      wordmark: this.props.wordmark ?? 'COMICS EDITOR',
+      ringColor: this.props.accent ?? '#00ace8',
+      balloonColor: inverted ? '#111111' : (this.props.accent ?? '#00ace8'),
+      discColor: inverted ? (this.props.accent ?? '#00ace8') : '#111111',
+      faceColor: inverted ? (this.props.accent ?? '#00ace8') : '#111111'
+    };
+  }
+}
+</script>
+</body>
+</html>

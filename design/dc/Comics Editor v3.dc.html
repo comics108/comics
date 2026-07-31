@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/colors.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/typography.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/effects.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/styles.css">
+<script src="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/_ds_bundle.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1e2126}
+  body{font-family:var(--font-core)}
+  a{color:var(--color-link)}a:hover{color:var(--color-primary-hover)}
+</style>
+</helmet>
+<div style="min-width:3400px;background:#1e2126;background-image:radial-gradient(#2a2e34 1.2px,transparent 1.2px);background-size:24px 24px;padding:60px 72px 100px;color:#e8eef1">
+
+  <div style="max-width:1000px;margin:0 0 48px">
+    <div style="display:inline-flex;align-items:center;gap:10px;font:500 12px var(--font-core);letter-spacing:.18em;color:var(--blue-400);text-transform:uppercase">Redesign · v3.0 · HolySpots DS</div>
+    <h1 style="font:500 42px var(--font-core);color:#fff;margin:10px 0 12px;letter-spacing:-.01em">Comics Editor 3.0</h1>
+    <p style="font:300 17px/1.5 var(--font-core);color:#aab6bd;margin:0;max-width:880px;text-wrap:pretty">Same tools as v2.8 — layers, sounds, per-language artwork, Translate / Rotate / Scale / Alpha animations, puzzle mode — rebuilt as one calm, timeline-driven workspace that works with a mouse on Desktop and with touch on iPad. Sky-blue accent, cloud canvas, Roboto, coral for destructive actions.</p>
+  </div>
+
+  <!-- ============ DESKTOP ============ -->
+  <div style="font:500 22px var(--font-core);color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid #343a41">Desktop workspace</div>
+  <div style="font:300 14px var(--font-core);color:#8b969d;margin:8px 0 26px">Three panes — Scene · Canvas · Properties — over a global timeline. Hover states active; 1440×920.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:60px;align-items:flex-start;margin-bottom:70px">
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Comics document · layer selected</div>
+      <div style="width:1440px;height:920px;background:var(--surface-cloud);border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column">
+
+        <!-- TOP BAR -->
+        <div style="height:60px;flex:none;background:var(--white);border-bottom:1px solid var(--divider-tab);display:flex;align-items:center;gap:16px;padding:0 16px">
+          <!-- brand -->
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--blue-500);position:relative;flex:none">
+              <div style="position:absolute;left:8px;top:9px;width:18px;height:4px;border-radius:2px;background:#fff;opacity:.95"></div>
+              <div style="position:absolute;left:8px;top:15px;width:18px;height:4px;border-radius:2px;background:#fff;opacity:.7"></div>
+              <div style="position:absolute;left:8px;top:21px;width:18px;height:4px;border-radius:2px;background:#fff;opacity:.45"></div>
+            </div>
+            <div style="font:500 17px var(--font-core);color:var(--text-title)">Comics Editor</div>
+            <div style="font:500 11px var(--font-core);color:var(--blue-500);background:var(--blue-100);border-radius:20px;padding:3px 8px">3.0</div>
+          </div>
+          <div style="width:1px;height:28px;background:var(--divider)"></div>
+          <!-- document name -->
+          <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);background:var(--gray-50);cursor:pointer">
+            <img src="assets/icon_picture.png" style="height:16px;opacity:.6">
+            <span style="font:400 15px var(--font-core);color:var(--text-body)">beach.comics</span>
+            <img src="assets/arrow-blue.png" style="height:8px;margin-left:4px">
+          </div>
+          <div style="flex:1"></div>
+          <!-- actions -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <button style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:var(--white);color:var(--color-primary);font:500 14px var(--font-core);cursor:pointer"><img src="assets/add.png" style="height:16px">New</button>
+            <button style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:var(--white);color:var(--color-primary);font:500 14px var(--font-core);cursor:pointer"><img src="assets/icon_search.png" style="height:16px">Open</button>
+            <x-import component-from-global-scope="HolySpotsDesignSystem_cfcab4.Button" size="md" style="height:38px;padding:0 16px;font-size:14px;gap:8px" hint-size="auto,38px"><img src="assets/icon_download.png" style="height:16px"/>Save</x-import>
+          </div>
+          <div style="width:1px;height:28px;background:var(--divider)"></div>
+          <!-- language segmented -->
+          <div style="display:inline-flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:38px">
+            <div style="display:flex;align-items:center;padding:0 14px;font:500 14px var(--font-core);background:var(--blue-500);color:#fff">En</div>
+            <div style="display:flex;align-items:center;padding:0 14px;font:400 14px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Ru</div>
+            <div style="display:flex;align-items:center;padding:0 14px;font:400 14px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Hi</div>
+          </div>
+        </div>
+
+        <!-- BODY: 3 columns -->
+        <div style="flex:1;display:flex;gap:10px;padding:10px;min-height:0">
+
+          <!-- LEFT: Scene -->
+          <div style="width:300px;flex:none;display:flex;flex-direction:column;gap:10px;min-height:0">
+            <!-- canvas settings -->
+            <div style="background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);padding:14px">
+              <div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Canvas</div>
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <label style="flex:1"><span style="display:block;font:400 12px var(--font-core);color:var(--text-secondary);margin-bottom:4px">Width</span><input value="1080" style="width:100%;height:38px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 10px;font:16px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+              <label style="flex:1"><span style="display:block;font:400 12px var(--font-core);color:var(--text-secondary);margin-bottom:4px">Height</span><input value="1920" style="width:100%;height:38px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 10px;font:16px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+                <button style="height:38px;padding:0 12px;border:0;border-radius:var(--radius-btn);background:var(--cloud-200);color:var(--color-primary);font:500 14px var(--font-core);cursor:pointer">Convert</button>
+              </div>
+            </div>
+            <!-- layers -->
+            <div style="background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
+              <div style="display:flex;align-items:center;padding:12px 12px 10px">
+                <div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;flex:1">Layers</div>
+                <div style="display:flex;gap:6px">
+                  <button title="Add" style="width:30px;height:30px;border:1px solid var(--cloud-200);border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/add.png" style="height:14px"></button>
+                  <button title="Up" style="width:30px;height:30px;border:1px solid var(--cloud-200);border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/arrow-blue.png" style="height:9px;transform:rotate(180deg)"></button>
+                  <button title="Down" style="width:30px;height:30px;border:1px solid var(--cloud-200);border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/arrow-blue.png" style="height:9px"></button>
+                  <button title="Delete" style="width:30px;height:30px;border:0;border-radius:6px;background:var(--cloud-200);display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/remove.png" style="height:12px"></button>
+                </div>
+              </div>
+              <div style="overflow:auto;flex:1">
+                <!-- row -->
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--divider-light)">
+                  <div style="width:34px;height:8px;border-radius:5px;background:var(--blue-500);position:relative;flex:none"><div style="position:absolute;right:1px;top:1px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+                  <div style="width:34px;height:34px;border-radius:4px;background:repeating-linear-gradient(135deg,#9fc3df 0 6px,#b3d1e6 6px 12px);flex:none"></div>
+                  <div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">sky.png</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--divider-light)">
+                  <div style="width:34px;height:8px;border-radius:5px;background:var(--blue-500);position:relative;flex:none"><div style="position:absolute;right:1px;top:1px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+                  <div style="width:34px;height:34px;border-radius:4px;background:repeating-linear-gradient(135deg,#cfd6db 0 6px,#e2e8ec 6px 12px);flex:none"></div>
+                  <div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">clouds.png</div>
+                </div>
+                <!-- selected -->
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--blue-100);border-left:3px solid var(--blue-500)">
+                  <div style="width:34px;height:8px;border-radius:5px;background:var(--blue-500);position:relative;flex:none"><div style="position:absolute;right:1px;top:1px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+                  <div style="width:34px;height:34px;border-radius:4px;background:repeating-linear-gradient(135deg,#caa987 0 6px,#dcc2a3 6px 12px);flex:none"></div>
+                  <div style="flex:1;font:500 14px var(--font-core);color:var(--text-title)">hero.png</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--divider-light)">
+                  <div style="width:34px;height:8px;border-radius:5px;background:var(--gray-400);position:relative;flex:none"><div style="position:absolute;left:1px;top:1px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+                  <div style="width:34px;height:34px;border-radius:4px;background:repeating-linear-gradient(135deg,#a7c19a 0 6px,#bcd4b0 6px 12px);flex:none;opacity:.5"></div>
+                  <div style="flex:1;font:400 14px var(--font-core);color:var(--text-secondary)">foreground.png</div>
+                </div>
+              </div>
+              <!-- sounds subsection -->
+              <div style="display:flex;align-items:center;padding:12px 12px 10px;border-top:1px solid var(--divider)">
+                <div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;flex:1">Sounds</div>
+                <div style="display:flex;gap:6px">
+                  <button title="Add" style="width:30px;height:30px;border:1px solid var(--cloud-200);border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/add.png" style="height:14px"></button>
+                  <button title="Mute" style="width:30px;height:30px;border:0;border-radius:6px;background:var(--cloud-200);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font:500 11px var(--font-core);color:var(--color-primary)">Mute</button>
+                  <button title="Delete" style="width:30px;height:30px;border:0;border-radius:6px;background:var(--cloud-200);display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/remove.png" style="height:12px"></button>
+                </div>
+              </div>
+              <div style="padding-bottom:6px">
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 12px">
+                  <div style="width:20px;height:20px;border-radius:4px;background:var(--coral-500);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/button_play.png" style="height:10px;filter:brightness(0) invert(1)"></div>
+                  <div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">wind.mp3</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 12px">
+                  <div style="width:20px;height:20px;border-radius:4px;background:var(--coral-500);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/button_play.png" style="height:10px;filter:brightness(0) invert(1)"></div>
+                  <div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">wave.mp3</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CENTER: canvas -->
+          <div style="flex:1;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);position:relative;overflow:hidden;min-width:0">
+            <!-- top ruler -->
+            <div style="position:absolute;left:0;right:0;top:0;height:24px;background:var(--gray-50);border-bottom:1px solid var(--divider);display:flex;align-items:flex-end;font:400 9px var(--font-core);color:var(--text-tertiary)">
+              <div style="width:200px;text-align:center;border-right:1px solid var(--divider);padding-bottom:2px">0</div>
+              <div style="width:200px;text-align:center;border-right:1px solid var(--divider);padding-bottom:2px">200</div>
+              <div style="width:200px;text-align:center;border-right:1px solid var(--divider);padding-bottom:2px">400</div>
+            </div>
+            <!-- viewport -->
+            <div style="position:absolute;left:0;right:0;top:24px;bottom:0;display:flex;align-items:center;justify-content:center;background:var(--surface-cloud)">
+              <!-- comic page -->
+              <div style="width:300px;height:520px;background:#0f1114;box-shadow:0 10px 40px rgba(0,0,0,.35);position:relative;overflow:hidden">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#26384d 0 14px,#2c4256 14px 28px)"></div>
+                <div style="position:absolute;left:10px;top:10px;font:400 11px var(--font-serif-data);color:#8fb3d6">sky.png</div>
+                <div style="position:absolute;left:40px;top:80px;width:150px;height:66px;background:repeating-linear-gradient(135deg,#43494f 0 10px,#4e555c 10px 20px);opacity:.9"></div>
+                <!-- selected hero + handles -->
+                <div style="position:absolute;left:70px;top:210px;width:160px;height:220px">
+                  <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#4a3826 0 12px,#57422d 12px 24px)"></div>
+                  <div style="position:absolute;left:8px;top:8px;font:400 11px var(--font-serif-data);color:#e7c9a3">hero.png</div>
+                  <div style="position:absolute;inset:0;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;left:-5px;top:-5px;width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <div style="position:absolute;right:-5px;top:-5px;width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <div style="position:absolute;left:-5px;bottom:-5px;width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <div style="position:absolute;right:-5px;bottom:-5px;width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <div style="position:absolute;left:calc(50% - 5px);top:-5px;width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <div style="position:absolute;left:calc(50% - 5px);bottom:-5px;width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <div style="position:absolute;left:-5px;top:calc(50% - 5px);width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <div style="position:absolute;right:-5px;top:calc(50% - 5px);width:10px;height:10px;background:#fff;border:1.5px solid var(--blue-500);border-radius:2px"></div>
+                  <!-- rotate handle -->
+                  <div style="position:absolute;left:calc(50% - 1px);top:-30px;width:2px;height:25px;background:var(--blue-500)"></div>
+                  <div style="position:absolute;left:calc(50% - 6px);top:-42px;width:12px;height:12px;border-radius:50%;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                </div>
+                <div style="position:absolute;left:0;bottom:0;width:100%;height:90px;background:repeating-linear-gradient(135deg,#2d3d2a 0 12px,#374a32 12px 24px);opacity:.5"></div>
+              </div>
+            </div>
+            <!-- zoom control -->
+            <div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:2px;background:var(--white);border-radius:var(--radius-btn);box-shadow:var(--shadow-card);padding:4px">
+              <button style="width:30px;height:30px;border:0;background:transparent;font:400 18px var(--font-core);color:var(--text-body);cursor:pointer">−</button>
+              <div style="font:500 13px var(--font-core);color:var(--text-body);width:48px;text-align:center">100%</div>
+              <button style="width:30px;height:30px;border:0;background:transparent;font:400 18px var(--font-core);color:var(--text-body);cursor:pointer">+</button>
+              <div style="width:1px;height:20px;background:var(--divider);margin:0 2px"></div>
+              <button title="Fit" style="width:30px;height:30px;border:0;background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/icon_locate.png" style="height:16px;opacity:.7"></button>
+            </div>
+            <!-- preview toggle -->
+            <div style="position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;background:var(--white);border-radius:var(--radius-btn);box-shadow:var(--shadow-card);padding:8px 12px">
+              <span style="font:400 13px var(--font-core);color:var(--text-body)">Preview</span>
+              <div style="width:38px;height:22px;border-radius:20px;background:var(--blue-500);position:relative"><div style="position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Properties -->
+          <div style="width:330px;flex:none;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:14px 14px 12px;border-bottom:1px solid var(--divider)">
+              <div style="width:28px;height:28px;border-radius:4px;background:repeating-linear-gradient(135deg,#caa987 0 6px,#dcc2a3 6px 12px);flex:none"></div>
+              <div style="flex:1;font:500 16px var(--font-core);color:var(--text-title)">hero.png</div>
+              <div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Layer</div>
+            </div>
+            <div style="overflow:auto;flex:1;padding:14px">
+              <!-- localized artwork -->
+              <div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Artwork · per language</div>
+              <div style="display:inline-flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:32px;margin-bottom:12px">
+                <div style="display:flex;align-items:center;padding:0 14px;font:500 13px var(--font-core);background:var(--blue-500);color:#fff">En</div>
+                <div style="display:flex;align-items:center;padding:0 14px;font:400 13px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Ru</div>
+                <div style="display:flex;align-items:center;padding:0 14px;font:400 13px var(--font-core);background:#fff;color:var(--text-secondary);border-left:1px solid var(--cloud-200)">Hi</div>
+              </div>
+              <div style="margin-bottom:10px"><span style="display:block;font:400 12px var(--font-core);color:var(--text-secondary);margin-bottom:4px">File</span>
+                <div style="display:flex;gap:6px"><div style="flex:1;height:38px;display:flex;align-items:center;padding:0 10px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);font:15px var(--font-serif-data);color:var(--color-primary);overflow:hidden;white-space:nowrap">hero.png</div><button style="width:38px;height:38px;border:0;border-radius:var(--radius-btn);background:var(--cloud-200);color:var(--color-primary);font:400 16px var(--font-core);cursor:pointer">…</button></div>
+              </div>
+              <div style="margin-bottom:12px"><span style="display:block;font:400 12px var(--font-core);color:var(--text-secondary);margin-bottom:4px">Popup</span>
+                <div style="display:flex;gap:6px"><div style="flex:1;height:38px;display:flex;align-items:center;padding:0 10px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);font:15px var(--font-serif-data);color:var(--text-tertiary);overflow:hidden;white-space:nowrap">— none —</div><button style="width:38px;height:38px;border:0;border-radius:var(--radius-btn);background:var(--cloud-200);color:var(--color-primary);font:400 16px var(--font-core);cursor:pointer">…</button></div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer"><div style="width:20px;height:20px;border-radius:5px;border:2px solid var(--cloud-200);background:#fff"></div><span style="font:400 14px var(--font-core);color:var(--text-body)">Preview this layer</span></label>
+
+              <!-- animations -->
+              <div style="display:flex;align-items:center;margin-bottom:10px"><div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;flex:1">Animations</div></div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+                <div style="height:30px;padding:0 12px;display:inline-flex;align-items:center;border-radius:var(--radius-chip);background:var(--blue-500);color:#fff;font:500 13px var(--font-core)">Translate</div>
+                <div style="height:30px;padding:0 12px;display:inline-flex;align-items:center;border-radius:var(--radius-chip);background:var(--cloud-200);color:var(--color-primary);font:400 13px var(--font-core)">Rotate</div>
+                <div style="height:30px;padding:0 12px;display:inline-flex;align-items:center;border-radius:var(--radius-chip);background:var(--cloud-200);color:var(--color-primary);font:400 13px var(--font-core)">Alpha</div>
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:16px">
+                <button style="flex:1;height:32px;border:1px dashed var(--gray-400);border-radius:var(--radius-chip);background:#fff;color:var(--text-secondary);font:400 12px var(--font-core);cursor:pointer">+ Translate</button>
+                <button style="flex:1;height:32px;border:1px dashed var(--gray-400);border-radius:var(--radius-chip);background:#fff;color:var(--text-secondary);font:400 12px var(--font-core);cursor:pointer">+ Rotate</button>
+                <button style="flex:1;height:32px;border:1px dashed var(--gray-400);border-radius:var(--radius-chip);background:#fff;color:var(--text-secondary);font:400 12px var(--font-core);cursor:pointer">+ Scale</button>
+                <button style="flex:1;height:32px;border:1px dashed var(--gray-400);border-radius:var(--radius-chip);background:#fff;color:var(--text-secondary);font:400 12px var(--font-core);cursor:pointer">+ Alpha</button>
+              </div>
+
+              <!-- selected anim params -->
+              <div style="border:1px solid var(--divider);border-radius:var(--radius-chip);padding:12px;background:var(--gray-50)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:10px;height:10px;border-radius:2px;background:var(--blue-500)"></div><div style="font:500 14px var(--font-core);color:var(--text-title);flex:1">Translate</div><button style="border:0;background:transparent;cursor:pointer"><img src="assets/remove.png" style="height:12px"></button></div>
+                <div style="display:flex;gap:8px;margin-bottom:8px">
+                  <label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Start</span><input value="0" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+                  <label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">End</span><input value="200" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">X</span><input value="0" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+                  <label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Y</span><input value="120" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIMELINE -->
+        <div style="height:190px;flex:none;background:var(--white);border-top:1px solid var(--divider);margin:0 10px 10px;border-radius:5px;box-shadow:var(--shadow-card);display:flex;overflow:hidden">
+          <!-- gutter -->
+          <div style="width:170px;flex:none;border-right:1px solid var(--divider)">
+            <div style="height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--divider)">
+              <button style="width:26px;height:26px;border:0;border-radius:50%;background:var(--blue-500);display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><img src="assets/button_play.png" style="height:11px;filter:brightness(0) invert(1)"></button>
+              <span style="font:500 12px var(--font-serif-data);color:var(--text-body)">frame 0</span>
+            </div>
+            <div style="height:30px;display:flex;align-items:center;padding:0 12px;font:400 13px var(--font-core);color:var(--text-body);border-bottom:1px solid var(--divider-light)">sky.png</div>
+            <div style="height:30px;display:flex;align-items:center;padding:0 12px;font:400 13px var(--font-core);color:var(--text-body);border-bottom:1px solid var(--divider-light)">clouds.png</div>
+            <div style="height:30px;display:flex;align-items:center;padding:0 12px;font:500 13px var(--font-core);color:var(--text-title);background:var(--blue-100);border-bottom:1px solid var(--divider-light)">hero.png</div>
+            <div style="height:30px;display:flex;align-items:center;padding:0 12px;font:400 13px var(--font-core);color:var(--coral-500);border-bottom:1px solid var(--divider-light)">wind.mp3</div>
+            <div style="height:30px;display:flex;align-items:center;padding:0 12px;font:400 13px var(--font-core);color:var(--coral-500)">wave.mp3</div>
+          </div>
+          <!-- tracks -->
+          <div style="flex:1;position:relative;overflow:hidden;background:linear-gradient(90deg,var(--gray-50) 0,var(--gray-50) 100%)">
+            <!-- frame ruler -->
+            <div style="height:34px;border-bottom:1px solid var(--divider);position:relative;font:400 9px var(--font-core);color:var(--text-tertiary)">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--divider)"></div>
+              <span style="position:absolute;left:6px;top:11px">0</span>
+              <div style="position:absolute;left:120px;top:0;bottom:0;width:1px;background:var(--divider)"></div><span style="position:absolute;left:126px;top:11px">100</span>
+              <div style="position:absolute;left:240px;top:0;bottom:0;width:1px;background:var(--divider)"></div><span style="position:absolute;left:246px;top:11px">200</span>
+              <div style="position:absolute;left:360px;top:0;bottom:0;width:1px;background:var(--divider)"></div><span style="position:absolute;left:366px;top:11px">300</span>
+              <div style="position:absolute;left:480px;top:0;bottom:0;width:1px;background:var(--divider)"></div><span style="position:absolute;left:486px;top:11px">400</span>
+              <div style="position:absolute;left:600px;top:0;bottom:0;width:1px;background:var(--divider)"></div><span style="position:absolute;left:606px;top:11px">500</span>
+            </div>
+            <!-- rows -->
+            <div style="height:30px;border-bottom:1px solid var(--divider-light);position:relative"></div>
+            <div style="height:30px;border-bottom:1px solid var(--divider-light);position:relative"><div style="position:absolute;left:60px;top:6px;height:18px;width:180px;border-radius:4px;background:var(--blue-300);opacity:.85"></div></div>
+            <div style="height:30px;border-bottom:1px solid var(--divider-light);position:relative;background:rgba(0,172,232,.05)">
+              <div style="position:absolute;left:0;top:6px;height:18px;width:240px;border-radius:4px;background:var(--blue-500);display:flex;align-items:center;padding:0 8px;font:500 10px var(--font-core);color:#fff">Translate</div>
+              <div style="position:absolute;left:250px;top:6px;height:18px;width:150px;border-radius:4px;background:var(--blue-300);display:flex;align-items:center;padding:0 8px;font:500 10px var(--font-core);color:#fff">Rotate</div>
+              <div style="position:absolute;left:410px;top:6px;height:18px;width:120px;border-radius:4px;background:var(--gray-500);display:flex;align-items:center;padding:0 8px;font:500 10px var(--font-core);color:#fff">Alpha</div>
+            </div>
+            <div style="height:30px;border-bottom:1px solid var(--divider-light);position:relative"><div style="position:absolute;left:170px;top:6px;height:18px;width:210px;border-radius:4px;background:var(--coral-500);opacity:.9"></div></div>
+            <div style="height:30px;position:relative"><div style="position:absolute;left:500px;top:6px;height:18px;width:140px;border-radius:4px;background:var(--coral-500);opacity:.9"></div></div>
+            <!-- playhead -->
+            <div style="position:absolute;left:120px;top:0;bottom:0;width:2px;background:var(--blue-600)"></div>
+            <div style="position:absolute;left:113px;top:0;width:16px;height:12px;background:var(--blue-600);clip-path:polygon(0 0,100% 0,50% 100%)"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ IPAD ============ -->
+  <div style="font:500 22px var(--font-core);color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid #343a41">iPad workspace</div>
+  <div style="font:300 14px var(--font-core);color:#8b969d;margin:8px 0 26px">Landscape split view — collapsible Scene rail, touch handles, Properties as a right sheet, timeline docks to the bottom. 44px minimum targets.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:60px;align-items:flex-start;margin-bottom:70px">
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">iPad Pro 11″ · landscape</div>
+      <!-- bezel -->
+      <div style="width:1240px;height:864px;background:#0b0d10;border-radius:32px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+        <div style="width:100%;height:100%;background:var(--surface-cloud);border-radius:20px;overflow:hidden;display:flex;flex-direction:column">
+          <!-- top bar -->
+          <div style="height:56px;flex:none;background:var(--white);border-bottom:1px solid var(--divider-tab);display:flex;align-items:center;gap:12px;padding:0 14px">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--blue-500);position:relative;flex:none"><div style="position:absolute;left:8px;top:8px;width:16px;height:3.5px;border-radius:2px;background:#fff"></div><div style="position:absolute;left:8px;top:14px;width:16px;height:3.5px;border-radius:2px;background:#fff;opacity:.7"></div><div style="position:absolute;left:8px;top:20px;width:16px;height:3.5px;border-radius:2px;background:#fff;opacity:.45"></div></div>
+            <div style="font:500 16px var(--font-core);color:var(--text-title)">beach.comics</div>
+            <div style="flex:1"></div>
+            <button style="width:44px;height:44px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:#fff;display:inline-flex;align-items:center;justify-content:center"><img src="assets/add.png" style="height:18px"></button>
+            <button style="width:44px;height:44px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:#fff;display:inline-flex;align-items:center;justify-content:center"><img src="assets/icon_search.png" style="height:18px"></button>
+            <button style="height:44px;padding:0 18px;border:0;border-radius:var(--radius-btn);background:var(--blue-500);color:#fff;font:500 15px var(--font-core);display:inline-flex;align-items:center;gap:8px"><img src="assets/icon_download.png" style="height:16px;filter:brightness(0) invert(1)">Save</button>
+            <div style="width:1px;height:26px;background:var(--divider)"></div>
+            <div style="display:inline-flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:44px">
+              <div style="display:flex;align-items:center;padding:0 16px;font:500 15px var(--font-core);background:var(--blue-500);color:#fff">En</div>
+              <div style="display:flex;align-items:center;padding:0 16px;font:400 15px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Ru</div>
+              <div style="display:flex;align-items:center;padding:0 16px;font:400 15px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Hi</div>
+            </div>
+          </div>
+          <!-- body -->
+          <div style="flex:1;display:flex;gap:8px;padding:8px;min-height:0">
+            <!-- scene rail (narrow, touch) -->
+            <div style="width:250px;flex:none;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;overflow:hidden">
+              <div style="display:flex;align-items:center;padding:12px 12px;border-bottom:1px solid var(--divider)"><div style="flex:1;font:500 12px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em">Layers</div><button style="width:36px;height:36px;border:1px solid var(--cloud-200);border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center"><img src="assets/add.png" style="height:15px"></button></div>
+              <div style="flex:1;overflow:auto">
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--divider-light)"><div style="width:38px;height:10px;border-radius:6px;background:var(--blue-500);position:relative;flex:none"><div style="position:absolute;right:1px;top:1px;width:8px;height:8px;border-radius:50%;background:#fff"></div></div><div style="width:38px;height:38px;border-radius:4px;background:repeating-linear-gradient(135deg,#9fc3df 0 6px,#b3d1e6 6px 12px);flex:none"></div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-body)">sky.png</div></div>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--divider-light)"><div style="width:38px;height:10px;border-radius:6px;background:var(--blue-500);position:relative;flex:none"><div style="position:absolute;right:1px;top:1px;width:8px;height:8px;border-radius:50%;background:#fff"></div></div><div style="width:38px;height:38px;border-radius:4px;background:repeating-linear-gradient(135deg,#cfd6db 0 6px,#e2e8ec 6px 12px);flex:none"></div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-body)">clouds.png</div></div>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--blue-100);border-left:3px solid var(--blue-500)"><div style="width:38px;height:10px;border-radius:6px;background:var(--blue-500);position:relative;flex:none"><div style="position:absolute;right:1px;top:1px;width:8px;height:8px;border-radius:50%;background:#fff"></div></div><div style="width:38px;height:38px;border-radius:4px;background:repeating-linear-gradient(135deg,#caa987 0 6px,#dcc2a3 6px 12px);flex:none"></div><div style="flex:1;font:500 15px var(--font-core);color:var(--text-title)">hero.png</div></div>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--divider-light)"><div style="width:38px;height:10px;border-radius:6px;background:var(--gray-400);position:relative;flex:none"><div style="position:absolute;left:1px;top:1px;width:8px;height:8px;border-radius:50%;background:#fff"></div></div><div style="width:38px;height:38px;border-radius:4px;background:repeating-linear-gradient(135deg,#a7c19a 0 6px,#bcd4b0 6px 12px);flex:none;opacity:.5"></div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-secondary)">foreground.png</div></div>
+              </div>
+              <div style="display:flex;align-items:center;padding:12px;border-top:1px solid var(--divider)"><div style="flex:1;font:500 12px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em">Sounds</div><button style="width:36px;height:36px;border:1px solid var(--cloud-200);border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center"><img src="assets/add.png" style="height:15px"></button></div>
+              <div style="padding-bottom:8px">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 12px"><div style="width:24px;height:24px;border-radius:5px;background:var(--coral-500);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/button_play.png" style="height:11px;filter:brightness(0) invert(1)"></div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-body)">wind.mp3</div></div>
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 12px"><div style="width:24px;height:24px;border-radius:5px;background:var(--coral-500);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/button_play.png" style="height:11px;filter:brightness(0) invert(1)"></div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-body)">wave.mp3</div></div>
+              </div>
+            </div>
+            <!-- canvas -->
+            <div style="flex:1;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);position:relative;overflow:hidden;min-width:0">
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface-cloud)">
+                <div style="width:260px;height:440px;background:#0f1114;box-shadow:0 10px 40px rgba(0,0,0,.35);position:relative;overflow:hidden">
+                  <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#26384d 0 14px,#2c4256 14px 28px)"></div>
+                  <div style="position:absolute;left:56px;top:170px;width:150px;height:200px">
+                    <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#4a3826 0 12px,#57422d 12px 24px)"></div>
+                    <div style="position:absolute;inset:0;border:2px solid var(--blue-500)"></div>
+                    <div style="position:absolute;left:-7px;top:-7px;width:14px;height:14px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div>
+                    <div style="position:absolute;right:-7px;top:-7px;width:14px;height:14px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div>
+                    <div style="position:absolute;left:-7px;bottom:-7px;width:14px;height:14px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div>
+                    <div style="position:absolute;right:-7px;bottom:-7px;width:14px;height:14px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:2px;background:var(--white);border-radius:var(--radius-btn);box-shadow:var(--shadow-card);padding:5px">
+                <button style="width:36px;height:36px;border:0;background:transparent;font:400 20px var(--font-core);color:var(--text-body)">−</button>
+                <div style="font:500 14px var(--font-core);color:var(--text-body);width:52px;text-align:center">100%</div>
+                <button style="width:36px;height:36px;border:0;background:transparent;font:400 20px var(--font-core);color:var(--text-body)">+</button>
+              </div>
+              <div style="position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;background:var(--white);border-radius:var(--radius-btn);box-shadow:var(--shadow-card);padding:9px 14px"><span style="font:400 14px var(--font-core);color:var(--text-body)">Preview</span><div style="width:42px;height:24px;border-radius:20px;background:var(--gray-400);position:relative"><div style="position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+            </div>
+            <!-- properties sheet -->
+            <div style="width:290px;flex:none;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid var(--divider)"><div style="width:30px;height:30px;border-radius:4px;background:repeating-linear-gradient(135deg,#caa987 0 6px,#dcc2a3 6px 12px)"></div><div style="flex:1;font:500 16px var(--font-core);color:var(--text-title)">hero.png</div></div>
+              <div style="flex:1;overflow:auto;padding:14px">
+                <div style="display:inline-flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:38px;margin-bottom:12px"><div style="display:flex;align-items:center;padding:0 16px;font:500 14px var(--font-core);background:var(--blue-500);color:#fff">En</div><div style="display:flex;align-items:center;padding:0 16px;font:400 14px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Ru</div><div style="display:flex;align-items:center;padding:0 16px;font:400 14px var(--font-core);background:#fff;color:var(--text-secondary);border-left:1px solid var(--cloud-200)">Hi</div></div>
+                <div style="margin-bottom:12px"><span style="display:block;font:400 12px var(--font-core);color:var(--text-secondary);margin-bottom:4px">File</span><div style="display:flex;gap:6px"><div style="flex:1;height:44px;display:flex;align-items:center;padding:0 10px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);font:15px var(--font-serif-data);color:var(--color-primary)">hero.png</div><button style="width:44px;height:44px;border:0;border-radius:var(--radius-btn);background:var(--cloud-200);color:var(--color-primary);font:400 18px var(--font-core)">…</button></div></div>
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><div style="width:22px;height:22px;border-radius:5px;border:2px solid var(--cloud-200);background:#fff"></div><span style="font:400 15px var(--font-core);color:var(--text-body)">Preview layer</span></label>
+                <div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Animations</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"><div style="height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:var(--radius-chip);background:var(--blue-500);color:#fff;font:500 14px var(--font-core)">Translate</div><div style="height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:var(--radius-chip);background:var(--cloud-200);color:var(--color-primary);font:400 14px var(--font-core)">Rotate</div></div>
+                <div style="border:1px solid var(--divider);border-radius:var(--radius-chip);padding:12px;background:var(--gray-50)"><div style="font:500 14px var(--font-core);color:var(--text-title);margin-bottom:10px">Translate</div><div style="display:flex;gap:8px;margin-bottom:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Start</span><input value="0" style="width:100%;height:40px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">End</span><input value="200" style="width:100%;height:40px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div><div style="display:flex;gap:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">X</span><input value="0" style="width:100%;height:40px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Y</span><input value="120" style="width:100%;height:40px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div></div>
+              </div>
+            </div>
+          </div>
+          <!-- timeline collapsed strip -->
+          <div style="height:64px;flex:none;background:var(--white);border-top:1px solid var(--divider);margin:0 8px 8px;border-radius:5px;box-shadow:var(--shadow-card);display:flex;align-items:center;padding:0 12px;gap:12px">
+            <button style="width:44px;height:44px;border:0;border-radius:50%;background:var(--blue-500);display:inline-flex;align-items:center;justify-content:center;flex:none"><img src="assets/button_play.png" style="height:15px;filter:brightness(0) invert(1)"></button>
+            <span style="font:500 13px var(--font-serif-data);color:var(--text-body);flex:none">frame 0</span>
+            <div style="flex:1;height:26px;position:relative;background:var(--gray-50);border-radius:6px;overflow:hidden">
+              <div style="position:absolute;left:0;top:5px;height:16px;width:38%;border-radius:4px;background:var(--blue-500)"></div>
+              <div style="position:absolute;left:40%;top:5px;height:16px;width:22%;border-radius:4px;background:var(--blue-300)"></div>
+              <div style="position:absolute;left:30%;top:5px;height:16px;width:30%;border-radius:4px;background:var(--coral-500);opacity:.55"></div>
+              <div style="position:absolute;left:24%;top:0;bottom:0;width:2px;background:var(--blue-600)"></div>
+            </div>
+            <button style="height:44px;padding:0 14px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:#fff;color:var(--color-primary);font:500 13px var(--font-core);flex:none">Timeline ▾</button>
+          </div>
+          <!-- home indicator -->
+          <div style="height:0"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DIALOGS + STATES ============ -->
+  <div style="font:500 22px var(--font-core);color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid #343a41">Dialogs, modes & inspector states</div>
+  <div style="font:300 14px var(--font-core);color:#8b969d;margin:8px 0 26px">Same actions as v2.8 — New (Comics / Puzzle), Open, Save, puzzle zoom, per-animation editors, duplicate-file error.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start;margin-bottom:56px">
+
+    <!-- New document -->
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">New — File ▸ New</div>
+      <div style="width:560px;background:var(--white);border-radius:5px;box-shadow:var(--shadow-dialog);overflow:hidden">
+        <div style="display:flex;align-items:center;padding:18px 20px;border-bottom:1px solid var(--divider)"><div style="flex:1;font:500 18px var(--font-core);color:var(--text-title)">New document</div><button style="width:32px;height:32px;border:0;background:transparent"><img src="assets/icon_close.png" style="height:16px;opacity:.5"></button></div>
+        <div style="display:flex;gap:16px;padding:20px">
+          <div style="flex:1;border:2px solid var(--blue-500);border-radius:var(--radius-card);overflow:hidden;cursor:pointer">
+            <div style="height:130px;background:repeating-linear-gradient(180deg,#26384d 0 22px,#2c4256 22px 44px);position:relative"><div style="position:absolute;left:14px;bottom:12px;font:400 11px var(--font-serif-data);color:#cfe0ef">vertical scroll</div></div>
+            <div style="padding:14px"><div style="font:500 16px var(--font-core);color:var(--text-title);margin-bottom:2px">Comics</div><div style="font:300 13px var(--font-core);color:var(--text-secondary)">Scrolling strip with timed layers &amp; sound.</div></div>
+          </div>
+          <div style="flex:1;border:1px solid var(--divider);border-radius:var(--radius-card);overflow:hidden;cursor:pointer">
+            <div style="height:130px;background:repeating-conic-gradient(#3a4a58 0 25%,#455663 0 50%) 0 0/44px 44px"></div>
+            <div style="padding:14px"><div style="font:500 16px var(--font-core);color:var(--text-title);margin-bottom:2px">Puzzle</div><div style="font:300 13px var(--font-core);color:var(--text-secondary)">Zoomable board of draggable pieces.</div></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding:0 20px 20px">
+          <button style="height:44px;padding:0 20px;border:0;border-radius:var(--radius-btn);background:var(--cloud-200);color:var(--color-danger);font:500 15px var(--font-core);cursor:pointer">Cancel</button>
+          <x-import component-from-global-scope="HolySpotsDesignSystem_cfcab4.Button" size="md" style="padding:0 22px" hint-size="auto,44px">Create</x-import>
+        </div>
+      </div>
+    </div>
+
+    <!-- Open -->
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Open — recent files</div>
+      <div style="width:480px;background:var(--white);border-radius:5px;box-shadow:var(--shadow-dialog);overflow:hidden">
+        <div style="display:flex;align-items:center;padding:18px 20px;border-bottom:1px solid var(--divider)"><div style="flex:1;font:500 18px var(--font-core);color:var(--text-title)">Open</div><button style="width:32px;height:32px;border:0;background:transparent"><img src="assets/icon_close.png" style="height:16px;opacity:.5"></button></div>
+        <div style="display:flex;align-items:center;gap:10px;height:44px;margin:16px 20px 8px;padding:0 12px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip)"><img src="assets/icon_search.png" style="height:16px;opacity:.5"><span style="font:400 15px var(--font-core);color:var(--text-tertiary)">Search…</span></div>
+        <div style="padding:0 8px 12px">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:6px;background:var(--blue-100)"><div style="width:30px;height:30px;border-radius:5px;background:var(--blue-500);display:flex;align-items:center;justify-content:center"><img src="assets/icon_picture.png" style="height:15px;filter:brightness(0) invert(1)"></div><div style="flex:1"><div style="font:400 15px var(--font-core);color:var(--text-title)">beach.comics</div><div style="font:300 12px var(--font-core);color:var(--text-secondary)">Comics · 1080×1920 · edited today</div></div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px"><div style="width:30px;height:30px;border-radius:5px;background:var(--cloud-200);display:flex;align-items:center;justify-content:center"><img src="assets/icon_picture.png" style="height:15px"></div><div style="flex:1"><div style="font:400 15px var(--font-core);color:var(--text-title)">city.comics</div><div style="font:300 12px var(--font-core);color:var(--text-secondary)">Comics · 1080×1920 · 3 days ago</div></div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px"><div style="width:30px;height:30px;border-radius:5px;background:var(--cloud-200);display:flex;align-items:center;justify-content:center;font:500 13px var(--font-core);color:var(--color-primary)">▦</div><div style="flex:1"><div style="font:400 15px var(--font-core);color:var(--text-title)">island.puzzle</div><div style="font:300 12px var(--font-core);color:var(--text-secondary)">Puzzle · 1024×768 · last week</div></div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--divider)">
+          <button style="height:44px;padding:0 16px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:#fff;color:var(--color-primary);font:500 14px var(--font-core);display:inline-flex;align-items:center;gap:8px;cursor:pointer"><img src="assets/icon_search.png" style="height:15px">Browse…</button>
+          <x-import component-from-global-scope="HolySpotsDesignSystem_cfcab4.Button" size="md" style="padding:0 22px" hint-size="auto,44px">Open</x-import>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Duplicate-file error</div>
+      <div style="width:380px;background:var(--white);border-radius:5px;box-shadow:var(--shadow-dialog);overflow:hidden">
+        <div style="padding:24px 22px 18px;display:flex;align-items:flex-start;gap:16px">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--coral-500);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/icon_close.png" style="height:16px;filter:brightness(0) invert(1)"></div>
+          <div><div style="font:500 16px var(--font-core);color:var(--text-title);margin-bottom:4px">File already exists</div><div style="font:300 14px/1.5 var(--font-core);color:var(--text-body)">A file with this name already exists. Choose a different name.</div></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;padding:0 22px 20px">
+          <x-import component-from-global-scope="HolySpotsDesignSystem_cfcab4.Button" size="md" style="padding:0 24px" hint-size="auto,44px">OK</x-import>
+        </div>
+      </div>
+    </div>
+
+    <!-- Puzzle mode -->
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Puzzle mode — zoomable board</div>
+      <div style="width:560px;height:400px;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface-cloud)">
+          <div style="width:360px;height:270px;background:#0f1114;position:relative;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.35)">
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#243a4d 0 16px,#2c4557 16px 32px)"></div>
+            <div style="position:absolute;left:110px;top:70px;width:140px;height:120px"><div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#4a3826 0 12px,#57422d 12px 24px)"></div><div style="position:absolute;inset:0;border:2px solid var(--blue-500)"></div><div style="position:absolute;left:-6px;top:-6px;width:12px;height:12px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div><div style="position:absolute;right:-6px;top:-6px;width:12px;height:12px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div><div style="position:absolute;left:-6px;bottom:-6px;width:12px;height:12px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div><div style="position:absolute;right:-6px;bottom:-6px;width:12px;height:12px;background:#fff;border:2px solid var(--blue-500);border-radius:3px"></div></div>
+          </div>
+        </div>
+        <!-- zoom slider (vertical) -->
+        <div style="position:absolute;right:16px;top:24px;bottom:24px;width:44px;background:var(--white);border-radius:var(--radius-btn);box-shadow:var(--shadow-card);display:flex;flex-direction:column;align-items:center;padding:12px 0">
+          <div style="font:400 16px var(--font-core);color:var(--text-body)">+</div>
+          <div style="flex:1;width:4px;background:var(--cloud-200);border-radius:4px;margin:10px 0;position:relative"><div style="position:absolute;left:0;right:0;bottom:0;top:45%;background:var(--blue-500);border-radius:4px"></div><div style="position:absolute;left:-8px;top:45%;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--blue-500);box-shadow:var(--shadow-card)"></div></div>
+          <div style="font:400 16px var(--font-core);color:var(--text-body)">−</div>
+        </div>
+        <div style="position:absolute;left:16px;bottom:16px;font:500 12px var(--font-serif-data);color:var(--text-body);background:#fff;border-radius:6px;box-shadow:var(--shadow-card);padding:6px 12px">Scale 0.55×</div>
+      </div>
+    </div>
+
+    <!-- Anim editors -->
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Animation editors — one per type (all share Start / End)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;width:720px">
+        <!-- Rotate -->
+        <div style="width:228px;border:1px solid var(--divider);border-radius:var(--radius-chip);padding:12px;background:var(--white);box-shadow:var(--shadow-card)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:10px;height:10px;border-radius:2px;background:var(--blue-300)"></div><div style="font:500 14px var(--font-core);color:var(--text-title)">Rotate</div></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Start</span><input value="0" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">End</span><input value="200" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Center X</span><input value="105" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Center Y</span><input value="150" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div>
+          <label><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Angle</span><input value="45" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+        </div>
+        <!-- Scale -->
+        <div style="width:228px;border:1px solid var(--divider);border-radius:var(--radius-chip);padding:12px;background:var(--white);box-shadow:var(--shadow-card)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:10px;height:10px;border-radius:2px;background:var(--blue-400)"></div><div style="font:500 14px var(--font-core);color:var(--text-title)">Scale</div></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Start</span><input value="0" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">End</span><input value="200" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Center X</span><input value="105" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Center Y</span><input value="150" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div>
+          <div style="display:flex;gap:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Scale X</span><input value="1.5" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Scale Y</span><input value="1.5" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div>
+        </div>
+        <!-- Alpha -->
+        <div style="width:228px;border:1px solid var(--divider);border-radius:var(--radius-chip);padding:12px;background:var(--white);box-shadow:var(--shadow-card)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:10px;height:10px;border-radius:2px;background:var(--gray-500)"></div><div style="font:500 14px var(--font-core);color:var(--text-title)">Alpha</div></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Start</span><input value="0" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">End</span><input value="200" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div>
+          <label style="display:block;margin-bottom:10px"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Alpha</span><input value="0.5" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label>
+          <div style="height:6px;border-radius:4px;background:var(--cloud-200);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:50%;background:var(--blue-500);border-radius:4px"></div><div style="position:absolute;left:calc(50% - 8px);top:-5px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue-500)"></div></div>
+        </div>
+        <!-- Sound -->
+        <div style="width:228px;border:1px solid var(--divider);border-radius:var(--radius-chip);padding:12px;background:var(--white);box-shadow:var(--shadow-card)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:10px;height:10px;border-radius:2px;background:var(--coral-500)"></div><div style="font:500 14px var(--font-core);color:var(--text-title)">Sound cue</div></div>
+          <div style="margin-bottom:8px"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">File</span><div style="display:flex;gap:6px"><div style="flex:1;height:34px;display:flex;align-items:center;padding:0 8px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);font:15px var(--font-serif-data);color:var(--color-primary)">wind.mp3</div><button style="width:34px;height:34px;border:0;border-radius:var(--radius-btn);background:var(--cloud-200);color:var(--color-primary)">…</button></div></div>
+          <div style="display:flex;gap:8px"><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">Start</span><input value="1200" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label><label style="flex:1"><span style="display:block;font:400 11px var(--font-core);color:var(--text-secondary);margin-bottom:3px">End</span><input value="1500" style="width:100%;height:34px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 8px;font:15px var(--font-serif-data);color:var(--color-primary);outline:none"></label></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
