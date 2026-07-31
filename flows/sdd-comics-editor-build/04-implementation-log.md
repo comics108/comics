@@ -15,7 +15,8 @@
 | 3.1/3.2 `docker-build.yml` | Done | `docker-build-linux`/`docker-build-android`, триггеры main/nightly/release, публикация артефактов |
 | 4.1 `docker/README.md` | Done | |
 | 4.2 Final status update | Done | |
-| — Windows CI MSB1008 (внесценарийный баг, см. ниже) | In Progress | Не входит в AC Docker Build; отслеживается здесь по решению пользователя |
+| — Windows CI MSB1008 (внесценарийный баг, см. ниже) | In Progress (round 5, unverified) | Не входит в AC Docker Build; отслеживается здесь по решению пользователя |
+| — macOS CI: `dataset_backward_compat_test.dart` crashing `flutter test` | Done | Не относится к Docker Build; регрессия из другого flow (`vdd-comics-editor-uiux-lettering`), исправлена здесь по той же логике («все build-процессы обсуждаются только в этом SDD») |
 
 ## Session Log
 
@@ -173,3 +174,41 @@
 - [x] No regressions (нативные тесты на macOS тоже перепроверены после `resolveBinary()` фикса)
 - [x] Documentation updated (`docker/README.md`, `_status.md`, этот лог)
 - [x] Status updated to COMPLETE (Docker Build часть; Windows CI MSB1008 — отдельная незакрытая нить, не блокирует этот flow)
+
+### Session 2026-07-30 — Claude (round 5: MSB1008 recurred after reactivation; new macOS regression)
+
+**Started at**: пользователь вставил два новых CI-лога (macOS и Windows), оба failing, из другой сессии/контекста (лог был приложен к незнакомой команде вместе с описанием). Resume этого flow по имени.
+
+#### Discoveries — macOS failure (новый баг, не MSB1008)
+- Отдельная, не связанная с Windows причина: `flutter test` (bare, без списка файлов) в job `build-macos` крашится на `loading .../test/dataset_backward_compat_test.dart (failed)` — `Directory listing failed, path = '/Users/runner/work/dataset/'`.
+- Файл добавлен в другом flow (`vdd-comics-editor-uiux-lettering`, Task 7.1) в той же сессии, где пользователь переключился сюда — использовал `Directory(Directory.current.path).parent.parent` для поиска `dataset/`, что резолвится корректно только в полном monorepo-чекауте.
+- Подтверждено (`git remote -v`, `git rev-parse --show-toplevel` внутри `apps/comics-editor-v2.9`): это отдельный git-репозиторий (`comics108/comics-editor-v2.9`), чей tree никогда не включал monorepo-level `dataset/` — путь `../../dataset` "работал" только по случайному совпадению структуры каталогов на машине разработчика.
+- Другие jobs (Linux/Windows/Android/iOS) используют явный список тестовых файлов (`flutter test test/widget_test.dart test/dart_io_core_test.dart [...]`) — этот новый файл никогда не попадал в их прогон, поэтому только macOS (единственный job с bare `flutter test`, специально ради `ffi_core_test.dart`) вообще его коснулся.
+- Пользователь также спросил про источник `dataset/`-файлов в другом репозитории (`comics108/comics-admin-v2012/asp.net/Files`) и предложил вынести такие тесты в общий CI-job. Ответ: вынос не даёт эффекта для ЭТОГО конкретного файла (он всё равно skip'нется в любом job'е standalone-репозитория, т.к. `dataset/` там принципиально недоступен) — граница в том, что тесты типа `core_client_test`/`ffi_core_test` нуждаются в только что собранном платформенном бинарнике и НЕ МОГУТ централизоваться, а pure-Dart тесты (`widget_test`/`dart_io_core_test`/этот) уже частично централизованы в `analyze`. Живой fetch из `comics-admin-v2012` в CI сознательно не подключался — сетевая зависимость/нестабильность ради инструмента, чьё назначение — локальная/ручная регрессионная проверка, не гейт каждого прогона.
+
+#### Completed — macOS fix
+- `apps/comics-editor-v2.9/test/dataset_backward_compat_test.dart`: добавлена проверка `datasetDir.existsSync()`; при отсутствии — `datasetFiles = []`, sanity-тест помечен `skip: '...'` с явной причиной вместо падения на `listSync()`. Верифицировано **в обе стороны** локально: с `dataset/` на месте — 28/28 зелёных (без регрессий); с `dataset/` временно переименованной (симуляция standalone-репозитория) — `~1: All tests skipped`, никакого краша.
+- `apps/comics-editor-v2.9/.github/workflows/build.yml`: `dataset_backward_compat_test.dart` явно добавлен в список `analyze` job'а (pure Dart, без платформенных артефактов) — для видимости в CI-выводе, наравне с `widget_test.dart`/`dart_io_core_test.dart` (там тоже будет skip, это ожидаемо).
+- Verified by: `flutter test` (полный набор, локально, dataset/ доступен) — 156/156 зелёных.
+
+#### Discoveries — Windows MSB1008 (round 5)
+- Идентичная ошибка (`MSB1008: Only one project can be specified` в `editor_plugin_csharp.vcxproj`), но НОВЫЙ контекст: custom target был реактивирован в `sdd-comics-editor-v2.9-fixes2` (Track A) — `editor_plugin.cpp` теперь реально грузит `Comics.Editor.Flutter.dll` через hostfxr (`hostfxr_bootstrap.cpp`), т.е. round 4's решение («просто отключить target, он не используется») больше не применимо.
+- Проверил реальный vendored Flutter SDK (`flutter-action@v2` его же скачивал в этой сессии для тестов) на предмет способа переключить CMake generator на Ninja (approved пользователем как первая гипотеза через AskUserQuestion): `flutter_tools/lib/src/windows/visual_studio.dart`'s `cmakeGenerator` getter жёстко возвращает `'Visual Studio 18 2026'`/`'Visual Studio 17 2022'`/`'Visual Studio 16 2019'` по определённой версии VS, без каких-либо env var или CLI-переопределений (`grep` по `build_windows.dart`/`visual_studio.dart` на `CMAKE_GENERATOR`/`Platform.environment` — ничего). Т.е. Ninja **недостижим** через `flutter build windows` без замены всей оркестрации сборки Windows на ручную (out of scope для CI-багфикса) — сообщено пользователю, который согласился на альтернативу.
+- **Реальная находка**: тот же vendored SDK содержит `flutter_tools/lib/src/migrations/cmake_custom_command_migration.dart` — миграция, которая добавляет `VERBATIM` ко ВСЕМ `add_custom_command()` в СОБСТВЕННОМ сгенерированном CMake-файле Flutter, с явной ссылкой на flutter/flutter#67270 (Visual Studio generator неправильно экранирует custom-команды без `VERBATIM`). Это Flutter'овский, задокументированный, прецедентный фикс именно ЭТОГО класса бага — не догадка.
+- Эта миграция трогает только flutter-managed файлы (`windows/flutter/CMakeLists.txt`), никогда не наш `windows/editor_plugin/CMakeLists.txt` — наш `add_custom_target(${PLUGIN_NAME}_csharp ALL ...)` никогда не имел `VERBATIM`.
+- Важно: раунды 1-4 (сохранены в записи выше) сравнивали УЖЕ СГЕНЕРИРОВАННЫЙ `<Command>` в итоговом `.vcxproj` и не нашли синтаксических отличий от рабочего custom-build-step — но отсутствие `VERBATIM` влияет на то, КАК generator экранирует команду ПРИ ГЕНЕРАЦИИ, что могло не проявиться в поверхностном построчном сравнении финального XML (раунды не сверяли байт-в-байт, полагались на визуальное сравнение). Это не противоречит находке раунда 4, а объясняет, почему та проверка могла её пропустить.
+
+#### Completed — Windows fix (round 5, unverified)
+- `apps/comics-editor-v2.9/windows/editor_plugin/CMakeLists.txt`: добавлен `VERBATIM` в `add_custom_target(${PLUGIN_NAME}_csharp ALL ...)`. Комментарий над блоком расширен: полная история round 5 (находка про VERBATIM, ссылка на flutter/flutter#67270 и `cmake_custom_command_migration.dart`, явное объяснение почему Ninja недостижим, явная пометка "не проверено реальным CI").
+- Verified by: **не проверено** — агент работает на macOS, `flutter build windows`/MSBuild недоступны локально. Требуется реальный Windows CI-прогон после коммита/пуша пользователем (git — только руками, см. memory `git-manual-only`).
+
+#### In Progress
+- Ожидание: пользователь коммитит/пушит (`CMakeLists.txt` в `windows/editor_plugin/`, `test/dataset_backward_compat_test.dart`, `.github/workflows/build.yml`), перезапускает оба job'а (`build-windows`, `build-macos`), присылает новые логи.
+- macOS: ожидается зелёный прогон (fix верифицирован в обе стороны локально, включая симуляцию отсутствия `dataset/`).
+- Windows: если `VERBATIM` не помогает — round 5's вывод («generator-level экранирование, не содержимое команды») остаётся в силе; следующий шаг — сверить `.vcxproj` **до и после** этого фикса байт-в-байт (не только визуально), а не гадать дальше вслепую.
+
+**Ended at**: macOS fix применён и верифицирован локально (обе ветки). Windows round 5 fix применён, ждёт реального CI.
+**Handoff notes**: если Windows fix не сработает — не начинать round 6 с нуля; конкретно сравнить `<Command>`/весь `.vcxproj` до/после `VERBATIM` (diff, не глазами) на следующем реальном прогоне с диагностическим dump-шагом (паттерн уже есть в round 2-3 выше, `Get-ChildItem -File` версия).
+
+#### Deviations from Plan
+- Обе правки (macOS test, Windows CMakeLists.txt) — вне scope `03-plan.md` (Docker Build), ведутся здесь по тому же прецеденту, что и round 1-4 Windows-фиксов: «все build-процессы обсуждаются только в этом SDD, не форкать новый flow» (см. Context Notes в `_status.md`).

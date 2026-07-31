@@ -6,15 +6,24 @@ IMPLEMENTATION
 
 ## Phase Status
 
-Docker Build (Phase 1-4) — DONE, см. `04-implementation-log.md` Progress Tracker. Windows CI MSB1008 — РЕШЕНО (не багфикс, custom target отключён от `ALL` как неиспользуемый — см. Blockers).
+Docker Build (Phase 1-4) — DONE, см. `04-implementation-log.md` Progress Tracker. Windows CI MSB1008 — **вернулся** после реактивации custom target в `sdd-comics-editor-v2.9-fixes2` (real hostfxr interop теперь потребляет публикуемую сборку) — round 5 fix (`VERBATIM`) применён 2026-07-30, ждёт подтверждения реальным CI. Отдельно: новая macOS-only регрессия (`dataset_backward_compat_test.dart` из `vdd-comics-editor-uiux-lettering`, Task 7.1) — исправлена и подтверждена локально в обе стороны (dataset/ есть/нет).
 
 ## Last Updated
 
-2026-07-25 by Claude
+2026-07-30 by Claude
+
+## Related Flows
+
+- `flows/sdd-comics-editor-publish/` — spun out 2026-07-31 (user request) to own store publishing
+  (screenshots, metadata, fastlane wiring). This flow (`sdd-comics-editor-build`) stays scoped to
+  CI/build verification only (Docker Build, native Windows/macOS/Linux build fixes like the
+  Windows MSB1008 thread below) — any future publishing-pipeline work belongs in the new flow, not
+  here, matching how `vdd-comics-editor-jhanava` was split out of `vdd-comics-editor-uiux-lettering`.
 
 ## Blockers
 
-- Нет активных блокеров. Windows CI MSB1008: после 4 раундов диагностики выяснилось, что сгенерированный `<Command>` в `.vcxproj` синтаксически корректен (root cause в MSBuild/CMake на `windows-2025-vs2026` toolset так и не подтверждён), но публикуемая custom-target'ом `Comics.Editor.Flutter.dll` **ничем не потребляется** — hostfxr/nethost interop в `editor_plugin.cpp` ещё не реализован (явный TODO/`not_implemented`-заглушка). Решение (подтверждено пользователем): `add_custom_target(editor_plugin_csharp ALL ...)` закомментирован в `windows/editor_plugin/CMakeLists.txt` (не удалён), temporary diagnostic-шаг убран из `build.yml`. Вернуть custom target, когда появится реальный hostfxr-вызов, и на этот раз сразу проверять реальным Windows CI, не полагаясь на macOS-локальную верификацию.
+- **macOS: `flutter test` (bare, no file list) failing on load** — `dataset_backward_compat_test.dart` (added 2026-07-30 in a different flow, `vdd-comics-editor-uiux-lettering`) crashed the whole file on `Directory.listSync()` because `dataset/` doesn't exist in this repo's own checkout. Root cause confirmed: `apps/comics-editor-v2.9` is pushed to its own separate git repo (`comics108/comics-editor-v2.9`, verified via `git remote -v`/`show-toplevel`) whose tree never includes the monorepo-level `dataset/` directory at all -- it only resolved in local dev by directory-nesting coincidence. **Fixed** (2026-07-30): the test now checks `datasetDir.existsSync()` and skips with a clear reason (not crash) when absent; verified locally both ways (with dataset/ present: 28/28 green; with it renamed away to simulate the CI-mirror-repo layout: `~1: All tests skipped`, correctly no crash). Also added explicitly to the `analyze` job's fast test list in `build.yml` (pure Dart, no native artifact) for visibility, alongside `widget_test.dart`/`dart_io_core_test.dart` -- it'll report skipped there too (analyze also runs against the standalone repo), which is expected and fine.
+- **Windows MSB1008 — round 5 (unverified, needs real CI)**: recurred on the first real Windows CI run after `sdd-comics-editor-v2.9-fixes2` reactivated the custom target (hostfxr interop now genuinely consumes `Comics.Editor.Flutter.dll`, so simply disabling the target again -- round 4's resolution -- is no longer viable). New finding this round: `add_custom_target(editor_plugin_csharp ALL ...)` in `windows/editor_plugin/CMakeLists.txt` was missing `VERBATIM`. Flutter's own `flutter_tools` (`cmake_custom_command_migration.dart` in the vendored SDK) exists specifically to add `VERBATIM` to Flutter's *own* generated `add_custom_command()` calls, citing flutter/flutter#67270 -- the Visual Studio CMake generator is documented to mis-escape custom commands/targets without it. That migration only touches Flutter-managed files, never ours, so this file never got the fix. Applied `VERBATIM` by hand (2026-07-30). Also confirmed switching the CMake generator to Ninja (the AskUserQuestion-approved alternative) is **not achievable**: `flutter build windows` hardcodes the Visual Studio generator based on detected VS version (`flutter_tools/lib/src/windows/visual_studio.dart`'s `cmakeGenerator` getter) with no env var or CLI override found anywhere in `build_windows.dart`/`visual_studio.dart` -- switching would mean bypassing Flutter's own Windows build orchestration entirely, out of scope for a CI bugfix. **Not verified** -- no Windows machine available to the agent; needs a real Windows CI run to confirm. If it recurs again, round 5's finding (VERBATIM was missing) at least rules out one more real candidate with strong external precedent, unlike rounds 1-3's guesses.
 
 ## Progress
 
