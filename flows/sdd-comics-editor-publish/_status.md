@@ -29,14 +29,29 @@ reach (see Blockers) — not something this flow can close by itself.
   needs it) published as an artifact for the user, not duplicated in full here — see this session's
   conversation. This is real progress: first actual signal from a real credentialed run, not just
   unverified-by-construction code.
-- **Real verification requires the user's manual steps + real CI runs** — cannot be done by the
-  agent (no store/Apple Developer credentials access). Specifically for `release-macos` (new,
-  least proven): (1) create a separate macOS app record in App Store Connect under
-  `net.nativemind.comics.editor`, (2) run `fastlane match appstore --platform macos` once locally
-  to seed the shared cert repo with macOS app+installer certificates. Both documented in
-  `macos/fastlane/Fastfile`'s header comment. `release-ios`/`release-android` should already work
-  as before (only `skip_*` flags removed) but weren't re-verified by a real store run this session
-  either.
+- **`match` removed entirely (2026-07-31, user's call)**: after 2 real `release-ios` CI runs — 1st
+  failed on `ASC_KEY_CONTENT` not being base64 (fixed, confirmed working on run 2), 2nd got past
+  that and failed on `match` itself (`fatal: repository '' does not exist` — `MATCH_GIT_URL` was
+  never actually set, and setting up a whole separate certs repo felt like unnecessary overhead) —
+  user asked to drop `match` and sign directly from GitHub secrets instead, the same pattern
+  `android/fastlane` already uses for its keystore. Reworked `ios/fastlane/Fastfile` (create_keychain
+  + import_certificate + UUID/Name extracted from the `.mobileprovision` via `security cms -D`+
+  `plutil` + `build_app` with `export_options: signingStyle: manual` + explicit `xcargs`) and
+  `macos/fastlane/Fastfile` (same idea, but TWO certs — app + installer, per Apple's Mac App Store
+  requirement — plus a **newly found gap**: the provisioning profile was never being embedded into
+  the `.app` at all, match or not; now copied to `Contents/embedded.provisionprofile` before the
+  final `codesign`). `release.yml`'s `release-ios`/`release-macos` jobs gained "Configure signing"
+  steps decoding the new secrets to files (mirroring `release-android`'s existing keystore-decode
+  step exactly). Full updated secrets list published as an artifact for the user (same URL,
+  republished). **None of this is verified by a real run yet** — it's the least-proven part of the
+  whole flow now, same caveat as before, just for a different reason (new code, not new platform).
+- **Real Android CI run (2026-07-31) found a genuine, unrelated repo bug**: `android/.gitignore`
+  was excluding `gradlew`/`gradlew.bat`/`gradle-wrapper.jar` from git entirely (Flutter's default
+  template assumes `flutter create` can regenerate them locally — breaks any fresh CI checkout that
+  needs the literal wrapper script, which `build.yml`'s `build-android` job never needed since
+  `flutter build apk` manages Gradle through Flutter's own tooling, but `fastlane`'s `gradle(...)`
+  action does need the literal file). Fixed the `.gitignore`; user still needs to `git add` the 3
+  now-unignored files (they exist on disk, were just never tracked) and commit/push.
 - **Mid-implementation finding, now resolved in code**: a naive macOS fastlane lane
   (`build_mac_app` + `upload_to_app_store`, as originally scoped in Specifications) would have
   silently shipped a Mac App Store submission missing the C# headless core entirely (Xcode's build
@@ -100,18 +115,23 @@ N/A — new flow, not a fork (see Context Notes for the flow it was split out of
 
 ## Next Actions
 
-1. User: get `zh-Hans`/`hi`/`th` store copy (iOS `ios/fastlane/metadata/`, macOS
-   `macos/fastlane/metadata/`, Android `android/fastlane/metadata/android/{zh-CN,hi-IN,th}/`)
-   reviewed by a native/fluent speaker — drafted as best-effort machine-quality translations, not
-   verified by a native speaker. ru/en-US are native-quality confidence.
-2. User: confirm `https://comics.nativemind.net/policy.html` and `/support.html` are real, live
-   pages before actual submission — this flow only references them in metadata, doesn't create them.
-3. User: set the Google Play category manually in Play Console (Art & Design recommended) — not
-   part of `supply`'s file-based metadata, has to be done in the Console UI.
-4. User: create the macOS App Store Connect record + run `fastlane match appstore --platform macos`
-   once locally (see `macos/fastlane/Fastfile` header for exact steps) — nothing else in this flow
-   can proceed on the macOS lane until this exists.
-5. User: run a real `workflow_dispatch` of `release-ios`/`release-android`/`release-macos` (once
-   prerequisites above are done) and share the result — this is the actual verification this flow
-   can't do itself.
-6. Once verified (or issues found and fixed from a real run's output): move to Documentation phase.
+1. User: `git add`/commit/push the `android/.gitignore` fix + the 3 now-unignored Gradle wrapper
+   files (`android/gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`) — the real,
+   currently-fatal blocker on `release-android`.
+2. User: export iOS Distribution cert + App Store provisioning profile, macOS app + installer
+   certs + Mac App Store provisioning profile, set all the new signing secrets (full list in the
+   published artifact this session — same URL, redeployed with match-free content) — replaces the
+   `match`-based prerequisites entirely, no certs git repo needed anymore.
+3. User: set `PLAY_STORE_JSON_KEY` (still blank in the last real log).
+4. User: create the macOS App Store Connect record (separate from iOS, same bundle id) — still
+   needed regardless of the match removal.
+5. User: get `zh-Hans`/`hi`/`th` store copy reviewed by a native/fluent speaker (ru/en-US are
+   native-quality confidence) — not blocking, but should happen before really going live there.
+6. User: confirm `https://comics.nativemind.net/policy.html` and `/support.html` are real, live
+   pages before actual submission.
+7. User: set the Google Play category manually in Play Console (Art & Design recommended) — not
+   part of `supply`'s file-based metadata.
+8. User: run a real `workflow_dispatch` of all 3 lanes and share the result — the match-free
+   signing rework (iOS `xcargs`-based manual signing, macOS's two-cert + profile-embedding flow)
+   is unverified and is now the highest-risk unverified piece of this whole flow.
+9. Once verified (or issues found and fixed from a real run's output): move to Documentation phase.

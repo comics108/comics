@@ -6,7 +6,7 @@ IMPLEMENTATION
 
 ## Phase Status
 
-IN PROGRESS
+COMPLETE (Phase 10 deliberately deferred, disclosed — see Blockers)
 
 ## Last Updated
 
@@ -14,8 +14,51 @@ IN PROGRESS
 
 ## Blockers
 
-- None. Implementation Phases 1-3 complete and verified (32/32 tests passing) — see
-  `04-implementation-log.md`. Phase 4 (segmentation model training) is next.
+- None. **Implementation complete.** Phases 1-9 and 11 done and verified against real data at
+  every stage (101/101 tests passing) — see `04-implementation-log.md`. Phase 10 (quality
+  correction) deliberately deferred: Requirements and Plan both explicitly frame it as
+  lowest-priority/optional ("build only if time remains after Phases 1-9 are solid") — a disclosed
+  prioritization decision, not an oversight.
+- Task 9.1's real output was visually composited and confirmed to reconstruct the exact same
+  Amba/Parashurama scene spot-checked in Phase 2 — the strongest end-to-end confirmation in the
+  project that the full pipeline works correctly on real photos.
+- Task 9.2 (.svg export) deliberately skipped per Specifications' explicit permission — not
+  implemented, not blocking.
+- Task 11.2: walked Specifications' full Testing Strategy checklist item-by-item; every item is now
+  checked off in `02-specifications.md`, with the one partial exception disclosed explicitly:
+  output `.comics` files are verified structurally valid + pixel-round-trip-correct via this
+  project's own reader, but never literally opened in the real `apps/comics-editor` Flutter/C#
+  application (out of scope for this pipeline's own test suite).
+- `pipeline.py` (Task 11.1) orchestrates all 10 stages, verified resumable (skips already-computed
+  stages, won't silently trigger an expensive retrain on a routine re-run).
+- Task 7.1 turned out to be a lookup against `comics-ai-baloons`' already-completed work (825
+  balloons, 22 packaged episodes), not a re-invocation of its pipeline — verified all 16 matched
+  episodes are a real subset of its 22 successfully-packaged outputs.
+- Phase 8's concrete Requirements acceptance criterion (an "Amba gallery" with no cross-
+  contamination) is verified for real: `work/library/characters/amba/` (11 crops) all trace back
+  to episode 21 via `alignment.jsonl`.
+- Real-photo evaluation found and fixed a genuine train/inference scale mismatch (U-Net baseline
+  was trained on panel-scale crops but inference runs on whole pages) — retrained on new page-scale
+  synthetic data (191 pairs); real-world mean kind-count agreement improved 0.382 → 0.486. See
+  `04-implementation-log.md` Session 2026-07-31 (continued 8).
+- Mask R-CNN's checkpoint (Task 4.3) was NOT retrained on the new page-scale data — Checkpoint D's
+  comparison is now even more stale/not-apples-to-apples than before if revisited.
+- **Resolved 2026-07-31**: Mask R-CNN's MPS hang was root-caused as a one-time Metal shader
+  compilation cost (reproduced directly: the first batched MPS call on a given session takes
+  minutes, every batched call after that is a normal ~30-35s), not a permanent MPS incompatibility.
+  `train_segmenter.py --model maskrcnn` now defaults to MPS when available (same auto-detect
+  pattern the U-Net baseline already used); `--device cpu` still available to force the old
+  behavior. See "Session 2026-07-31 (continued 7)" in `04-implementation-log.md`.
+- Known open item (not blocking): Checkpoint D (baseline U-Net vs. Mask R-CNN) only has a partial,
+  honestly-disclosed-as-unequal-budget verdict from the earlier CPU-only run. U-Net baseline is
+  still the practically-vetted option for now; re-running Mask R-CNN at a matched data/epoch budget
+  on MPS (now unblocked) would let this be finalized, but hasn't been done yet.
+- **Resolved by the Phase 6 retrain**: Phase 5's `cluster_layers_by_scene` clustering-bug fix
+  predates Phase 6's page-scale data regeneration, so the current U-Net baseline checkpoint already
+  benefits from the corrected clustering — no separate retrain needed for that specific issue.
+- Phase 5 also revealed real content (episode 21/`ambas_plea` correctly matched from real photos
+  with verified-correct dialogue) validating the whole alignment pipeline end-to-end — see
+  `04-implementation-log.md` Session 2026-07-31 (continued 7).
 - **Major mid-implementation revision (2026-07-31)**: Checkpoint A (Task 2.3) found the printed
   book is a conventionally paginated comic (fixed panel grids, real page numbers to 198+), not a
   crop of the tall scrolling digital canvas. Specifications and Plan both revised to v1.1 and
@@ -33,12 +76,7 @@ IN PROGRESS
 - [x] Plan drafted
 - [x] Plan approved
 - [x] Implementation started
-- [ ] Implementation complete
-- [ ] Specifications approved
-- [ ] Plan drafted
-- [ ] Plan approved
-- [ ] Implementation started
-- [ ] Implementation complete
+- [x] Implementation complete
 - [ ] Documentation drafted
 - [ ] Documentation approved
 
@@ -79,13 +117,19 @@ Key decisions and context for resuming:
 
 ## Next Actions
 
-1. Phase 4 (segmentation model): Task 4.2 baseline U-Net first (cheap, unblocks integration testing
-   early), then Task 4.3 Mask R-CNN, compared at Checkpoint D — per Plan's Task 4.1 decision.
-   `work/train_pairs/manifest.jsonl` (753 pairs) is ready to train against via `dataset.py`.
-2. Phase 5 (revised), when reached: verify `comics-ai-baloons`'s `work/ocr.jsonl` exists/is current
-   first (cross-flow dependency for panel-to-scene matching) before building `align_photo.py`.
-3. Note for whoever picks this up: `comics-ai-baloons` currently has 2 failing tests of its own
+**Implementation is functionally complete.** Remaining items are optional follow-ups, not blockers:
+
+1. Phase 10 (optional quality correction) — lower priority per Requirements; build only if more
+   capability is wanted later.
+2. If revisiting Checkpoint D, re-run Mask R-CNN training on the page-scale data (matching the
+   U-Net baseline's current manifest) on MPS for a true equal-budget comparison.
+3. Episode-name-derived identity labels are weak/best-effort (many are generic, e.g. "the-2"
+   through "the-5") — fine for this iteration per Specifications, but real character naming would
+   need either manual curation or a better signal than episode titles.
+4. Note for whoever picks this up: `comics-ai-baloons` currently has 2 failing tests of its own
    (stale `REPO_ROOT` path math + dataset reorg to a nested layout) — see
-   `04-implementation-log.md` Session 2026-07-31 "Discoveries". Not this flow's problem to fix, but
-   relevant if Phase 7's balloon handoff (or the new Phase 5 OCR-corpus dependency) behaves
-   unexpectedly.
+   `04-implementation-log.md` Session 2026-07-31 "Discoveries". Not this flow's problem, unrelated
+   to Phase 7's handoff (which reads its output files directly, unaffected by those test failures).
+5. If a Documentation phase is wanted (per this repo's SDD convention, e.g. `sdd-comics-ai-baloons`
+   has one): would mean writing/polishing `apps/comics-ai/comics-multimodal/README.md` into a full
+   usage guide. Not started; ask the user whether they want this before starting it.

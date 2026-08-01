@@ -249,3 +249,88 @@ speaker (flagged, not blocking, but should happen before going live in those mar
 `https://comics.nativemind.net/policy.html` and `/support.html` are real, live pages by the time of
 submission (this flow only references them, doesn't create them); (3) set the Google Play category
 manually in Play Console (not part of `supply`'s file-based metadata).
+
+---
+
+### Session 2026-07-31 (продолжение 2) — Claude (real CI runs: ASC_KEY_CONTENT fix confirmed, match dropped, gradlew gitignore bug)
+
+**Started at**: user resumed with `/sdd run sdd-comics-editor-publish`, then asked which GitHub
+secrets to set and where from.
+
+#### Completed
+- Compiled and published a full secrets/variables reference as an artifact (name, source, which
+  lane needs it) covering Apple API key, iOS signing, macOS signing, Android signing — rather than
+  duplicating the full table in this log (kept current by redeploying to the same URL as the setup
+  evolved).
+- **Real CI run #2** (`release-ios`): confirmed the `ASC_KEY_CONTENT` base64 fix from the previous
+  session worked — `app_store_connect_api_key` step now succeeds. Progressed to `match`, which
+  failed with `fatal: repository '' does not exist` (`MATCH_GIT_URL` secret was never actually set).
+- **Real CI run #2** (`release-android`, same push): failed with `Couldn't find gradlew at path
+  '.../android/gradlew'`. Investigated locally: `android/.gitignore` explicitly excluded `gradlew`/
+  `gradlew.bat`/`gradle-wrapper.jar` (Flutter's default template, assumes `flutter create` can
+  regenerate them — breaks fresh CI checkouts). Confirmed via `git ls-files` that neither file was
+  ever tracked. **This is why `build.yml`'s own `build-android` job never hit it** — `flutter build
+  apk` manages Gradle through Flutter's own tooling, not the literal wrapper script; this was the
+  first time anything in this repo actually needed the checked-in `android/gradlew`.
+  - Files changed: `android/.gitignore` (removed the 3 offending lines + a stray garbage `?` line)
+  - Verified by: confirmed all 3 files exist on disk (`ls`), confirmed `git status` now shows them
+    as untracked (`??`) rather than ignored — ready for the user to `git add`/commit/push. **Cannot
+    verify the actual CI re-run succeeds** without the user pushing first.
+- User then asked whether `match` could be dropped entirely in favor of signing directly via GitHub
+  secrets (same pattern `android/fastlane` already uses for its keystore) — confirmed yes: `match`
+  and the App Store Connect API key solve unrelated problems (code signing vs. API auth), and
+  `match`'s only real value is *where the certificate lives* — a private git repo is not mandatory,
+  direct secrets work exactly as well and is simpler.
+  - **`ios/fastlane/Fastfile`**: replaced `match(...)` with `create_keychain` → `import_certificate`
+    → UUID/Name extracted from the `.mobileprovision` via `security cms -D -i ... | plutil -extract
+    ...` (not guessed from any fastlane action's return value) → profile copied to `~/Library/
+    MobileDevice/Provisioning Profiles/<uuid>.mobileprovision` → `build_app` with `export_options:
+    signingStyle: manual` + explicit `xcargs` (`CODE_SIGN_STYLE`/`CODE_SIGN_IDENTITY`/
+    `PROVISIONING_PROFILE_SPECIFIER`). Extensively commented (this is a well-documented but genuinely
+    unverified-by-this-agent pattern, same transparency standard as the earlier macOS core-embedding
+    fix).
+  - **`macos/fastlane/Fastfile`**: same idea, but Mac App Store needs **two** certs (app + installer,
+    a real Apple requirement, not a match artifact) — `create_keychain` + two `import_certificate`
+    calls. Since this lane already did manual `codesign`/`productbuild` (not gym's auto-export, for
+    the core-embedding reason from the previous session), most of the lane didn't need to change —
+    just swapped where the identities come from. **Found and fixed a genuine gap that existed even
+    with `match`**: the provisioning profile was never being embedded into the built `.app` at all
+    (`Contents/embedded.provisionprofile`) — added that step before the final `codesign`, since Mac
+    App Store apps need it regardless of signing method.
+  - **`.github/workflows/release.yml`**: added "Configure signing" steps to `release-ios`/
+    `release-macos`, decoding the new secrets to files — structurally identical to `release-android`'s
+    existing keystore-decode step. Removed `MATCH_GIT_URL`/`MATCH_PASSWORD` from both jobs' env.
+  - Files changed: `ios/fastlane/Fastfile`, `macos/fastlane/Fastfile`, `.github/workflows/release.yml`
+  - Verified by: `ruby -c` on both Fastfiles, YAML parse on `release.yml`, `flutter analyze` (0
+    issues). **Cannot verify the signing sequence actually works** — no real Apple Developer
+    certs/CI access available to the agent; this is now the single least-proven piece of the whole
+    flow (new code, replacing the also-unverified match-based version).
+- Republished the secrets artifact with the corrected (match-free) content at the same URL.
+
+#### Deviations from Plan
+- `match` → direct secrets is a real architecture change to Task 4.1 (`macos/fastlane/Appfile`+
+  `Fastfile`) and to the already-implemented `ios/fastlane/Fastfile` (which Plan never scoped for
+  modification at all, since it existed and "worked" — as far as anyone knew — before this flow
+  started). Driven entirely by real CI feedback (`MATCH_GIT_URL` friction) plus the user's explicit
+  preference, not a bug being fixed.
+
+#### Discoveries
+- `android/.gitignore` excluding the Gradle wrapper is a pre-existing repo issue, unrelated to
+  anything this flow built — only surfaced because `release-android`'s fastlane `gradle(...)` action
+  is the first thing in this repo's history to need the literal `android/gradlew` file rather than
+  going through `flutter build apk`'s own Gradle-invocation path.
+- Mac App Store provisioning-profile embedding was missing even in the match-based version of the
+  macOS lane from the previous session — not something match not being used introduced; a real gap
+  found while re-examining the lane for an unrelated reason (dropping match), which is exactly the
+  kind of thing a second careful pass over existing code sometimes catches that the first pass
+  missed under time/context pressure.
+
+**Ended at**: `match` fully removed from both Apple lanes; secrets reference published and current.
+Two real, distinct bugs found via actual CI runs and fixed (the Android gitignore issue is a repo
+bug unrelated to this flow's own changes; the profile-embedding gap was in this flow's own earlier
+work). Nothing in this session's changes has been confirmed by a real run yet.
+**Handoff notes**: The very next real CI attempt should be treated as the first genuine test of the
+match-free signing approach for both iOS and macOS — if it fails, the Fastfile's own step-by-step
+header comments name exactly which of the 4-5 sequential operations (keychain → import → extract →
+build/sign → package) is implicated by where in the log it dies, same diagnostic discipline as
+`sdd-comics-editor-build`'s Windows MSB1008 investigation history.
