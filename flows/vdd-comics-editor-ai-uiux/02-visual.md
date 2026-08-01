@@ -451,6 +451,8 @@ Kind-conditional differences (same card, different affordances shown):
 
 ## Approval
 
-- [ ] Reviewed by:
-- [ ] Approved on:
-- [ ] Notes:
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-01
+- [x] Notes: Approved as-is, including the high-fidelity companion mockup's refinements (exact chip
+      colors, confidence tokens, persistent routing indicator, cross-device layer-sync
+      clarification).

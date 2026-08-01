@@ -85,6 +85,27 @@ continued conceptual drafting)
   to prevent one product consultation's answers from narrowing that flow's original scope while
   still preserving the bigger-picture insight for later.
 
+## Related Work Since This Flow Was Drafted (2026-08-01)
+
+Two flows built substantial real capability that bears directly on this flow's vision, without a
+stakeholder session ever happening:
+
+- **`sdd-comics-ai-multimodal`** (COMPLETE): a from-scratch-trained segmentation/cutting pipeline
+  that decomposes a flattened page image into kind-tagged regions (background/character/balloon/
+  sound/motion-fx) — i.e. it *builds* the "material cutting/systematization" prerequisite Джанава's
+  framing called out as possibly the bigger of the two problems here.
+- **`vdd-comics-editor-ai-uiux`** (IN PROGRESS, Phases 1-3/4 done): builds the in-editor
+  trigger/review/correct UI for that pipeline's output, extending the shipped `BalloonEditorCard`
+  pattern to every kind — i.e. it's the first real placement/review tooling beyond balloons.
+
+`flows/sdd-comics-editor-questions/01-requirements.md` was re-annotated the same day against this
+work: 4 of 7 kind-taxonomy/material-intake questions now have a de facto engineering answer or real
+supporting evidence; character/background placement *complexity* specifically (as opposed to
+*cutting*) and all of Group B (video/motion-comic) remain fully open. See that doc's "Status Update
+(2026-08-01)" section for the question-by-question breakdown. **None of this is a substitute for
+the real session with Джанава/Бхагаван this flow still needs** — it's evidence to bring to that
+conversation, not a resolution of it.
+
 ## Next Actions
 
 1. Now that the open questions live in `sdd-comics-editor-questions` rather than gating this flow,

@@ -2,11 +2,16 @@
 
 ## Current Phase
 
-VISUAL
+IMPLEMENTATION
 
 ## Phase Status
 
-DRAFTED (awaiting "visual approved")
+IMPLEMENTATION COMPLETE (all 7 plan phases done, plus two requested follow-ups: stale-source-
+changed detection and the results-canvas zoom control. 205/206 Dart tests + 108/108 Python tests
+green — the 1 Dart failure is pre-existing and unrelated. Includes a real end-to-end run against
+the actual trained checkpoint and a cross-device file-format round trip. No known gaps remain —
+every Requirements Must Have and Should Have is delivered. Awaiting user review, and a decision on
+whether to run the Documentation phase.)
 
 ## Last Updated
 
@@ -14,45 +19,49 @@ DRAFTED (awaiting "visual approved")
 
 ## Blockers
 
-- Awaiting user review/approval of `02-visual.md`.
-- `01-requirements.md` is APPROVED (2026-08-01), including the disclosed scope narrowing: real
-  desktop subprocess invocation + full review UI for all 4 kinds (background/character/balloon/art)
-  is Must Have this iteration; backend/on-device-ML-runtime/billing are explicit "Won't Have (This
-  Iteration)" — confirmed via research that none of that infra exists anywhere in the repo today,
-  mirroring how `BalloonAiClient` shipped as contract-only with a disclosed stub.
-- `02-visual.md` resolves all 6 Requirements Open Questions as concrete design decisions (not
-  re-asked): (1) one shared kind-parameterized `CuttingReviewCard`, not per-kind cards; (2) Library
-  browser is a tab inside a new "Cutting" mode (third mode alongside Edit/Lettering), not a separate
-  screen; (3) source image intake assumes an already-cropped page image, rectification explicitly
-  out of scope and disclosed inline on the trigger screen; (4) mobile shows the Cutting mode switch
-  disabled-but-visible with an explanatory tap message, never entered-then-broken; (5) confidence
-  shown as a color+percentage badge (green/amber/coral, text always present); (6) bounding-box
-  adjustment reuses the canvas's existing layer-resize-handle interaction, no new gesture.
-- **2026-08-01 update**: user supplied a high-fidelity HTML/PDF companion mockup
-  (`design/comics-editor-v3.1.0-maket/Comics Editor Cutting Devices.dc.html` +
-  `design/comics-editor-v3.1.0-cutting.pdf`, HolySpots DS v3.1) confirming the ASCII structure with
-  no disagreements, plus concrete pixel-level detail now folded into `02-visual.md` v1.1: exact new
-  chip colors (slate `#5a7d99` Background, teal `#2f8f7a` Character; Balloon/Art reuse existing
-  violet/gray), exact confidence badge tokens, a header region-count status summary, icon-based
-  accept/reject indicators, a persistent (not just during-run) routing/source indicator, an
-  all-regions-visible-with-spotlight canvas treatment, and — most importantly — a clarified
-  behavior: **cutting-produced layers are ordinary document layers**, viewable normally on any
-  platform via the existing document-open path; only *triggering* a new cut is desktop-only. This
-  narrows what "mobile is out of scope" actually means in a corrector-favorable direction (worth
-  surfacing to the user, it's a improvement not a regression).
+- None. Implementation is functionally complete, including both follow-ups requested after the
+  original completion report — see `05-implementation-log.md` for full detail:
+  - **Stale-source detection** (Requirements Must Have): `CuttingSession` fingerprints the source
+    layer at trigger time; `EditorController.refreshCuttingStaleness()`/`dismissCuttingStale()`
+    detect and surface changes via a banner with Re-run/Dismiss (8 tests). A real bug was found and
+    fixed in the same pass — Dismiss didn't re-baseline the fingerprint, so the warning silently
+    reappeared right after being dismissed — caught by the banner's own test, fixed before shipping.
+  - **Results-canvas zoom control** (Should Have): a local `TransformationController` +
+    `InteractiveViewer` (pan-only, button-driven zoom) with a `_CuttingZoomControl` mirroring
+    `canvas_view.dart`'s own zoom UI (4 tests, including exact-percentage checks and the 400% cap).
+  - No known gaps remain — every Requirements Must Have and Should Have named in this flow's own
+    documentation is delivered.
+- A real, measurable regression was found and fixed during implementation: adding the 3rd
+  ("Cutting") segment to the desktop top bar's mode switch caused a 6.8px overflow that broke 6
+  pre-existing tests. Fixed with a shorter label specifically in the segmented control; full suite
+  confirmed green afterward.
+- A real, disclosed design deviation from `02-visual.md`'s high-fidelity mockup: the mockup's
+  slate/teal Background/Character chip colors conflict with colors already shipped and live in the
+  app's existing layers list (`Hs.teal500`/`Hs.indigo500`, prepared in advance during
+  `vdd-comics-editor-jhanava` groundwork). Used the already-shipped colors instead, to avoid the
+  same `kind` value rendering differently in different panels — disclosed, not silent.
+- A second disclosed deviation: the mobile "disabled" treatment is one additional icon in the
+  existing compact/touch row, not a full 3-way segmented control with a grayed third option as
+  the mockup depicted — the real compact row uses a single binary icon toggle for Edit/Lettering
+  (a pre-existing, documented space constraint), not a segmented control at all.
+- Tasks 7.3 (cross-device check) and 7.4 (full state-coverage walkthrough) were adapted from
+  "real device" / "manual walkthrough" to automated equivalents — no iOS/Android device or
+  simulator was available in this environment. The adaptations are real, meaningful verifications
+  (a `DartIoCore` file-format round trip; comprehensive automated widget-test state coverage), not
+  skips, but disclosed as adapted rather than claimed as literally what the Plan described.
 
 ## Progress
 
 - [x] Requirements drafted
 - [x] Requirements approved
 - [x] Visual drafted
-- [ ] Visual approved
-- [ ] Specifications drafted
-- [ ] Specifications approved
-- [ ] Plan drafted
-- [ ] Plan approved
-- [ ] Implementation started
-- [ ] Implementation complete
+- [x] Visual approved
+- [x] Specifications drafted
+- [x] Specifications approved
+- [x] Plan drafted
+- [x] Plan approved
+- [x] Implementation started
+- [x] Implementation complete
 - [ ] Documentation drafted
 - [ ] Documentation approved
 
@@ -104,11 +113,8 @@ Key context carried in from prior, closely-related flows (not re-derived from sc
 
 ## Next Actions
 
-1. Get explicit "visual approved" from the user on `02-visual.md`.
-2. Once approved, move to SPECIFICATIONS phase: design the real `MultimodalCuttingClient`
-   implementation (subprocess invocation of `pipeline.py`, NDJSON-or-similar event streaming to
-   match the existing macOS/Linux headless-core RPC pattern), the `CuttingReviewCard` Dart widget
-   and its data model, the Cutting-mode routing/state additions to `controller.dart`, and how
-   accepted regions become real `Layer`s (image-content plumbing, per Requirements Acceptance
-   Criterion 3 — must not repeat the old properties-panel stub-picker mistake from before the
-   lettering flow fixed it).
+1. User review of the implementation — in particular the two color/layout deviations from
+   `02-visual.md` (chip colors, mobile disabled-state affordance) and Tasks 7.3/7.4 being adapted
+   rather than literal device/manual verification.
+2. If/when the user wants it: start the DOCUMENTATION phase (`06-readme.md`, client-facing,
+   analogous to `sdd-comics-ai-baloons`'s README) — not started, not assumed wanted.
