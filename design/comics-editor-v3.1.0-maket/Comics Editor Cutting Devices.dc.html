@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/colors.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/typography.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/tokens/effects.css">
+<link rel="stylesheet" href="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/styles.css">
+<script src="_ds/holyspots-design-system-cfcab4a2-6cdb-4e62-8aaf-2f79d0467217/_ds_bundle.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1e2126}
+  body{font-family:var(--font-core)}
+  a{color:var(--color-link)}a:hover{color:var(--color-primary-hover)}
+</style>
+</helmet>
+<div style="min-width:3200px;background:#1e2126;background-image:radial-gradient(#2a2e34 1.2px,transparent 1.2px);background-size:24px 24px;padding:60px 72px 100px;color:#e8eef1">
+
+  <div style="max-width:1000px;margin:0 0 48px">
+    <div style="display:inline-flex;align-items:center;gap:10px;font:500 12px var(--font-core);letter-spacing:.18em;color:var(--blue-400);text-transform:uppercase">Addition · Cutting · HolySpots DS v3.1</div>
+    <h1 style="font:500 42px var(--font-core);color:#fff;margin:10px 0 12px;letter-spacing:-.01em">Cutting mode — devices</h1>
+    <p style="font:300 17px/1.5 var(--font-core);color:#aab6bd;margin:0;max-width:880px;text-wrap:pretty">Third mode in the top-bar switch: [Edit | Lettering | Cutting]. Same three-pane shape as Lettering — region rail on the left, review card on the right, page canvas in the middle. Functional on macOS only this iteration; on iPad and iPhone the switch is visible but disabled, with an honest explanation on tap. Source page: page-014 photo, regions from the local pipeline.</p>
+  </div>
+
+  <!-- ============ MACOS ============ -->
+  <div style="font:500 22px var(--font-core);color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid #343a41">Cutting mode — macOS · results</div>
+  <div style="font:300 14px var(--font-core);color:#8b969d;margin:8px 0 26px">Primary screen. 12 proposed regions over the source photo; #04 selected with layer-style resize handles. Kind chip + confidence badge on every row — color never alone.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:60px;align-items:flex-start;margin-bottom:70px">
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">1440×920 · region #04 selected · Character · 92%</div>
+      <div style="width:1440px;height:920px;background:var(--surface-cloud);border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column">
+        <div style="height:60px;flex:none;background:var(--white);border-bottom:1px solid var(--divider-tab);display:flex;align-items:center;gap:16px;padding:0 16px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--blue-500);position:relative;flex:none">
+              <div style="position:absolute;left:8px;top:9px;width:18px;height:4px;border-radius:2px;background:#fff;opacity:.95"></div>
+              <div style="position:absolute;left:8px;top:15px;width:18px;height:4px;border-radius:2px;background:#fff;opacity:.7"></div>
+              <div style="position:absolute;left:8px;top:21px;width:18px;height:4px;border-radius:2px;background:#fff;opacity:.45"></div>
+            </div>
+            <div style="font:500 17px var(--font-core);color:var(--text-title)">Comics Editor</div>
+            <div style="font:500 11px var(--font-core);color:var(--blue-500);background:var(--blue-100);border-radius:20px;padding:3px 8px">3.1</div>
+          </div>
+          <div style="width:1px;height:28px;background:var(--divider)"></div>
+          <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);background:var(--gray-50)">
+            <img src="assets/icon_picture.png" style="height:16px;opacity:.6">
+            <span style="font:400 15px var(--font-core);color:var(--text-body)">page-014.comics</span>
+          </div>
+          <div style="display:inline-flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:38px">
+            <div style="display:flex;align-items:center;padding:0 16px;font:400 14px var(--font-core);background:#fff;color:var(--text-body);cursor:pointer">Edit</div>
+            <div style="display:flex;align-items:center;gap:7px;padding:0 16px;font:400 14px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200);cursor:pointer"><span style="width:10px;height:8px;border:1.5px solid var(--gray-400);border-radius:3px 3px 3px 0"></span>Lettering</div>
+            <div style="display:flex;align-items:center;gap:7px;padding:0 16px;font:500 14px var(--font-core);background:var(--blue-500);color:#fff;border-left:1px solid var(--cloud-200)"><span style="width:10px;height:10px;border:1.5px dashed #fff;display:inline-block"></span>Cutting</div>
+          </div>
+          <div style="flex:1"></div>
+          <div style="font:400 13px var(--font-core);color:var(--text-secondary)">12 regions · 9 pending · 2 accepted · 1 rejected</div>
+          <div style="width:1px;height:28px;background:var(--divider)"></div>
+          <x-import component-from-global-scope="HolySpotsDesignSystem_cfcab4.Button" size="md" style="height:38px;padding:0 16px;font-size:14px;gap:8px" hint-size="auto,38px"><img src="assets/icon_download.png" style="height:16px"/>Save</x-import>
+        </div>
+        <div style="flex:1;display:flex;gap:10px;padding:10px;min-height:0">
+          <!-- regions rail -->
+          <div style="width:300px;flex:none;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+            <div style="display:flex;flex:none;border-bottom:1px solid var(--divider)">
+              <div style="flex:1;text-align:center;padding:12px 0;font:500 13px var(--font-core);color:var(--blue-600);border-bottom:2px solid var(--blue-500)">Regions · 12</div>
+              <div style="flex:1;text-align:center;padding:12px 0;font:400 13px var(--font-core);color:var(--text-secondary);cursor:pointer">Library</div>
+            </div>
+            <div style="flex:1;overflow:auto">
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:20px;width:44px;border-radius:4px;background:#5a7d99;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Bg</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#01</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">96%</div><div style="width:16px;height:16px;border-radius:50%;background:var(--blue-500);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/approve.png" style="height:8px;filter:brightness(0) invert(1)"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:20px;width:44px;border-radius:4px;background:#5a7d99;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Bg</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#02</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">88%</div><div style="width:16px;flex:none"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:20px;width:44px;border-radius:4px;background:#2f8f7a;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Chr</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#03</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">91%</div><div style="width:16px;height:16px;border-radius:50%;background:var(--blue-500);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/approve.png" style="height:8px;filter:brightness(0) invert(1)"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--blue-100);border-left:3px solid var(--blue-500)"><div style="height:20px;width:44px;border-radius:4px;background:#2f8f7a;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Chr</div><div style="flex:1;font:500 14px var(--font-core);color:var(--text-title)">#04</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">92%</div><div style="width:16px;flex:none"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:20px;width:44px;border-radius:4px;background:#7b5cd6;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:none"><span style="width:8px;height:6px;border:1.5px solid #fff;border-radius:3px 3px 3px 0"></span>Bln</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#05</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">99%</div><div style="width:16px;flex:none"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:20px;width:44px;border-radius:4px;background:#7b5cd6;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:none"><span style="width:8px;height:6px;border:1.5px solid #fff;border-radius:3px 3px 3px 0"></span>Bln</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#06</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">97%</div><div style="width:16px;flex:none"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:20px;width:44px;border-radius:4px;background:var(--gray-100);color:var(--text-secondary);font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Art</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#07</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#f7ecd4;color:#8a6207;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">64%</div><div style="width:16px;flex:none"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light);opacity:.5"><div style="height:20px;width:44px;border-radius:4px;background:var(--gray-100);color:var(--text-secondary);font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Art</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-secondary);text-decoration:line-through">#08</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#fde4dc;color:#c04a26;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">31%</div><div style="width:16px;height:16px;border-radius:50%;background:var(--gray-400);display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/icon_close.png" style="height:7px;filter:brightness(0) invert(1)"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:20px;width:44px;border-radius:4px;background:#2f8f7a;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Chr</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#09</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">89%</div><div style="width:16px;flex:none"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px"><div style="height:20px;width:44px;border-radius:4px;background:#7b5cd6;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:none"><span style="width:8px;height:6px;border:1.5px solid #fff;border-radius:3px 3px 3px 0"></span>Bln</div><div style="flex:1;font:400 14px var(--font-core);color:var(--text-body)">#10</div><div style="height:20px;padding:0 7px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 12px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">95%</div><div style="width:16px;flex:none"></div></div>
+            </div>
+            <div style="padding:12px;border-top:1px solid var(--divider);flex:none">
+              <button style="width:100%;height:40px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:#fff;color:var(--color-primary);font:500 14px var(--font-core);cursor:pointer">Accept all &gt;90% · 6 regions</button>
+            </div>
+          </div>
+          <!-- canvas -->
+          <div style="flex:1;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);position:relative;overflow:hidden;min-width:0">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface-cloud)">
+              <div style="width:326px;height:700px;background:#0f1114 url('assets/cutting/page-014.jpg');background-size:cover;background-position:center;box-shadow:0 10px 40px rgba(0,0,0,.35);position:relative;overflow:hidden">
+                <!-- proposed region outlines -->
+                <div style="position:absolute;left:10px;top:14px;width:306px;height:206px;border:2px solid rgba(143,179,204,.95)"><div style="position:absolute;left:-2px;top:-2px;height:20px;padding:0 6px;background:#5a7d99;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center;gap:4px">Bg #01</div></div>
+                <div style="position:absolute;left:2px;top:232px;width:322px;height:132px;border:2px solid rgba(143,179,204,.95)"><div style="position:absolute;left:-2px;top:-2px;height:20px;padding:0 6px;background:#5a7d99;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center">Bg #02</div></div>
+                <div style="position:absolute;left:12px;top:250px;width:86px;height:108px;border:2px solid rgba(102,194,173,.95)"><div style="position:absolute;left:-2px;bottom:-22px;height:20px;padding:0 6px;background:#2f8f7a;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center">Chr #03</div></div>
+                <!-- selected region with handles -->
+                <div style="position:absolute;left:162px;top:378px;width:150px;height:224px;border:2.5px solid var(--blue-500);box-shadow:0 0 0 4000px rgba(15,17,20,.28)">
+                  <div style="position:absolute;left:-2px;top:-26px;height:22px;padding:0 8px;background:var(--blue-500);color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center;gap:5px">Chr #04 · 92%</div>
+                  <div style="position:absolute;left:-5px;top:-5px;width:9px;height:9px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;left:50%;top:-5px;width:9px;height:9px;margin-left:-5px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;right:-5px;top:-5px;width:9px;height:9px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;left:-5px;top:50%;width:9px;height:9px;margin-top:-5px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;right:-5px;top:50%;width:9px;height:9px;margin-top:-5px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;left:-5px;bottom:-5px;width:9px;height:9px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;left:50%;bottom:-5px;width:9px;height:9px;margin-left:-5px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                  <div style="position:absolute;right:-5px;bottom:-5px;width:9px;height:9px;background:#fff;border:1.5px solid var(--blue-500)"></div>
+                </div>
+                <!-- balloon regions -->
+                <div style="position:absolute;left:44px;top:112px;width:70px;height:94px;border:2px solid rgba(166,138,232,.95)"><div style="position:absolute;left:-2px;bottom:-22px;height:20px;padding:0 6px;background:#7b5cd6;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center">Bln #05</div></div>
+                <div style="position:absolute;left:196px;top:240px;width:52px;height:46px;border:2px solid rgba(166,138,232,.95)"><div style="position:absolute;left:-2px;bottom:-22px;height:20px;padding:0 6px;background:#7b5cd6;color:#fff;font:500 10px var(--font-core);display:inline-flex;align-items:center">Bln #06</div></div>
+              </div>
+            </div>
+            <div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:2px;background:var(--white);border-radius:var(--radius-btn);box-shadow:var(--shadow-card);padding:4px">
+              <button style="width:30px;height:30px;border:0;background:transparent;font:400 18px var(--font-core);color:var(--text-body);cursor:pointer">−</button>
+              <div style="font:500 13px var(--font-core);color:var(--text-body);width:48px;text-align:center">72%</div>
+              <button style="width:30px;height:30px;border:0;background:transparent;font:400 18px var(--font-core);color:var(--text-body);cursor:pointer">+</button>
+            </div>
+            <div style="position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;background:var(--white);border-radius:var(--radius-btn);box-shadow:var(--shadow-card);padding:8px 12px">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid var(--blue-500);position:relative;flex:none"><div style="position:absolute;inset:3px;border-radius:50%;background:var(--blue-500)"></div></div>
+              <span style="font:400 13px var(--font-core);color:var(--text-secondary)">Local process · source: page-014-photo</span>
+            </div>
+          </div>
+          <!-- review card -->
+          <div style="width:360px;flex:none;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid var(--divider)">
+              <div style="flex:1;font:500 16px var(--font-core);color:var(--text-title)">Region #04</div>
+              <div style="height:22px;padding:0 8px;border-radius:4px;background:#2f8f7a;color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center">Character</div>
+              <div style="height:22px;padding:0 8px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 13px var(--font-serif-data);display:inline-flex;align-items:center">92%</div>
+            </div>
+            <div style="flex:1;overflow:auto;padding:14px">
+              <div style="height:220px;border:1px solid var(--divider);border-radius:var(--radius-chip);background:repeating-linear-gradient(45deg,#eef2f5 0 10px,#f7f9fa 10px 20px);display:flex;align-items:center;justify-content:center;margin-bottom:6px;overflow:hidden">
+                <img src="assets/cutting/r01.png" style="max-height:200px;max-width:90%;object-fit:contain">
+              </div>
+              <div style="font:400 12px var(--font-core);color:var(--text-secondary);margin-bottom:14px">Crop preview · boundary editable on canvas with layer resize handles</div>
+              <div style="font:500 11px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Kind</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;height:44px;border:2px solid var(--cloud-200);border-radius:var(--radius-chip);padding:0 12px;margin-bottom:16px;cursor:pointer">
+                <span style="font:400 15px var(--font-core);color:var(--text-body)">Character</span>
+                <img src="assets/arrow-blue.png" style="height:10px">
+              </div>
+              <button style="width:100%;height:44px;border:1px solid var(--cloud-200);border-radius:var(--radius-btn);background:var(--surface-cloud);color:var(--color-primary);font:500 14px var(--font-core);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;margin-bottom:8px"><img src="assets/add.png" style="height:13px">Insert into library</button>
+              <div style="font:300 12px/1.5 var(--font-core);color:var(--text-secondary);margin-bottom:16px">Adds this crop to the character library (work/library/characters/) for reuse on future pages.</div>
+              <div style="display:flex;gap:8px">
+                <x-import component-from-global-scope="HolySpotsDesignSystem_cfcab4.Button" size="md" style="flex:1;height:44px;font-size:15px" hint-size="50%,44px">Accept</x-import>
+                <button style="flex:1;height:44px;border:0;border-radius:var(--radius-btn);background:var(--cloud-200);color:var(--color-danger);font:500 15px var(--font-core);cursor:pointer">Reject</button>
+              </div>
+            </div>
+            <div style="padding:12px 14px;border-top:1px solid var(--divider);font:300 12px/1.5 var(--font-core);color:var(--text-secondary)">Accepting creates a real layer with kind = Character. Balloons instead offer "Open in Lettering".</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- legend cards -->
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div>
+        <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Confidence badges — color + text, never color alone</div>
+        <div style="width:340px;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:24px;padding:0 9px;border-radius:4px;background:#e3f2e6;color:#1f7a33;font:500 13px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">92%</div><div style="font:400 14px var(--font-core);color:var(--text-body)">High · ≥ 85% · green</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:24px;padding:0 9px;border-radius:4px;background:#f7ecd4;color:#8a6207;font:500 13px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">64%</div><div style="font:400 14px var(--font-core);color:var(--text-body)">Medium · 50–84% · amber</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:24px;padding:0 9px;border-radius:4px;background:#fde4dc;color:#c04a26;font:500 13px var(--font-serif-data);display:inline-flex;align-items:center;flex:none">31%</div><div style="font:400 14px var(--font-core);color:var(--text-body)">Low · &lt; 50% · coral — "look closely"</div></div>
+          <div style="font:300 12px/1.5 var(--font-core);color:var(--text-secondary);border-top:1px solid var(--divider-light);padding-top:10px">Coral reuses the DS "needs attention" weight — not an error, a scanning aid. Percentage text always present.</div>
+        </div>
+      </div>
+      <div>
+        <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Kind chips — two new members, same family</div>
+        <div style="width:340px;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:24px;width:54px;border-radius:4px;background:#5a7d99;color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Bg</div><div style="font:400 14px var(--font-core);color:var(--text-body)">Background — new · slate</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:24px;width:54px;border-radius:4px;background:#2f8f7a;color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Chr</div><div style="font:400 14px var(--font-core);color:var(--text-body)">Character — new · teal</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:24px;width:54px;border-radius:4px;background:#7b5cd6;color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none"><span style="width:9px;height:7px;border:1.5px solid #fff;border-radius:3px 3px 3px 0"></span>Bln</div><div style="font:400 14px var(--font-core);color:var(--text-body)">Balloon — from Lettering · violet</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:24px;width:54px;border-radius:4px;background:var(--gray-100);color:var(--text-secondary);font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Art</div><div style="font:400 14px var(--font-core);color:var(--text-body)">Art / other — catch-all default</div></div>
+          <div style="font:300 12px/1.5 var(--font-core);color:var(--text-secondary);border-top:1px solid var(--divider-light);padding-top:10px">Slate and teal sit outside the sky-blue / coral vocabulary, same rule as violet and amber. Blue stays selection.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ IPAD ============ -->
+  <div style="font:500 22px var(--font-core);color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid #343a41">Cutting on iPad — disabled, not hidden</div>
+  <div style="font:300 14px var(--font-core);color:#8b969d;margin:8px 0 26px">The pipeline is desktop-only this iteration. The switch shows all three modes; Cutting is grayed. A tap answers with a popover — never a silent inert control, never entering-then-failing.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:60px;align-items:flex-start;margin-bottom:70px">
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">iPad Pro 11″ · landscape · Edit mode · corrector just tapped the grayed switch</div>
+      <div style="width:1240px;height:864px;background:#0b0d10;border-radius:32px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+        <div style="width:100%;height:100%;background:var(--surface-cloud);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="height:56px;flex:none;background:var(--white);border-bottom:1px solid var(--divider-tab);display:flex;align-items:center;gap:12px;padding:0 14px">
+            <div style="font:500 16px var(--font-core);color:var(--text-title)">page-014.comics</div>
+            <div style="display:inline-flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:44px">
+              <div style="display:flex;align-items:center;padding:0 18px;font:500 15px var(--font-core);background:var(--blue-500);color:#fff">Edit</div>
+              <div style="display:flex;align-items:center;gap:7px;padding:0 18px;font:400 15px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)"><span style="width:10px;height:8px;border:1.5px solid var(--gray-400);border-radius:3px 3px 3px 0"></span>Lettering</div>
+              <div style="display:flex;align-items:center;gap:7px;padding:0 18px;font:400 15px var(--font-core);background:var(--gray-50);color:var(--text-tertiary);border-left:1px solid var(--cloud-200)"><span style="width:10px;height:10px;border:1.5px dashed var(--gray-400);display:inline-block"></span>Cutting</div>
+            </div>
+            <div style="flex:1"></div>
+            <button style="height:44px;padding:0 18px;border:0;border-radius:var(--radius-btn);background:var(--blue-500);color:#fff;font:500 15px var(--font-core);display:inline-flex;align-items:center;gap:8px"><img src="assets/icon_download.png" style="height:16px;filter:brightness(0) invert(1)">Save</button>
+          </div>
+          <!-- popover under grayed switch -->
+          <div style="position:absolute;left:214px;top:64px;width:360px;background:var(--white);border-radius:8px;box-shadow:var(--shadow-dialog);padding:14px 16px;z-index:5">
+            <div style="position:absolute;left:210px;top:-7px;width:14px;height:14px;background:var(--white);transform:rotate(45deg)"></div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--blue-400);color:var(--blue-500);font:500 13px var(--font-serif-data);display:flex;align-items:center;justify-content:center;flex:none">i</div>
+              <div style="font:300 14px/1.5 var(--font-core);color:var(--text-body)">Cutting requires the desktop app for now — the AI pipeline doesn't run on this device yet. Regions cut on your Mac appear here as normal layers.</div>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;gap:8px;padding:8px;min-height:0">
+            <div style="width:270px;flex:none;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;overflow:hidden">
+              <div style="display:flex;align-items:center;padding:14px 12px;border-bottom:1px solid var(--divider)"><div style="flex:1;font:500 12px var(--font-core);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em">Layers</div></div>
+              <div style="flex:1;overflow:auto">
+                <div style="display:flex;align-items:center;gap:8px;padding:13px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:22px;width:48px;border-radius:4px;background:#5a7d99;color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Bg</div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-body)">panel_top</div></div>
+                <div style="display:flex;align-items:center;gap:8px;padding:13px 12px;background:var(--blue-100);border-left:3px solid var(--blue-500)"><div style="height:22px;width:48px;border-radius:4px;background:#2f8f7a;color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Chr</div><div style="flex:1;font:500 15px var(--font-core);color:var(--text-title)">king_kashi</div></div>
+                <div style="display:flex;align-items:center;gap:8px;padding:13px 12px;border-bottom:1px solid var(--divider-light)"><div style="height:22px;width:48px;border-radius:4px;background:#7b5cd6;color:#fff;font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:none"><span style="width:8px;height:6px;border:1.5px solid #fff;border-radius:3px 3px 3px 0"></span>Bln</div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-body)">king_balloon_01</div></div>
+                <div style="display:flex;align-items:center;gap:8px;padding:13px 12px"><div style="height:22px;width:48px;border-radius:4px;background:var(--gray-100);color:var(--text-secondary);font:500 11px var(--font-core);display:inline-flex;align-items:center;justify-content:center;flex:none">Art</div><div style="flex:1;font:400 15px var(--font-core);color:var(--text-body)">ornament_fx</div></div>
+              </div>
+              <div style="padding:12px;border-top:1px solid var(--divider);font:300 12px/1.5 var(--font-core);color:var(--text-secondary)">Layers cut on desktop arrive with kind chips already set.</div>
+            </div>
+            <div style="flex:1;background:var(--white);border-radius:5px;box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;min-width:0">
+              <div style="width:298px;height:640px;background:#0f1114 url('assets/cutting/page-014.jpg');background-size:cover;background-position:center;box-shadow:0 10px 40px rgba(0,0,0,.35)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ IPHONE ============ -->
+  <div style="font:500 22px var(--font-core);color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid #343a41">Cutting on iPhone — disabled, not hidden</div>
+  <div style="font:300 14px var(--font-core);color:#8b969d;margin:8px 0 26px">Same rule, single column. Tapping the grayed segment shows a one-line inline note under the switch instead of a popover.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start;margin-bottom:70px">
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">Edit mode · switch visible, Cutting grayed</div>
+      <div style="width:400px;height:844px;background:#0b0d10;border-radius:48px;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+        <div style="width:100%;height:100%;background:var(--white);border-radius:38px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:center"><div style="width:110px;height:28px;border-radius:20px;background:#0b0d10"></div></div>
+          <div style="height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--divider-tab)">
+            <div style="flex:1;font:500 16px var(--font-core);color:var(--text-title)">page-014.comics</div>
+            <div style="font:400 13px var(--font-core);color:var(--text-secondary)">page 1</div>
+          </div>
+          <div style="flex:none;padding:10px 12px 0">
+            <div style="display:flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:44px">
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;font:500 14px var(--font-core);background:var(--blue-500);color:#fff">Edit</div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;font:400 14px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Lettering</div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font:400 14px var(--font-core);background:var(--gray-50);color:var(--text-tertiary);border-left:1px solid var(--cloud-200)"><span style="width:9px;height:9px;border:1.5px dashed var(--gray-400);display:inline-block"></span>Cutting</div>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface-cloud);margin:10px 12px;border-radius:5px;overflow:hidden">
+            <div style="width:224px;height:480px;background:#0f1114 url('assets/cutting/page-014.jpg');background-size:cover;background-position:center;box-shadow:0 10px 40px rgba(0,0,0,.35)"></div>
+          </div>
+          <div style="height:24px;flex:none;display:flex;align-items:center;justify-content:center"><div style="width:130px;height:5px;border-radius:4px;background:#0b0d10;opacity:.9"></div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font:400 13px var(--font-core);color:#7f8b92;margin:0 0 10px 2px">After tapping the grayed segment — inline note</div>
+      <div style="width:400px;height:844px;background:#0b0d10;border-radius:48px;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+        <div style="width:100%;height:100%;background:var(--white);border-radius:38px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:center"><div style="width:110px;height:28px;border-radius:20px;background:#0b0d10"></div></div>
+          <div style="height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--divider-tab)">
+            <div style="flex:1;font:500 16px var(--font-core);color:var(--text-title)">page-014.comics</div>
+            <div style="font:400 13px var(--font-core);color:var(--text-secondary)">page 1</div>
+          </div>
+          <div style="flex:none;padding:10px 12px 0">
+            <div style="display:flex;border:1px solid var(--cloud-200);border-radius:var(--radius-chip);overflow:hidden;height:44px">
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;font:500 14px var(--font-core);background:var(--blue-500);color:#fff">Edit</div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;font:400 14px var(--font-core);background:#fff;color:var(--text-body);border-left:1px solid var(--cloud-200)">Lettering</div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font:400 14px var(--font-core);background:var(--gray-50);color:var(--text-tertiary);border-left:1px solid var(--cloud-200)"><span style="width:9px;height:9px;border:1.5px dashed var(--gray-400);display:inline-block"></span>Cutting</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;background:var(--gray-50);border:1px solid var(--divider);border-radius:6px;padding:12px;margin-top:8px">
+              <div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--blue-400);color:var(--blue-500);font:500 12px var(--font-serif-data);display:flex;align-items:center;justify-content:center;flex:none">i</div>
+              <div style="font:300 13px/1.5 var(--font-core);color:var(--text-body)">Cutting requires a desktop app for now — the AI pipeline doesn't run on this device yet.</div>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface-cloud);margin:10px 12px;border-radius:5px;overflow:hidden">
+            <div style="width:206px;height:440px;background:#0f1114 url('assets/cutting/page-014.jpg');background-size:cover;background-position:center;box-shadow:0 10px 40px rgba(0,0,0,.35)"></div>
+          </div>
+          <div style="height:24px;flex:none;display:flex;align-items:center;justify-content:center"><div style="width:130px;height:5px;border-radius:4px;background:#0b0d10;opacity:.9"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:900px;font:300 13px/1.6 var(--font-core);color:#7f8b92">Per the approved requirements: Cutting is functional on desktop only this iteration — iPad and iPhone show the disabled switch, no faked mobile pipeline. Slate <span style="color:#8fb3cc">#5a7d99</span> (Bg) and teal <span style="color:#66c2ad">#2f8f7a</span> (Chr) are new chip colors, same "outside sky-blue / coral" rule as violet and amber. Source photo and region crops come from the real pipeline output (layers/).</div>
+
+</div>
+</x-dc>
+</body>
+</html>
