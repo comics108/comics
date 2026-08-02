@@ -202,6 +202,10 @@ framing from the start.
 
 ## References
 
+- `flows/sdd-comics-editor-fromat-dot-comics/` — consolidated `.comics` format reference; this
+  flow's layer/no-grouping model, `TranslateAnim.X`/`Y` position representation, canvas geometry
+  facts, and RotateAnim usage stat were extracted there alongside `vdd-comics-editor-timeline`'s
+  format facts, 2026-08-01
 - `flows/sdd-comics-ai-multimodal/` — COMPLETE; cutting/segmentation, alignment, and library-
   clustering stages this flow reuses directly; its `02-specifications.md` "Editor Integration
   Contract" (`MultimodalCuttingClient`/`CuttingEvent`/`DetectedRegion`) is the shape this flow's own

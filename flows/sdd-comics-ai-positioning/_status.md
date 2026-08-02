@@ -6,23 +6,144 @@ IMPLEMENTATION
 
 ## Phase Status
 
-IN PROGRESS — Phases 1-6 done (Must-Have baseline pipeline, held-out evaluation, real text-context
+COMPLETE (Phases 1-8 all done, per `04-implementation-log.md`'s Task 8.1/8.2 entry and the real
+`apps/comics-ai/comics-positioning/README.md` it produced — this section below had drifted stale,
+still describing Phase 7 as the latest state; corrected 2026-08-01 while investigating the
+reading-order finding below, which reopened this closed flow for one real fix-and-A/B-test session,
+now re-closed with no change to the previously-shipped/documented numbers).
+
+Phases 1-6 done (Must-Have baseline pipeline, held-out evaluation, real text-context
 now covering all 16 training episodes via the comic's own OCR'd dialogue, learned model trained and
 honestly evaluated against baseline, including a local-OSS-multimodal-model detour). 33/33 tests
 passing. **Net result of Phases 4 and 5 together, even after upgrading text context to 100%
 coverage**: the calibrated rule-based baseline remains the best real deliverable — the learned model
 does not beat it (5.8% worse, weighted, with full text coverage; was 4.3% worse with partial
 coverage). Per Requirements' own Must-Have criterion 3, shipping the baseline alone is an explicitly
-acceptable outcome. Remaining: Phase 7 (optional, cross-page page-number anchor — not started) and
-Phase 8 (report/contract docs — not started).
+acceptable outcome.
+
+**Phase 7 (optional, cross-page page-number anchor) attempted for real, real negative result.**
+`page_number.py` reuses `comics-multimodal`'s `detect_pages` to locate the real page box (a fixed
+frame-relative crop failed first — caught by viewing the actual crop). Even with the page and folio
+number correctly located, **Tesseract cannot reliably read this book's small, stylized digits**:
+tried raw/tighter crops, 4x-6x upscaling, autocontrast, binarization, erosion, 6 PSM modes, and
+per-digit splitting — the "7" of a real "67" is read consistently, the "6" is *never* read, across
+every configuration tried. Confirmed systematic (not a one-off) on 10 more real photos: 1/10 got even
+a partial digit, 9/10 got nothing. Added a real correctness fix regardless (a two-page spread's
+folio numbers must be consecutive integers — `right == left + 1` — rejecting a lone misread digit
+instead of silently trusting it). Task 7.2 (page-number → episode mapping) was not attempted — not
+honest to build on an unreliable input. This is exactly the risk Specifications flagged in advance;
+its own fallback (per-page relative positioning, human handles absolute placement) already covers
+it — nothing downstream needs to change. 35/35 tests passing.
+
+**Reading-order investigation (2026-08-01) added, tested, A/B'd, and ultimately did not change
+shipped behavior** — see Blockers for the full record. 30/30 dependency-free tests still passing
+(added 2 new tests for the investigated-but-unadopted row-clustering code); `work/train_pairs/` and
+`work/eval_report.jsonl` regenerated, numbers unchanged from before this investigation (1467.4px
+weighted baseline mean error). Phase 8 (report/contract docs) was already done in an earlier
+session — `apps/comics-ai/comics-positioning/README.md` exists and its documented 1467px baseline
+number matches exactly, confirming no drift from this investigation.
+
+**Data expansion (2026-08-02), from `sdd-comics-ai-transformations`'s re-matching refinement.**
+That flow measured and (with Anton's explicit confirmation) applied a refined single-hit matching
+rule to `comics-multimodal`'s `align_photo.py`, recovering 22 of 99 previously-unmatched pages —
+real matched pages/episodes went from 37/16 to **59/19**. Cascade regenerated here: `build_pairs.py`
+(392 → **564 real pairs**), `evaluate_positioning.py` (4-episode/78-pair held-out set → **5
+episodes/158 pairs**). New weighted baseline: **1479.7px mean error** (was 1467.4px — real, honest
+~0.8% change, not treated as a regression or improvement on its own) and **0.634 rank correlation**
+(was 0.542 — a real improvement, on a held-out sample roughly double the previous size). Net
+finding: more real data confirmed the baseline's performance level with higher statistical
+confidence, rather than changing it. One new real outlier surfaced: held-out episode
+`d00c610a6f4647dcbd8116014674d255` has 6120px mean error (14.7% of its canvas height) — flagged,
+not investigated further this pass. `apps/comics-ai/comics-positioning/README.md` updated with the
+new numbers. One hardcoded test (`test_data_checkpoint.py::
+test_summarize_on_real_data_matches_manual_count`) updated from `37/16` to `59/19` to match the new
+real counts.
+
+**Learned-model re-comparison, same day, `scikit-learn`/`joblib` installed to make it possible.**
+Retrained on the expanded 406-example/14-episode training set, evaluated on the new 5-episode/
+158-pair held-out set: **55% worse than baseline** (2294px vs. 1480px weighted), worse than either
+prior attempt (4.3%, then 5.8%). Excluding the `d00c610a...` outlier, still **70% worse** (1804px
+vs. 1064px) — not just outlier-driven. Real, disclosed, counter-to-expectation finding: more data
+made the model's relative disadvantage larger, not smaller. Plausible (unconfirmed) explanation:
+the newly-recovered episodes' pairs come from lower-confidence single-hit matches, possibly noisier
+than the model can generalize past, while the baseline's simpler per-kind median statistic is more
+robust to that noise. **Recommendation to ship the baseline only stands, now on stronger evidence.**
+Full detail in `apps/comics-ai/comics-positioning/README.md`. All 37/37 tests passing (was 30 —
+7 previously dependency-blocked tests now run for real).
 
 ## Last Updated
 
-2026-08-01 by Claude
+2026-08-02 by Claude (regenerated pairs/eval after `sdd-comics-ai-transformations`'s confirmed
+re-matching refinement — real data expansion, baseline performance level confirmed, not changed;
+see Context Notes)
 
 ## Blockers
 
-- None currently. The Checkpoint B decision point (baseline-calibration vs. Phase 5 vs. ship-as-is)
+- **RESOLVED (2026-08-01) — investigated, fixed, A/B tested, and the naive sort was kept after
+  all, on real evidence.** Original finding: `reading_order_index`'s `_sort_top_to_bottom`
+  (`build_pairs.py`) is a naive `sorted(key=(bbox_y, bbox_x))` — `bbox_x` only breaks ties on
+  *exact* Y equality, not real row-clustering — and `sdd-comics-ai-multimodal`'s Checkpoint A
+  independently confirms the real printed source is "a conventionally paginated comic (fixed
+  rectangular panel grids)," i.e. genuinely multi-panel-per-row, not vertically pre-stacked. Raised
+  by Anton asking how reading order should work for e.g. a 3×3 grid page.
+  **Built and tested a real fix** (`_sort_reading_order`/`_cluster_into_rows` in `build_pairs.py`):
+  row-cluster by Y-proximity, then sort each row by X — confirmed correct on a synthetic 3×3-grid
+  unit test the naive sort provably gets wrong (`test_build_pairs.py`).
+  **Then A/B tested it for real** against the naive sort, same held-out episodes/protocol as the
+  Phase 5 learned-model comparison — and the "fix" made the actual metric *worse*, not better, in
+  two independent tolerance variants:
+  | Variant | Weighted mean error | Reading-order rank correlation |
+  |---|---|---|
+  | Naive sort (shipped) | **1467px** | **0.542** |
+  | Row-clustering, per-pair adaptive tolerance | 1640px (+11.8%) | 0.389 |
+  | Row-clustering, page-median tolerance | 1665px (+13.5%) | 0.479 |
+
+  Confirmed this wasn't just tie-breaking noise: 60-70% of pairs in the held-out episodes actually
+  got a different `reading_order_index` between naive and fixed. Diagnosed likely cause: real
+  `regions.jsonl` content spans a huge size range within one page (9-245px tall out of a 256px
+  crop, since these are fine-grained content segments — one balloon, one character silhouette —
+  not uniform panel-sized boxes), which defeats simple Y-proximity clustering more than the clean
+  synthetic test case suggested. **Per this flow's own established precedent (ship what wins, not
+  what sounds better — same standard as Phase 5's learned model losing to baseline), the naive sort
+  stays the shipped default.** The row-clustering code is kept, tested, and documented in
+  `build_pairs.py` as a real, disclosed negative result — not deleted — since the underlying
+  geometric argument (real pages are multi-panel grids) remains true even though this specific fix
+  didn't pan out; future work (larger held-out sample, or `sdd-comics-ai-script-context`'s
+  narrative-order signal as an independent cross-check) might explain why or do better. Full
+  experiment record in `04-implementation-log.md`. `work/train_pairs/*.jsonl` and
+  `work/eval_report.jsonl` regenerated with the naive sort (shipped behavior) — numbers match the
+  original 1467.4px exactly, confirming no drift from this investigation.
+- **Refined understanding of the underlying craft (2026-08-01, from Anton's comics-craft domain
+  knowledge, informed the fix attempt above even though it didn't ultimately change shipped
+  behavior)**:
+  professional comics reading order follows a small, well-established heuristic stack, in priority
+  order — Z-path (row-raster; the dominant case), then panel size, then overlap/compositional
+  z-order, then balloon-tail direction, then character gaze direction — because professional artists
+  design pages so **layout itself implies order** ("continuous closure"); genuine ambiguity is
+  considered a page-design flaw, not a normal reading experience. This reframes the whole
+  recomposition task precisely: what Джанава called "нарезатор" creative judgment
+  (`flows/vdd-comics-editor-jhanava/`) *is* determining true panel order via this heuristic stack for
+  non-trivial layouts, then laying panels out sequentially along the target strip's Y-axis — literally
+  the historical newspaper comic-strip model (one linear sequence, `1→2→3→4→5→6`), rotated from
+  horizontal to vertical, with a page-grid detour in between that this pipeline has to undo. Concrete
+  priority for the actual fix: (1) row-clustering + X-sort implements Z-path exactly and is already
+  sufficient for confirmed "fixed rectangular panel grids" — the common case, no further heuristics
+  needed there; (2) panel bbox area (already computed) as a tie-break for size; (3) region overlap
+  (already representable — `sdd-comics-ai-multimodal` already supports overlapping instance masks)
+  as a tie-break for compositional z-order; (4) balloon-tail direction and (5) character gaze
+  direction both require CV capability that **does not exist anywhere in this codebase today**
+  (confirmed in `sdd-comics-editor-questions`'s survey: no orientation/gaze concept exists) — real,
+  possibly large new scope, not a small addition; low priority until (1)-(3) are shown insufficient
+  on real ambiguous pages. Matches this repo's own "skip + log, never guess" convention: pages where
+  (1)-(3) still leave real ambiguity are exactly where `sdd-comics-ai-script-context`'s narrative-order
+  signal is the intended fallback/cross-check (see that flow's Should-Have), not a replacement for
+  the geometric heuristics.
+  **Correction, same day, after actually building and testing (1)**: "already sufficient" turned out
+  to be the theory, not the result — see the RESOLVED entry above. (1) alone measurably
+  underperformed the naive sort on real held-out data; (2)/(3) were not implemented or tested this
+  session (deprioritized once (1) itself didn't pan out), so their own real-world value is still
+  unverified, not just (4)/(5)'s.
+- None otherwise currently. The Checkpoint B decision point (baseline-calibration vs. Phase 5 vs. ship-as-is)
   is resolved by evidence, not by choosing one of the three options blind: Anton said "continue" ->
   proceeded to Phase 5 for real -> the model was built, evaluated fairly against baseline, and lost
   (4.3% worse, weighted). That answers the original question: more model investment isn't currently
@@ -82,9 +203,9 @@ Phase 8 (report/contract docs — not started).
       pairs, 16 episodes), Phase 2 (392 real training pairs, `work/train_pairs/`), Phase 3
       (real spacing stats + baseline positioner), Phase 4 (held-out evaluation + Checkpoint B) all
       code-complete and run against real data, 20/20 tests passing
-- [ ] Implementation complete — paused at Checkpoint B pending Anton's direction (see Blockers);
-      Phases 1-4 are a real, working, honestly-evaluated deliverable regardless of which way this
-      goes next
+- [x] Implementation complete — Phases 1-8 all done (Phases 5-7 each a genuine attempt with an
+      honestly-reported real result, not a skip); see `04-implementation-log.md` for the full record
+      and this doc's Phase Status note above on the stale-progress correction made 2026-08-01
 
 ## Context Notes
 
@@ -143,3 +264,15 @@ N/A — new flow. Spun out of `flows/sdd-comics-editor-questions/` (problem fram
 2. On "plan approved": move to Implementation — start with Phase 1 (environment + reuse wiring) and
    Task 1.2's real data-count checkpoint, per this repo's one-test-at-a-time protocol. Log progress
    in `04-implementation-log.md`.
+
+## Superseded/Extended By
+
+- `flows/sdd-comics-ai-transformations/` (2026-08-01, renamed same day from
+  `sdd-comics-ai-positioning-revised` and substantially rescoped to full-book coverage plus
+  transformation/animation generation) — this flow (`sdd-comics-ai-positioning`) is COMPLETE and
+  stays as the shipped position-prediction stage; the new flow depends on it directly (a region
+  needs a resting position before a reveal animation into that position makes sense) and also
+  carries forward the reading-order investigation's flagged next step (test
+  `sdd-comics-ai-script-context`'s narrative signal) and the never-adopted `text_context_length`
+  semantic upgrade. This flow's own numbers/docs stay as the historical record unless the new flow
+  reports a real win back here.

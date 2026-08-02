@@ -11,7 +11,7 @@ until a real stakeholder session happens)
 
 ## Last Updated
 
-2026-08-01 by Claude
+2026-08-01 by Claude (added Group D, spun out into `flows/sdd-comics-ai-script-context/`)
 
 ## Blockers
 
@@ -19,6 +19,11 @@ until a real stakeholder session happens)
   Корытный) and Бхагаван (identity in this context not yet clarified) to resolve for real. No
   amount of further drafting here substitutes for that — see 2026-08-01 note below on what *has*
   changed without a stakeholder session happening.
+- Group C's two genuinely-open items (was v2.8's orientation "more correct"; is the current
+  fixed-width/scale-to-fit/vertical-scroll model right for every device aspect ratio; what
+  "correct" viewer playback should be) are design-judgment calls no code investigation can
+  resolve — needs Anton's own follow-up opinion, not a stakeholder session with Джанава/Бхагаван
+  specifically (this group's source is Anton, not those two).
 
 ## Progress
 
@@ -27,6 +32,12 @@ until a real stakeholder session happens)
 - [x] Requirements updated (2026-08-01) — annotated each Group A/B question against completed work
       (`sdd-comics-ai-multimodal`, `vdd-comics-editor-ai-uiux`) as ANSWERED-IN-PRACTICE / EVIDENCED
       / STILL OPEN. No question is closed — this is not a substitute for the real session.
+- [x] Requirements updated (2026-08-01, later same day) — added Group C (Anton): timeline
+      orientation (v2.8 vertical vs. current horizontal), whether vertical scroll and vertical
+      timeline are related, whether horizontal-scroll comics are feasible, device-aspect-ratio
+      display/assembly, and correct viewer playback. Investigated against real v2.8 WPF source +
+      current Flutter/mobile code before writing anything down as a blind question — see
+      `01-requirements.md`'s Group C for full citations.
 - [ ] Requirements approved — not applicable; see Acceptance Criteria in `01-requirements.md` for
       this flow's actual "done" condition (questions answered, not a doc approved)
 - [ ] Specifications drafted — not applicable to this flow's purpose
@@ -94,3 +105,26 @@ until a real stakeholder session happens)
    complete per episode. Reframed the relevant Group A question from "ask Джанава whether this data
    exists" to "spike whether automatic text↔episode alignment is feasible" — an engineering question,
    not a stakeholder one, for at least this specific gap.
+6. **2026-08-01, fifth update, same day**: added Group C (Anton) — timeline orientation (v2.8
+   vertical scroll-as-time vs. today's explicit horizontal Gantt bar), whether that's tied to the
+   comic's own vertical infinite scroll, whether horizontal-scroll comics are feasible, device
+   aspect-ratio display/assembly, and correct viewer playback. Verified against real v2.8 WPF
+   source (`ComicsControl.xaml`/`.xaml.cs`, `ComicsViewModel.cs`, `TranslateAnim.cs`) and current
+   Flutter/mobile code (`timeline.dart`, `ZoomFrameLayout.java`, `ComicsActivity.java`) before
+   writing anything down as a blind question. Net finding: the 90°-orientation-change premise is
+   confirmed and explained (v2.8 had no separate timeline — vertical scroll *was* time); vertical
+   scroll is deeply assumed throughout the current stack (WPF's `VerticalOffset`-only binding,
+   mobile viewer's Y-only translate, real files ~30:1 tall) though not literally forbidden at the
+   data-model level; device aspect ratio is currently handled via fixed-width/scale-to-fit/
+   scroll-height, not per-device adaptation. Three sub-questions remain genuinely open
+   (design-judgment calls, not code answers) — see `01-requirements.md`'s Group C.
+7. **2026-08-01, sixth update, same day**: added Group D (Anton) — Джанава's `vendors/anima`
+   pipeline idea (LLM-simplify scripture into a named-entity pseudo-script, train
+   "нарезатор"/"позиционер" on it). Surveyed every real flow in the repo first — confirmed none does
+   LLM-based narrative→script conversion today. Rather than draft it out here, spun it out
+   immediately into its own new flow, `flows/sdd-comics-ai-script-context/` (REQUIREMENTS/DRAFTING,
+   v0.1), since it's substantial enough to need its own Requirements/Specifications/Plan and three
+   consumer flows were identified (`sdd-comics-ai-multimodal`, `sdd-comics-ai-positioning`,
+   `vdd-comics-editor-systematization-uiux`). User-specified constraint at creation: local Ollama
+   only, no paid API — real environment check (`ollama list`) found models pulled but none
+   purpose-built for narrative extraction, tracked as an open question there, not decided here.

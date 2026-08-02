@@ -12,8 +12,7 @@ until a real session happens)
 
 ## Last Updated
 
-2026-07-30 by Claude (extracted open questions to `sdd-comics-editor-questions`; unparked for
-continued conceptual drafting)
+2026-08-01 by Claude (added "Material Systematization — Concrete Shape" to `01-requirements.md`)
 
 ## Blockers
 
@@ -105,6 +104,19 @@ supporting evidence; character/background placement *complexity* specifically (a
 (2026-08-01)" section for the question-by-question breakdown. **None of this is a substitute for
 the real session with Джанава/Бхагаван this flow still needs** — it's evidence to bring to that
 conversation, not a resolution of it.
+
+## Related Work Since This Flow Was Drafted (2026-08-01, continued)
+
+- **Anton gave "material systematization" a concrete structure**: not a flat tagged pile but a tree
+  — `image -> kind (character) -> identity (e.g. Бирма) -> variant (smiling/laughing/crying/falling/
+  sitting/...)`. Levels 1-2 already exist for real (`sdd-comics-ai-multimodal`'s `work/library/
+  characters/<name>/`, surfaced via `comics-editor`'s producer-facing Library tab from
+  `vdd-comics-editor-ai-uiux`) and stay documented in this flow's `01-requirements.md` as
+  existing-system context. **Level 3 (variant tagging) and the downstream AI-generation aspiration —
+  not built anywhere, explicitly out of scope today — were extracted the same day to
+  `flows/vdd-comics-editor-systematization-uiux/`**, per explicit user request, mirroring the
+  `sdd-comics-editor-questions` split. Still unvalidated with Джанава himself either way — captured
+  from Anton directly, same caveat as everything else in this flow.
 
 ## Next Actions
 

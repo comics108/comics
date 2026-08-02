@@ -112,6 +112,24 @@ These six points are now open questions tracked in `flows/sdd-comics-editor-ques
 not settled scope — this section documents what the *example* implies is missing, it does not
 commit to building any of it.
 
+## Material Systematization — Existing-System Context (2026-08-01)
+
+Джанава's "нарезка и систематизация имеющегося материала" (Problem Statement above) turned out,
+per a 2026-08-01 elaboration from Anton, to have a concrete shape: a tree —
+`image -> kind (character) -> identity (e.g. Бирма) -> variant (pose/emotion/action)`. **Levels 1-2
+of that tree already exist for real**: `sdd-comics-ai-multimodal` produces `work/library/
+characters/<name>/` per identified character (weakly identified today — episode-name token + visual
+clustering, see `flows/sdd-comics-editor-questions/`), surfaced in `apps/comics-editor` via a
+producer-facing "Library" tab (`library_browser.dart`, built by `flows/vdd-comics-editor-ai-uiux`) —
+real, running code, staying documented here as context for this flow's broader taxonomy thinking.
+
+**Everything about level 3 (variant tagging) and beyond — not built anywhere, explicitly out of
+scope today — has been extracted to `flows/vdd-comics-editor-systematization-uiux/` on 2026-08-01**,
+per explicit user request, mirroring the `sdd-comics-editor-questions` extraction pattern. That flow
+tracks: the variant-tag taxonomy/UI design, how tags would be sourced (text-grounding, same open
+question as `sdd-comics-ai-positioning`), and the future (not-this-iteration) aspiration of AI
+generating new in-style character variants from accumulated tagged data + text.
+
 ## User Stories
 
 Speculative — not yet validated with Джанава or the wider team beyond the single exchange above.
@@ -174,6 +192,9 @@ This flow proceeds in the meantime on stated hypotheses/defaults, not on resolve
 - `flows/sdd-comics-editor-questions/` — consolidated backlog of every open question this flow has
   raised (both Джанава's kind-taxonomy framing and the video-sample analysis); extracted out on
   2026-07-30 so this flow isn't gated by needing all of them answered first
+- `flows/vdd-comics-editor-systematization-uiux/` — variant-level (pose/emotion/action) character
+  library tagging + the future AI-generation-from-accumulated-variants aspiration; extracted out on
+  2026-08-01, the unbuilt/out-of-scope half of the "Material Systematization" tree idea
 
 ---
 

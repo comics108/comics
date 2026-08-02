@@ -1,10 +1,8 @@
 # Requirements: comics-editor-questions
 
-> Version: 0.5 (consolidation, not a build spec; Status Update covering raw material +
-> character/background placement + tooling-vs-process, a Technical Verification pass against real
-> code/data confirming the architecture, then a follow-up check of `spiritual_text/` that found real
-> usable grounding text for at least one validated episode — revising the "no descriptive text
-> exists" finding)
+> Version: 0.6 (adds Group C: timeline orientation / vertical-vs-horizontal scroll / device aspect
+> ratio / viewer playback, from Anton, investigated against real v2.8 WPF + current Flutter/mobile
+> code before being left as open questions)
 > Status: DRAFT
 > Last Updated: 2026-08-01
 
@@ -226,6 +224,92 @@ four questions below are exactly as open as when they were written.
       this was analyzed) — someone should actually listen to it before relying on any conclusion
       about audio scope.
 
+### Group C — Timeline orientation & comic aspect ratio/scroll direction (Anton, 2026-08-01)
+
+Raw question, verbatim intent: originally in Comics Editor 2.8, was the timeline oriented
+vertically — 90° different from the current build? Maybe the original orientation was correct?
+Is this related to comics having vertical infinite scroll? Can a comic have horizontal infinite
+scroll instead? Different devices have different aspect ratios — how should comics correctly be
+displayed and assembled for different ratios? How should they correctly be played back in the
+comics viewer?
+
+Investigated against real code before leaving any part of this as a blind question, per this
+flow's own established practice:
+
+- [EVIDENCED] Was v2.8's timeline vertical, 90° from today? **Confirmed, but not quite as a
+      "rotated widget"** — v2.8 had no separate timeline widget at all. "Time" *was* the canvas's
+      vertical scroll position: `ComicsControl.xaml:25` (a `ScrollViewer`) feeds
+      `e.VerticalOffset` directly into `ComicsViewModel.Scroll` (`ComicsControl.xaml.cs:41-53`,
+      `ComicsViewModel.cs:158`), which drives `TranslateAnim.Interpolate`'s keyframe factor
+      (`TranslateAnim.cs:43-51`). The current Flutter `Timeline` widget
+      (`apps/comics-editor/lib/src/ui/widgets/timeline.dart:7-9`, own comment: *"the modernization
+      of the original's scroll-as-time model"*) is an explicit horizontal Gantt-style bar
+      (`scrollDirection: Axis.horizontal` at line 129, playhead positioned via `left:`). So yes,
+      confirmed 90°-different — from an *implicit* vertical scroll-as-time model to an *explicit*
+      horizontal timeline bar, a deliberate modernization already documented in the new code's own
+      comment, not an accidental rotation.
+- [STILL OPEN] Was the original (implicit, vertical, scroll-is-time) model actually "more
+      correct"? A real design-judgment question — the current horizontal timeline bar is more
+      legible as a timeline (matches every other NLE/animation tool's convention) but visually
+      decouples "where you are in time" from "where you are in the actual vertical scroll," which
+      arguably the old model made viscerally obvious for free. No code investigation can resolve
+      this — needs a real opinion from whoever championed the horizontal redesign.
+- [ANSWERED-IN-PRACTICE] Is the vertical-scroll-as-time relationship why v2.8's timeline was
+      vertical? **Yes, directly and mechanically**, not just a convention: v2.8 had no independent
+      timeline concept — the vertical `ScrollViewer` *was* the time axis (see above), so a
+      vertical timeline orientation was the *only* orientation that could have existed; there was
+      nothing to separately choose.
+- [EVIDENCED] Can a comic have horizontal infinite scroll instead of vertical? **Not modeled as
+      impossible at the data layer, but assumed vertical everywhere around it** — real rework, not
+      a config flip. `ComicsDoc` stores independent `width`/`height` with no axis flag
+      (`apps/comics-editor/lib/src/ui/models.dart:179-190`), and `TranslateAnim`/`Anim` key on a
+      scalar frame/scroll factor with both x/y offsets, agnostic to axis
+      (`models.dart:57-83`, `TranslateAnim.cs:9-52`) — so nothing in the *authoring format* rules
+      out a wide-and-short document. But: v2.8's `ScrollViewer` only ever exposes
+      `VerticalOffset`/`ScrollToVerticalOffset` (`ComicsControl.xaml.cs:41,47,53`), the mobile
+      viewer's restore/track logic is Y-only (`ComicsActivity.java:234`:
+      `zoomLayout.translate(0, lastScroll * zoomLayout.getScale())`), and every real
+      `.comics` file is extremely tall relative to its width — confirmed
+      `8a89f7d689fb441ea280cd782276bd7a.comics`'s `data.json`: `{"width": 1080, "height": 33000}`
+      (≈30.5:1). Building a horizontal-scroll comic today would mean reworking the editor's scroll
+      binding and the mobile viewer's translate/fit logic, not just authoring a wide document.
+- [EVIDENCED] How should comics be displayed/assembled for different device aspect ratios today?
+      **Current real mechanism: fixed authoring width, scale-to-fit-width, scroll for (unbounded)
+      height** — aspect ratio isn't really handled *per device* so much as normalized away on one
+      axis. Editor: `canvas_view.dart`'s `_Stage` fits `doc.width`/`doc.height` into the viewport
+      (`canvas_view.dart:37-51`) but the authoring model itself keeps `width` fixed (e.g. 1080) and
+      only `height` grows without bound. Mobile viewer: `activity_comics.xml:15` sets
+      `app:fitMode="horizontal"` on `ZoomFrameLayout`, and `ZoomFrameLayout.java:149`'s
+      `FitMode.HORIZONTAL` branch computes `minScale = viewRect.width() / contentRect.width()` —
+      width is normalized to the screen, tall content scrolls. **Still open**: whether this
+      single-axis-fit model is actually right for every real device shape (e.g. a wide tablet or
+      foldable in landscape gets a *much* shorter effective viewport per scroll-page than a phone
+      does) — that's a genuine design question this evidence doesn't resolve by itself.
+- [EVIDENCED] How should comics correctly play back in the comics viewer (today's actual
+      behavior, as a baseline for "correctly")? Plain zoomable vertical scroll, not paged:
+      `ComicsActivity.java:221` sets content size from `comics.getWidth()/getHeight()`, restores
+      `lastScroll` via a Y-only translate (`ComicsActivity.java:234`), pinch-zoom via
+      `ScaleGestureDetector` in `ZoomFrameLayout`, and end-of-scroll (`scrollY + extendedY ==
+      contentHeight`, lines 128-131) marks the episode "read." No comment anywhere explains *why*
+      vertical-only was chosen over a paged or horizontal alternative — that rationale, and whether
+      "correct" playback should stay this simple model or do something more sophisticated (panel-
+      by-panel paging, Ken-Burns-style guided reading, etc.), needs a real product conversation, not
+      a code answer.
+
+### Group D — Text-to-script pipeline (Джанава/anima-inspired, spun out 2026-08-01)
+
+Anton shared a pipeline idea from Джанава (materials in `vendors/anima/`, a script DSL for a
+*different*, generation-oriented production system): simplify scripture narrative into a
+pseudo-script with named entities via LLM, then train "нарезатор"/"позиционер" on that
+representation. A full survey of every real flow in this repo found no flow does LLM-based
+narrative→structured-script conversion anywhere — genuinely new capability, not an existing gap in
+disguise. Rather than let it stay a loose idea here, **spun out immediately into its own flow,
+`flows/sdd-comics-ai-script-context/`**, since it's substantive enough to need its own Requirements/
+Specifications/Plan rather than living as a backlog entry. See that flow for the full breakdown
+(three consumer flows identified: `sdd-comics-ai-multimodal`'s character identity,
+`sdd-comics-ai-positioning`'s `text_context` feature, `vdd-comics-editor-systematization-uiux`'s
+variant tag) and the local-Ollama constraint Anton gave when creating it.
+
 ## Acceptance Criteria
 
 ### Must Have
@@ -276,6 +360,16 @@ kept as the primary section rather than duplicated here.
 - `dataset/boranko/mahabharata/book1/comics_interactive/Comics_Episodes.csv` — episode 21 =
   `21_ambas_plea` = `8a89f7d689fb441ea280cd782276bd7a.comics`, confirming which real narrative
   passage corresponds to the validated character-library example
+- `apps/comics-editor/native/Comics.Editor/Views/ComicsControl.xaml` + `.xaml.cs` — v2.8's
+  `ScrollViewer`/`VerticalOffset` binding, confirming "time" was literally vertical scroll position
+- `apps/comics-editor/native/Comics.Editor/ViewModel/ComicsViewModel.cs` (`Scroll` property) +
+  `native/Comics.Editor/Models/TranslateAnim.cs` (`Interpolate`) — confirms scroll position drove
+  animation keyframes directly, with no separate timeline concept, in v2.8
+- `apps/comics-editor/lib/src/ui/widgets/timeline.dart` — current horizontal Gantt-style timeline,
+  own comment explicitly frames itself as "the modernization of the original's scroll-as-time model"
+- `apps/mahabharata-mobile-java-v2026/.../res/layout/activity_comics.xml`,
+  `.../controls/ZoomFrameLayout.java`, `.../ComicsActivity.java` — confirm the mobile viewer's
+  fixed-width/scale-to-fit/vertical-scroll model and Y-only scroll restore/tracking
 
 ---
 
