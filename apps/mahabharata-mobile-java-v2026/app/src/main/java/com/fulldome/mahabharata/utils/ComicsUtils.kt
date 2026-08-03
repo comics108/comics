@@ -8,14 +8,15 @@ import android.view.ViewGroup
 import androidx.annotation.StringRes
 import com.fulldome.mahabharata.BuildConfig
 import com.fulldome.mahabharata.R
-import com.fulldome.mahabharata.controls.PieceView
-import com.fulldome.mahabharata.controls.TileImageView
 import com.fulldome.mahabharata.model.Episode
 import com.fulldome.mahabharata.model.Settings
-import com.fulldome.mahabharata.model.visual.Layer
 import com.google.android.material.snackbar.Snackbar
 import com.ironwaterstudio.dialogs.AlertFragment
+import com.ironwaterstudio.utils.FbUtils
 import com.ironwaterstudio.utils.Utils
+import net.nativemind.comics.viewer.comics.model.Layer
+import net.nativemind.comics.viewer.comics.view.TileImageView
+import net.nativemind.comics.viewer.puzzle.view.PieceView
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -53,6 +54,20 @@ object ComicsUtils {
     @JvmStatic
     fun getImage(image: String?): String? {
         return if (!TextUtils.isEmpty(image)) BuildConfig.HOST + image else null
+    }
+
+
+    /**
+     * Flips the app-wide persisted sound preference and returns the new value.
+     * comics-viewer-android's Comics/Puzzle no longer know about Settings, so callers
+     * must propagate the result via Comics.setSoundEnabled()/Puzzle.setSoundEnabled().
+     */
+    @JvmStatic
+    fun toggleGlobalSound(): Boolean {
+        Settings.getInstance().isSoundOn = !Settings.getInstance().isSoundOn
+        Settings.getInstance().save()
+        FbUtils.logEvent(AnalyticsEvents.CATEGORY_SOUNDS, AnalyticsEvents.ACTION_POWER + " " + if (Settings.getInstance().isSoundOn) "on" else "off")
+        return Settings.getInstance().isSoundOn
     }
 
 

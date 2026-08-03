@@ -8,19 +8,20 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.fulldome.mahabharata.R;
-import com.fulldome.mahabharata.controls.PieceView;
 import com.fulldome.mahabharata.controls.SoundBadge;
-import com.fulldome.mahabharata.controls.TileImageView;
-import com.fulldome.mahabharata.controls.ZoomFrameLayout;
 import com.fulldome.mahabharata.dialogs.PopupDialog;
 import com.fulldome.mahabharata.model.Settings;
-import com.fulldome.mahabharata.model.puzzle.Piece;
-import com.fulldome.mahabharata.model.puzzle.Puzzle;
-import com.fulldome.mahabharata.model.puzzle.Puzzles;
-import com.fulldome.mahabharata.model.visual.Layer;
 import com.fulldome.mahabharata.utils.ComicsUtils;
-import com.fulldome.mahabharata.utils.ImageManager;
-import com.ironwaterstudio.server.data.ApiResult;
+
+import net.nativemind.comics.viewer.comics.model.Layer;
+import net.nativemind.comics.viewer.ironwater.server.data.ApiResult;
+import net.nativemind.comics.viewer.comics.util.ImageManager;
+import net.nativemind.comics.viewer.comics.view.TileImageView;
+import net.nativemind.comics.viewer.comics.view.ZoomFrameLayout;
+import net.nativemind.comics.viewer.puzzle.model.Piece;
+import net.nativemind.comics.viewer.puzzle.model.Puzzle;
+import net.nativemind.comics.viewer.puzzle.model.Puzzles;
+import net.nativemind.comics.viewer.puzzle.view.PieceView;
 
 import static com.fulldome.mahabharata.screens.PuzzleActivity.PUZZLE_NUMBER;
 
@@ -42,7 +43,7 @@ public class PiecesViewController {
 				return false;
 
 			Puzzle puzzle = Puzzles.getInstance().get(PUZZLE_NUMBER);
-			puzzle.toggleSounds();
+			puzzle.setSoundEnabled(ComicsUtils.toggleGlobalSound());
 			invalidateAll();
 			soundBadge.show(Settings.getInstance().isSoundOn());
 			return super.onSingleTapConfirmed(e);

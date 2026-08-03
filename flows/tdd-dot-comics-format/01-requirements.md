@@ -1,11 +1,28 @@
-# Requirements: comics-editor-fromat-dot-comics
+# Requirements: dot-comics-format (TDD)
 
-> Version: 0.1 (consolidation, not a build spec — extracted verbatim from two sources per explicit
-> user request)
+> Version: 0.2 (promoted from a parked SDD reference consolidation to an active TDD flow, per
+> Anton's explicit request 2026-08-02 — this file's history below predates that promotion)
 > Status: DRAFT
-> Last Updated: 2026-08-01
+> Last Updated: 2026-08-02
 
-## Origin
+## Promotion note (2026-08-02, read this first)
+
+This flow started as `flows/sdd-comics-editor-fromat-dot-comics` — a parked, non-build reference
+consolidation (see "Origin" below for that history, preserved as-is). Anton copied it into
+`flows/tdd-dot-comics-format/` and asked for it to become a real TDD flow: catalog every existing
+test touching the `.comics` format, then define the test cases needed for compatibility across
+**legacy v2012 players** (`legacy/mahabharata-mobile-java-v2012`, `legacy/mahabharata-mobile-swift-
+v2012`), **the v2.8 desktop editor**, and **modern v2026 viewers**
+(`libs/comics_viewer/{comics-viewer-android,comics-viewer-ios,flutter_comics_viewer,
+react-native-comics-viewer}`) — plus new-in-2026 format concerns: format/orientation selection
+defaults (vertical vs. the historically-original horizontal "comic strip"), device screen
+orientation (portrait default, landscape as a 2026 addition), and the animation-type/kind-
+classification version history. See `02-tests.md` for the actual cases-first deliverable — this
+file's Problem Statement/scope below has been updated to match the new mandate, but the older
+consolidated facts (Origin through Position Representation) remain accurate and are kept as
+background.
+
+## Origin (predates the TDD promotion — preserved for history)
 
 Extracted from `flows/vdd-comics-editor-timeline/` and `flows/sdd-comics-ai-positioning/` on
 2026-08-01, per explicit user request: both flows independently investigated real `.comics`/
@@ -71,10 +88,13 @@ convention.**
   both the legacy WPF app and the real Android viewer drive visual matrices *and* sound triggering
   off the identical scroll number in the same tick (`vdd-comics-editor-timeline/01-requirements.md`).
 - `Anim.start`/`end` values are **small numbers (roughly 48–6000 observed)**, not 1:1 with document
-  pixel height (which ranges 16,300–100,900px in the same sampled files) — the exact unit
-  relationship between the two was investigated but **not fully resolved** by
-  `vdd-comics-editor-timeline` (flagged there as the single biggest risk in that flow's own spec,
-  deferred to empirical verification during its implementation).
+  pixel height (which ranges 12,000–100,900px in the same sampled files). **RESOLVED (2026-08-02,
+  by `vdd-comics-editor-vertical-scroll`, not by empirical testing as originally planned)**: there
+  is no unit mismatch and no scale factor. `Anim.Start`/`End` are in the exact same raw-pixel
+  coordinate space as scroll position — a keyframe range only needs to span the short window
+  (~200px) during which one specific transition plays; once passed, the value holds unchanged for
+  the rest of the document, however tall. See that flow's `01-requirements.md`, Major Finding
+  point 9, and `03-specifications.md`'s corrected Investigation Note.
 - Only a minority of real layers use rotation: **1146 of 4594** real layers have a `RotateAnim` at
   all (`sdd-comics-ai-positioning/01-requirements.md`, via `render_canvas.py`'s documented finding).
 
@@ -102,18 +122,20 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
    flow's own text, **then** it matches (verbatim quote or faithful paraphrase) — this document does
    not introduce new claims beyond what its two named sources already established.
 
-### Should Have
+### Should Have (added with the TDD promotion, 2026-08-02)
 
-- Flag, explicitly, format-relevant facts known to exist in *other* flows (`sdd-comics-ai-multimodal`,
-  `sdd-comics-ai-baloons`, `sdd-comics-editor-questions`) that were **not** pulled into this pass
-  since the user's request named only two sources — so a future consolidation pass has a clear
-  worklist instead of an implicit gap (see Open Questions).
+- A catalog of every existing automated test anywhere in the repo that touches the `.comics`
+  format, so `02-tests.md`'s cases-first analysis builds on real existing coverage instead of
+  re-deriving it blind.
+- Cases-first behavioral analysis (per TDD discipline) covering: legacy v2012 compatibility,
+  format/orientation defaults, device screen orientation, animation-type/kind-classification
+  version history, and v2026 multi-platform viewer parity.
 
 ### Won't Have (This Iteration)
 
-- No new code, no schema changes, no design decisions — this is a reference consolidation only.
-- No consolidation of format facts from flows other than the two explicitly named, beyond flagging
-  that they exist (see Open Questions) — pulling them in is explicitly deferred, not silently done.
+- No new code, no schema changes — `02-tests.md` defines cases; fixing any bugs the cases-first
+  analysis surfaces is explicitly a separate, later decision (see `02-tests.md`'s Bugs section),
+  not silently done as part of this Tests-phase pass.
 
 ## Constraints
 
@@ -123,17 +145,16 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
 
 ## Open Questions
 
-- [ ] Should this consolidation be extended to pull in the additional real format facts already
-      established in `sdd-comics-ai-multimodal` (ZIP-container structure: `data.json` +
-      `layers/*.png`; 512×512 tiling slice/stitch mechanics; the paginated-print-source vs.
-      continuous-strip-target distinction), `sdd-comics-ai-baloons` (multi-language `Images[]`
-      slot/`Cultures` enum structure; balloon-layer structural definition), and
-      `sdd-comics-editor-questions` (the `ComicsDoc` width/height-with-no-axis-flag finding)? Not
-      done in this pass since the user named only two sources — flagged here rather than silently
-      left incomplete.
-- [ ] The exact `Anim.start`/`end` ↔ document-pixel-height unit relationship
-      (`vdd-comics-editor-timeline`'s own unresolved risk) — still open there; this document
-      inherits that gap rather than resolving it.
+- [x] Should this consolidation be extended to pull in additional real format facts from other
+      flows? **Done (2026-08-02)** — a full sweep of every remaining SDD/VDD flow
+      (`sdd-comics-ai-multimodal`, `sdd-comics-ai-baloons`, `sdd-comics-editor-questions`,
+      `sdd-comics-editor-build`/`-publish`/`-v2.9`/`-v2.9-android-ios`/`-v2.9-fixes1`/`-fixes2`,
+      `vdd-comics-editor-jhanava`, `vdd-comics-editor-uiux-lettering`, `vdd-comics-editor-ai-uiux`,
+      `vdd-comics-editor-systematization-uiux`, `sdd-comics-ai-script-context`,
+      `sdd-comics-ai-transformations`) is in `02-tests.md`'s References/background section, each
+      with what it does and doesn't contribute to format facts.
+- [x] The exact `Anim.start`/`end` ↔ document-pixel-height unit relationship — **resolved**, see the
+      correction above in Layer & animation model.
 
 ## References
 

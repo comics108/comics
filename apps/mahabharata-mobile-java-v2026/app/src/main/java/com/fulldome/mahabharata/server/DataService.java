@@ -9,10 +9,11 @@ import com.fulldome.mahabharata.model.Quotes;
 import com.fulldome.mahabharata.model.Seasons;
 import com.fulldome.mahabharata.model.Subscriptions;
 import com.fulldome.mahabharata.model.TokenModel;
-import com.fulldome.mahabharata.model.puzzle.Puzzles;
 import com.ironwaterstudio.server.Request;
 import com.ironwaterstudio.server.listeners.OnCallListener;
 import com.ironwaterstudio.utils.Utils;
+
+import net.nativemind.comics.viewer.puzzle.model.Puzzles;
 
 import java.util.Date;
 

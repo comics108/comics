@@ -1,50 +1,98 @@
-# Status: sdd-comics-editor-fromat-dot-comics
+# Status: tdd-dot-comics-format
 
 ## Current Phase
 
-REQUIREMENTS
+TESTS
 
 ## Phase Status
 
-DRAFTING (parked — this is a reference consolidation, not an active build; same shape as
-`sdd-comics-editor-questions`, kept purely for its durable, resumable, citable-document role)
+DRAFTED, AWAITING APPROVAL — promoted 2026-08-02 from the parked `sdd-comics-editor-fromat-dot-
+comics` reference consolidation into a real, active TDD flow, per Anton's explicit request.
+`02-tests.md` v1.0 drafted: existing-test catalog (Part 1), background facts from a full flow sweep
+(Part 2), a v2026 multi-platform viewer compatibility matrix (Part 3), three confirmed bugs (Part 4),
+and cases-first behavioral analysis across 6 categories (Part 5).
 
 ## Last Updated
 
-2026-08-01 by Claude
+2026-08-02 by Claude
 
 ## Blockers
 
-None — this isn't gated on anything; it's a consolidation of already-established facts, not new
-investigation.
+- Waiting on Anton's direction on `02-tests.md`'s remaining Open Design Questions — most
+  consequentially whether to fix the newly-found `scaleX`/`scaleY`/`alpha` JSON-default bug
+  (B1/E1/E2) now or later, and whether this flow should proceed to a formal Specifications/Plan/
+  Implementation phase (writing the actual new test files) or stop at cataloging + cases-first
+  analysis.
+- **Decided (2026-08-02), three related questions now closed**: (1) UI — New Document dialog gets a
+  visible-but-disabled "century-old comic strip (horizontal infinity scroll)" option (Test Case B3).
+  (2) Schema — yes, an explicit `scrollType` field (proposed name/values, not yet confirmed by
+  Anton verbatim: `"vertical"`/`"horizontal"`; deliberately NOT named "orientation" — see next
+  point), absent → defaults to `"vertical"` specifically for v2012-through-2026 backward
+  compatibility (Test Case B4). (3) **`scrollType` (content) and device screen orientation
+  (portrait/landscape) are independent parameters, never coupled or inferred from each other** (Test
+  Case B5) — corrected from an earlier draft that sloppily reused "orientation" for both. Nothing
+  here is implemented anywhere yet — all three are forward-looking schema/UI decisions, not claims
+  that horizontal scrolling or landscape viewing work today.
 
 ## Progress
 
 - [x] Requirements drafted (2026-08-01) — v0.1, consolidated verbatim from
-      `vdd-comics-editor-timeline` and `sdd-comics-ai-positioning`, per explicit user request
-- [ ] Requirements approved — not applicable; see Acceptance Criteria in `01-requirements.md` for
-      this flow's actual "done" condition (a faithful, checkable reference), not a doc sign-off
-- [ ] Specifications drafted — not applicable to this flow's purpose
-- [ ] Plan drafted — not applicable to this flow's purpose
-- [ ] Implementation started — not applicable to this flow's purpose
+      `vdd-comics-editor-timeline` and `sdd-comics-ai-positioning`
+- [x] Requirements revised (2026-08-02) — v0.2, promoted to TDD scope, both prior Open Questions
+      resolved (unit-mismatch risk closed by a sibling flow; flow sweep now done)
+- [ ] Requirements approved
+- [x] Tests drafted (2026-08-02) — v1.0, see `02-tests.md`
+- [ ] Tests approved
+- [ ] Specifications drafted
+- [ ] Plan drafted
+- [ ] Implementation started
 
 ## Context Notes
 
-- **Purpose**: single authoritative reference for `.comics`/`data.json` format facts, so future
-  flows check here first instead of re-deriving what two prior flows already investigated from real
-  code. Same role in this repo's flow ecosystem as `flows/sdd-comics-editor-questions/` (a
-  consolidation document, not a feature build) — SDD phase machinery beyond Requirements doesn't
-  really apply here.
-- **Explicitly scoped to two named sources** (`vdd-comics-editor-timeline`,
-  `sdd-comics-ai-positioning`) per the user's exact request — real format facts also exist in
-  `sdd-comics-ai-multimodal`, `sdd-comics-ai-baloons`, and `sdd-comics-editor-questions` (Group C)
-  that were deliberately **not** pulled into this pass; flagged as an Open Question in
-  `01-requirements.md` rather than silently left out.
-- **Headline fact, stated explicitly per the user's request**: `.comics` is a vertical comic strip
-  by default — one continuous scrollable strip with no built-in scene/page boundaries, confirmed
-  directly by Anton in `vdd-comics-editor-timeline/03-specifications.md`, not just inferred from
-  file geometry (though the geometry — real files 16,300-100,900px tall, all far taller than wide —
-  independently agrees).
+- **Purpose evolved**: started as a single authoritative reference for `.comics` format facts (SDD
+  consolidation). Now a real TDD flow: catalog existing test coverage, then define compatibility
+  test cases across legacy v2012 players, the v2.8/2026 editors, and 4 v2026 viewer implementations.
+- **Research method**: 3 parallel background research agents (v2012 legacy codebases; a full sweep
+  of every remaining SDD/VDD flow plus a repo-wide existing-test catalog; the 3 non-Android v2026
+  viewers), plus direct first-principles verification of one finding.
+
+## Research Discoveries (2026-08-02)
+
+1. **The "maxlastscroll" premise was wrong on naming, right on substance.** No such term exists
+   anywhere in 2012 code — what exists is an unrelated "resume last scroll position" bookmark
+   feature. But the actual claim (2012 animation = scroll-only, no looping, no time-based) is
+   correct: 2012 has the identical 5-type shape as v2.8, unchanged since.
+2. **No orientation flag has ever existed in the format, at any generation** (2012 Java/Swift, v2.8,
+   current). Every implementation is vertical-only by convention, never by schema enforcement — a
+   hypothetical wide/short document has literally never been tested anywhere (see `02-tests.md`
+   Category B2, a named open gap, not a resolved question).
+3. **`comics-admin-v2012` is not an original/earlier editor** — it has zero Layer/Anim/Sound/Comics
+   model classes; it's a CMS that stores comics as opaque uploaded archives and literally bundles a
+   downloadable `ComicsEditor_2.8.zip` as its own "Editor" feature.
+4. **A real, previously-undetected bug found via first-principles verification, contradicting an
+   earlier flow's own code comment**: `models_mapping.dart`'s `scaleX`/`scaleY`/`alpha` JSON parsing
+   defaults absent keys to `1`, but the real C# source has no `[DefaultValue]` attributes on those
+   fields — an absent key truly means `0`. An earlier comment (`vdd-comics-editor-uiux-lettering`
+   Task 7.1) argued the `1` default was correct because "deserialization leaves it at the object's
+   `Init()`-assigned value" — verified this is false: `Init()` is only called by `FindNearest`'s
+   synthetic-fallback path, never during normal deserialization. Same bug class as the `end`/200
+   bug `vdd-comics-editor-vertical-scroll` already fixed, not yet fixed here. See `02-tests.md`
+   Part 4 (B1) and Category E (E1/E2).
+5. **Only `comics-viewer-ios` is a genuine second viewer implementation** — algorithmically identical
+   to `comics-viewer-android` (same cubic ease-out, same keyframe walk), but has zero tests despite
+   compiling standalone. `flutter_comics_viewer`/`react-native-comics-viewer` are thin bridges with
+   no parsing logic of their own; RN additionally has 4 stubbed/non-functional JS accessors.
+6. **Zero automated tests exist in any 2012 codebase, the C# editor, `comics-viewer-android`, or any
+   of the 3 non-Android v2026 viewers.** Only `apps/comics-editor/test/` (Dart, ~260 cases) and the
+   two Python AI pipelines (~200 cases combined) have real format-touching coverage.
+7. **A real v2012-shaped sample exists** (`samples/sample_v2012.comics`, pointed to directly by
+   Anton mid-session — none of the 3 research agents knew it existed). Inspected directly: confirms
+   the no-orientation-flag finding, confirms `SoundAnim` never appears inside `Layer.animations`
+   (177 real layers, only Translate/Rotate/Scale/Alpha), confirms the same Start=0-tied-anims pattern
+   found in 2026 dataset files, and surfaces one new fact — a real `SoundAnim` with `start=-38`
+   (negative), which every platform's plain-numeric-comparison gating logic handles fine with no
+   special-casing needed. This turns Test Case A5 from "needs new tooling to get a sample" into
+   "sample already exists, ready to use."
 
 ## Fork History
 

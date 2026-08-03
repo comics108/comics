@@ -21,15 +21,13 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.fulldome.mahabharata.R;
-import com.fulldome.mahabharata.controls.LayersView;
 import com.fulldome.mahabharata.controls.SoundBadge;
-import com.fulldome.mahabharata.controls.ZoomFrameLayout;
 import com.fulldome.mahabharata.model.Episode;
 import com.fulldome.mahabharata.model.Language;
 import com.fulldome.mahabharata.model.Seasons;
 import com.fulldome.mahabharata.model.Settings;
-import com.fulldome.mahabharata.model.visual.Comics;
 import com.fulldome.mahabharata.utils.AnalyticsEvents;
+import com.fulldome.mahabharata.utils.ComicsUtils;
 import com.ironwaterstudio.controls.ImageViewEx;
 import com.ironwaterstudio.controls.RadioButtonEx;
 import com.ironwaterstudio.dialogs.AlertFragment;
@@ -37,6 +35,12 @@ import com.ironwaterstudio.server.ActionRequest;
 import com.ironwaterstudio.server.data.ApiResult;
 import com.ironwaterstudio.server.listeners.CallListener;
 import com.ironwaterstudio.utils.FbUtils;
+
+import net.nativemind.comics.viewer.comics.model.Comics;
+import net.nativemind.comics.viewer.comics.view.LayersView;
+import net.nativemind.comics.viewer.comics.view.ZoomFrameLayout;
+
+import java.io.File;
 
 public class ComicsActivity extends AppCompatActivity {
 	private boolean hasRead = false;
@@ -76,7 +80,9 @@ public class ComicsActivity extends AppCompatActivity {
 	private final ActionRequest.Runnable initDescriptorRunnable = new ActionRequest.Runnable() {
 		@Override
 		public Object run() {
-			return ApiResult.fromObject(Comics.create(ComicsActivity.this, getEpisode()));
+			Episode episode = getEpisode();
+			File file = episode != null && episode.isDownloaded() ? episode.getSavedFile(ComicsActivity.this) : null;
+			return ApiResult.fromObject(net.nativemind.comics.viewer.comics.util.ComicsUtils.INSTANCE.create(ComicsActivity.this, file));
 		}
 	};
 
@@ -86,7 +92,7 @@ public class ComicsActivity extends AppCompatActivity {
 			if (comics == null)
 				return super.onSingleTapConfirmed(e);
 
-			comics.toggleSounds();
+			comics.setSoundEnabled(ComicsUtils.toggleGlobalSound());
 			zoomLayout.invalidateAll();
 			soundBadge.show(Settings.getInstance().isSoundOn());
 			return super.onSingleTapConfirmed(e);
@@ -108,7 +114,10 @@ public class ComicsActivity extends AppCompatActivity {
 			int index = radioGroup.indexOfChild(radioGroup.findViewById(id));
 			Settings.getInstance().setLanguage(Language.values()[index]);
 			Settings.getInstance().save();
-			comics.cancelLayerTasks();
+			if (comics != null) {
+				comics.setLanguageIndex(index);
+				comics.cancelLayerTasks();
+			}
 			if (layersView != null)
 				layersView.reloadLayers();
 			postInvalidateAll();
@@ -204,6 +213,10 @@ public class ComicsActivity extends AppCompatActivity {
 
 	public void initComics(Comics comics) {
 		this.comics = comics;
+		// comics-viewer-android's Comics/Layer no longer read Settings directly;
+		// sync the app's persisted sound/language preferences right after creation.
+		comics.setSoundEnabled(Settings.getInstance().isSoundOn());
+		comics.setLanguageIndex(Settings.getInstance().getLanguage().ordinal());
 		initNextEpisodePoster();
 		zoomLayout.setContentSize(comics.getWidth(), comics.getHeight());
 		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(comics.getWidth(), comics.getHeight());

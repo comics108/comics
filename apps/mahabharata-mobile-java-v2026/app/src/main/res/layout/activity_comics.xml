@@ -6,7 +6,7 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
 
-	<com.fulldome.mahabharata.controls.ZoomFrameLayout
+	<net.nativemind.comics.viewer.comics.view.ZoomFrameLayout
 		android:id="@+id/zoom_layout"
 		xmlns:android="http://schemas.android.com/apk/res/android"
 		android:layout_width="match_parent"
@@ -195,7 +195,7 @@
 				</RelativeLayout>
 			</RelativeLayout>
 		</FrameLayout>
-	</com.fulldome.mahabharata.controls.ZoomFrameLayout>
+	</net.nativemind.comics.viewer.comics.view.ZoomFrameLayout>
 
 	<com.fulldome.mahabharata.controls.SoundBadge
 		android:id="@+id/sound_badge"

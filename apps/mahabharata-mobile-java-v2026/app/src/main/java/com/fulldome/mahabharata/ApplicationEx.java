@@ -9,10 +9,11 @@ import androidx.multidex.MultiDexApplication;
 import com.facebook.appevents.AppEventsLogger;
 import com.fulldome.mahabharata.model.Seasons;
 import com.fulldome.mahabharata.model.Settings;
-import com.fulldome.mahabharata.model.puzzle.Puzzles;
 import com.ironwaterstudio.server.http.HttpHelper;
 import com.ironwaterstudio.utils.FbUtils;
 import com.ironwaterstudio.utils.Utils;
+
+import net.nativemind.comics.viewer.puzzle.model.Puzzles;
 
 import java.util.Arrays;
 import java.util.List;

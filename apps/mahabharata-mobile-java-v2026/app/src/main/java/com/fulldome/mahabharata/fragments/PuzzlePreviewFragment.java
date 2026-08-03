@@ -14,15 +14,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.fulldome.mahabharata.R;
-import com.fulldome.mahabharata.model.puzzle.Piece;
-import com.fulldome.mahabharata.model.puzzle.Puzzle;
-import com.fulldome.mahabharata.model.puzzle.Puzzles;
 import com.fulldome.mahabharata.screens.PuzzleActivity;
 import com.fulldome.mahabharata.server.DataService;
 import com.ironwaterstudio.server.data.ApiResult;
 import com.ironwaterstudio.server.listeners.CallListener;
 import android.animation.AnimatorListenerAdapter;
 import com.ironwaterstudio.utils.UiHelper;
+
+import net.nativemind.comics.viewer.puzzle.model.Piece;
+import net.nativemind.comics.viewer.puzzle.model.Puzzle;
+import net.nativemind.comics.viewer.puzzle.model.Puzzles;
 
 public class PuzzlePreviewFragment extends Fragment {
 	private static final int QUERY_INTERVAL = 1000;

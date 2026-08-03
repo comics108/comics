@@ -282,6 +282,7 @@
 		7CCB53DC27CFA41400CEDB2B /* link-banner-instagram@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7CCB53CA27CFA41300CEDB2B /* link-banner-instagram@2x.png */; };
 		7CCB53DE27CFA41400CEDB2B /* link-banner-shop.png in Resources */ = {isa = PBXBuildFile; fileRef = 7CCB53CC27CFA41300CEDB2B /* link-banner-shop.png */; };
 		7CCB53E727D0C74300CEDB2B /* LinksBannerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CCB53E627D0C74300CEDB2B /* LinksBannerButton.swift */; };
+		88958DB0814F68975815F3AD /* ComicsViewer in Frameworks */ = {isa = PBXBuildFile; productRef = BA845693EC522DE50A5E4239 /* ComicsViewer */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -629,6 +630,7 @@
 				771F505E202DDAC40048D070 /* MediaPlayer.framework in Frameworks */,
 				77A1FC582056D4AC000C9183 /* StoreKit.framework in Frameworks */,
 				5E9D9BFF67CFD2544585487B /* Pods_Mahabharata.framework in Frameworks */,
+				88958DB0814F68975815F3AD /* ComicsViewer in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1499,6 +1501,9 @@
 			dependencies = (
 			);
 			name = Mahabharata;
+			packageProductDependencies = (
+				BA845693EC522DE50A5E4239 /* ComicsViewer */,
+			);
 			productName = Mahabharata;
 			productReference = 2790DCA21F753D5900A70463 /* Mahabharata.app */;
 			productType = "com.apple.product-type.application";
@@ -1543,6 +1548,9 @@
 				"mr-IN",
 			);
 			mainGroup = 2790DC991F753D5900A70463;
+			packageReferences = (
+				1E93D843968C8A990F9C743D /* XCLocalSwiftPackageReference "comics-viewer-ios" */,
+			);
 			productRefGroup = 2790DCA31F753D5900A70463 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -2135,6 +2143,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		1E93D843968C8A990F9C743D /* XCLocalSwiftPackageReference "comics-viewer-ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../libs/comics_viewer/comics-viewer-ios";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BA845693EC522DE50A5E4239 /* ComicsViewer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1E93D843968C8A990F9C743D /* XCLocalSwiftPackageReference "comics-viewer-ios" */;
+			productName = ComicsViewer;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2790DC9A1F753D5900A70463 /* Project object */;
 }

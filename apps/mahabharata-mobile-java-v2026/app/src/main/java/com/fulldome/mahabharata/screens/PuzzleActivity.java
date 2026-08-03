@@ -6,12 +6,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.fulldome.mahabharata.R;
 import com.fulldome.mahabharata.model.InitDescriptorResult;
-import com.fulldome.mahabharata.model.puzzle.Puzzle;
-import com.fulldome.mahabharata.model.puzzle.Puzzles;
 import com.fulldome.mahabharata.server.InitDescriptorRequest;
 import com.ironwaterstudio.server.Request;
 import com.ironwaterstudio.server.data.ApiResult;
 import com.ironwaterstudio.server.listeners.CallListener;
+
+import net.nativemind.comics.viewer.puzzle.model.Puzzle;
+import net.nativemind.comics.viewer.puzzle.model.Puzzles;
 
 public class PuzzleActivity extends AppCompatActivity {
 	public static final int PUZZLE_NUMBER = 0;

@@ -1,12 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<declare-styleable name="ZoomFrameLayout">
-		<attr name="fitMode" format="enum">
-			<enum name="vertical" value="0"/>
-			<enum name="horizontal" value="1"/>
-		</attr>
-		<attr name="zoomEnabled" format="boolean"/>
-	</declare-styleable>
+	<!-- ZoomFrameLayout styleable now lives in comics-viewer-android (net.nativemind.comics.viewer),
+	     since the ZoomFrameLayout class was migrated there. -->
 
 	<declare-styleable name="ImageViewEx">
 		<attr name="cacheMode">

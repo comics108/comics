@@ -1,3 +1,4 @@
 include ':app', ':samskara'
-include ':zip_file'
 include ':library'
+include ':comics-viewer-android'
+project(':comics-viewer-android').projectDir = new File(rootDir, '../../libs/comics_viewer/comics-viewer-android')
