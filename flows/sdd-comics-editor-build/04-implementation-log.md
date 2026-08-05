@@ -15,8 +15,9 @@
 | 3.1/3.2 `docker-build.yml` | Done | `docker-build-linux`/`docker-build-android`, триггеры main/nightly/release, публикация артефактов |
 | 4.1 `docker/README.md` | Done | |
 | 4.2 Final status update | Done | |
-| — Windows CI MSB1008 (внесценарийный баг, см. ниже) | In Progress (round 5, unverified) | Не входит в AC Docker Build; отслеживается здесь по решению пользователя |
+| — Windows CI MSB1008 (внесценарийный баг, см. ниже) | In Progress (round 7, CI pending) | C# publish полностью вынесен из CMake/MSBuild в workflow step |
 | — macOS CI: `dataset_backward_compat_test.dart` crashing `flutter test` | Done | Не относится к Docker Build; регрессия из другого flow (`vdd-comics-editor-uiux-lettering`), исправлена здесь по той же логике («все build-процессы обсуждаются только в этом SDD») |
+| — CI regressions from 2026-08-02 run | In Progress (CI pending) | Analyzer + standalone macOS tests verified locally; Linux/Windows fixes require platform CI |
 
 ## Session Log
 
@@ -239,5 +240,129 @@
 **Ended at**: round 6 fix применён (структурный, не content-level), ждёт реального CI.
 **Handoff notes**: если round 6 не поможет — не пробовать ещё один content-level фикс на том же механизме; следующий шаг — вынести публикацию из CMake в `build.yml` напрямую (см. "In Progress" выше), т.к. 6 раундов (5 content-level + 1 структурный) исчерпывают разумные варианты чинить это внутри CMake/MSBuild custom-build-step на этом тулсете.
 
+### Session 2026-08-04 — Codex (round 7: four failures from CI run 2026-08-02)
+
+**Input**: full `analyze`, Windows, macOS, and Linux job logs for commit `71d3b30`.
+
+#### Findings
+
+- `flutter analyze`: one `use_key_in_widget_constructors` info on public `KindChip`.
+- Windows: round 6 did remove the standalone custom-target project, but the same MSB1008 moved to the normal `editor_plugin.vcxproj`. The emitted command is visible and `publish_csharp.cmd` still never starts, proving that the remaining failure boundary is MSBuild's handling of the CMake POST_BUILD command, not the batch script body.
+- Linux: `audioplayers_linux` now requires pkg-config package `gstreamer-1.0`; the native runner and reproducible Docker image lacked `libgstreamer1.0-dev`.
+- macOS: the standalone `comics-editor` checkout cannot contain monorepo sibling `apps/comics-ai/comics-multimodal`; two discovery tests incorrectly asserted that local-only fixture was mandatory. The resolver already documents `null` as a valid unavailable state.
+
+#### Changes
+
+- Added `{super.key}` to `KindChip`.
+- Removed all C# publication/copy custom commands from both Windows CMake files. `build.yml` now calls the existing `publish_csharp.cmd` directly after `flutter build windows`, targeting `build/windows/x64/runner/Release/dotnet` (the uploaded package location).
+- Added `libgstreamer1.0-dev` to the native Linux job and `docker/linux-build.Dockerfile` to keep both build environments aligned.
+- Made the two checkout-presence tests skip with an explicit standalone-checkout reason when `comics-multimodal` is absent. The isolated-directory and Python-resolution tests still execute.
+
+#### Verification
+
+- `flutter analyze` — **pass**, no issues.
+- `flutter test test/multimodal_paths_test.dart` — **pass**, 2 executed + 2 expected skips in this checkout.
+- Windows `flutter build windows --release` + direct batch publication — **not locally verifiable on macOS; real Windows CI required**.
+- Linux native/Docker build with the new apt package — **not locally re-run; real Linux CI required**.
+
+#### Handoff
+
+Commit/push the scoped changes and rerun Native Build. Do not reintroduce C# publication into CMake if Windows fails again; inspect only the direct workflow batch step and its logged arguments/output.
+
 #### Deviations from Plan
 - Вне scope `03-plan.md` (Docker Build), продолжение той же нити round 1-5 по решению пользователя (см. Context Notes в `_status.md`).
+
+### Session 2026-08-05 — Codex (round 8: Windows and Linux CI follow-up)
+
+**Input**: full Windows and Linux job logs for commit `5885105` on .NET SDK 10.0.302,
+Flutter 3.44.6, Windows Server 2025/VS 2026, and Ubuntu 24.04.
+
+#### Findings
+
+- Windows successfully completed `flutter build windows --release` and entered the direct
+  `publish_csharp.cmd` workflow step, validating round 7's CMake boundary change. The script's
+  diagnostics appeared for the first time. The .NET CLI then emitted an MSBuild command line where
+  `-o` had become a bare `PublishDir=...` token rather than an MSBuild property switch; MSBuild
+  treated that token plus the `.csproj` as two projects and raised MSB1008.
+- Linux found core `gstreamer-1.0` after round 7, but `audioplayers_linux` also requires
+  `gstreamer-app-1.0`. On Ubuntu 24.04 that pkg-config module is supplied by the plugins-base
+  development package, not `libgstreamer1.0-dev` alone.
+- The analyzer/macOS fixes were not contradicted by the supplied logs; this repair remains limited
+  to the two demonstrated failures.
+
+#### Changes
+
+- `windows/editor_plugin/publish_csharp.cmd`: replaced `-o "%OUT_DIR%"` with explicit
+  `-p:PublishDir="%OUT_DIR%"`, retaining direct workflow invocation and CRLF line endings. Updated
+  the stale header that still described the script as a CMake custom-build step.
+- `.github/workflows/build.yml`: added `libgstreamer-plugins-base1.0-dev` to the Linux desktop
+  dependencies.
+- `docker/linux-build.Dockerfile`: added the same package so Native Build and reproducible Docker
+  Build do not diverge.
+
+#### Verification
+
+- `.github/workflows/build.yml` parsed successfully with Ruby/Psych.
+- Local SDK is the same `10.0.302`; `dotnet msbuild ... -getProperty:PublishDir
+  -p:PublishDir=/private/tmp/comics-editor-publish-check` exited 0 and returned the exact requested
+  directory, verifying that the replacement is parsed as one MSBuild property.
+- A local macOS `dotnet publish` reached the Windows-targeted build without reproducing MSB1008,
+  but cannot substitute for the Windows runner or prove the final WPF artifact on this host.
+- Docker/Linux build was not rerun because the local Docker daemon is not running. Real Linux CI
+  remains required to prove pkg-config discovery.
+
+#### Handoff
+
+Commit/push the scoped application and flow changes and rerun Native Build. Confirm the Windows
+step creates `build/windows/x64/runner/Release/dotnet/Comics.Editor.Flutter.dll` and Linux advances
+past `audioplayers_linux` CMake configuration. Do not move publication back into CMake/MSBuild
+custom commands.
+
+#### Deviations from Plan
+
+- As in round 7, this is a user-directed continuation of the Native Build repair thread outside
+  the original Docker-only task list; it does not alter the approved build architecture.
+
+### Session 2026-08-05 — Codex (round 9: bypass `dotnet publish` parser)
+
+**Input**: Windows rerun for commit `b9b6044` after round 8.
+
+#### Findings
+
+- Flutter's Windows application build succeeded, so the failure remains isolated to the direct
+  C# publication step.
+- The batch script received the correct project and output paths and invoked SDK 10.0.302.
+- Round 8's `-p:PublishDir=...` still appeared in the resulting MSBuild command as bare
+  `PublishDir=...`, exactly like round 7's `-o`. This proves the transformation happens in the
+  `dotnet publish` front-end parser before MSBuild and is not specific to the output shorthand.
+- Rewriting the property syntax again inside `dotnet publish` would remain on the disproven
+  boundary. The robust escape is to invoke the MSBuild `Publish` target directly.
+
+#### Changes
+
+- `windows/editor_plugin/publish_csharp.cmd` now runs:
+  `dotnet msbuild <csproj> -restore -target:Publish -property:Configuration=Release
+  -property:TargetFramework=net10.0-windows -property:PublishDir=<out> -verbosity:normal`.
+- Updated the batch diagnostics and history to state why `dotnet publish` is intentionally not
+  used. CRLF line endings are preserved.
+
+#### Verification
+
+- Ran the exact direct-MSBuild command shape with SDK 10.0.302 against a disposable project in
+  `/private/tmp`, including restore, `Publish`, configuration/framework properties, and an explicit
+  `PublishDir`.
+- Result: exit code 0, `Build succeeded`, and the requested output directory contained
+  `probe.dll`. This validates the command path and property forwarding without touching tracked
+  application build artifacts.
+- The Windows/WPF project and `cmd.exe` quoting still require the real Windows runner for final
+  proof.
+
+#### Handoff
+
+Commit/push the batch change and rerun Native Build. The expected Windows log must show
+`dotnet msbuild`, then a successful `Publish` target and exit code 0; the workflow should continue
+to Flutter tests and artifact upload.
+
+#### Deviations from Plan
+
+- Continuation of the approved Native Build repair thread; no architecture or requirements change.

@@ -6,13 +6,13 @@ IMPLEMENTATION
 
 ## Phase Status
 
-Docker Build (Phase 1-4) — DONE, см. `04-implementation-log.md` Progress Tracker. Windows CI MSB1008 — round 5 (`VERBATIM`) не помог, тот же лог подтвердил (3-й раз), что наш `publish_csharp.cmd` вообще не запускается. Round 6 (2026-07-31): структурный фикс — убрана отдельная custom-target-only `.vcxproj` (`add_custom_target(..._csharp ALL ...)`), публикация C#-слоя перенесена в `add_custom_command(TARGET editor_plugin POST_BUILD ...)` на уже существующей, заведомо рабочей библиотеке. Не проверено реальным CI. Отдельно: новая macOS-only регрессия (`dataset_backward_compat_test.dart` из `vdd-comics-editor-uiux-lettering`, Task 7.1) — исправлена и подтверждена локально в обе стороны (dataset/ есть/нет).
+Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05 Windows rerun: C# publication now invokes the MSBuild `Publish` target directly, bypassing the .NET 10.0.302 `dotnet publish` parser that converted both `-o` and `-p:PublishDir` into positional tokens. Round 8's Linux plugins-base dependency and round 9's Windows command require real CI verification.
 
 **Важно**: `apps/comics-editor-v2.9/` переименован пользователем в `apps/comics-editor/` (тот же проект, `pubspec.yaml` `name: comics_editor`) — не найдя старый путь, искать по новому.
 
 ## Last Updated
 
-2026-07-31 by Claude
+2026-08-05 by Codex
 
 ## Related Flows
 
@@ -24,8 +24,7 @@ Docker Build (Phase 1-4) — DONE, см. `04-implementation-log.md` Progress Tra
 
 ## Blockers
 
-- **macOS: `flutter test` (bare, no file list) failing on load** — `dataset_backward_compat_test.dart` (added 2026-07-30 in a different flow, `vdd-comics-editor-uiux-lettering`) crashed the whole file on `Directory.listSync()` because `dataset/` doesn't exist in this repo's own checkout. Root cause confirmed: `apps/comics-editor-v2.9` is pushed to its own separate git repo (`comics108/comics-editor-v2.9`, verified via `git remote -v`/`show-toplevel`) whose tree never includes the monorepo-level `dataset/` directory at all -- it only resolved in local dev by directory-nesting coincidence. **Fixed** (2026-07-30): the test now checks `datasetDir.existsSync()` and skips with a clear reason (not crash) when absent; verified locally both ways (with dataset/ present: 28/28 green; with it renamed away to simulate the CI-mirror-repo layout: `~1: All tests skipped`, correctly no crash). Also added explicitly to the `analyze` job's fast test list in `build.yml` (pure Dart, no native artifact) for visibility, alongside `widget_test.dart`/`dart_io_core_test.dart` -- it'll report skipped there too (analyze also runs against the standalone repo), which is expected and fine.
-- **Windows MSB1008 — round 6 (unverified, needs real CI)**: round 5's `VERBATIM` fix did not help — the next real CI run (2026-07-31, commit `316cb80`) hit the identical error, and for the third time (rounds 2 and 6) the diagnostic `echo` lines inside `publish_csharp.cmd` never appeared in the log at all, confirming our script never starts executing. Since round 4 already confirmed the generated `<Command>` is syntactically identical to a working custom-build-step in the same file, five rounds of content-level fixes (CRLF, `call`, echo diagnostics, byte-level `<Command>` comparison, `VERBATIM`) are exhausted without success. Round 6 changes tack structurally instead: `add_custom_target(editor_plugin_csharp ALL ...)` forces CMake's Visual Studio generator to create a standalone `.vcxproj` whose only "source" is an auto-generated `.rule` stub (no real `ClCompile` items) -- on this runner's very new/preview toolset (`windows-2025-vs2026`, VS "18"/2026) that specific *class* of vcxproj (utility/custom-target-only) is the suspected trigger, not the command content. Replaced with `add_custom_command(TARGET editor_plugin POST_BUILD ...)`, attaching the publish step to the already-existing `editor_plugin` static-library target (a normal C++ project with real sources) instead of creating a new vcxproj at all. `windows/runner/CMakeLists.txt`'s copy-`dotnet`-folder step needed no changes -- build order is preserved because `runner` links `editor_plugin` and therefore builds after its POST_BUILD publish step. Syntax verified locally via a stub CMake project on macOS (reached CMake's Generate step cleanly). **Not verified** by real Windows CI. If it recurs a third time with this structural change too, the planned next step (noted in `04-implementation-log.md`) is to stop iterating on CMake/MSBuild entirely and invoke `dotnet publish` directly from a PowerShell step in `build.yml`, after `flutter build windows`.
+- **Windows and Linux platform verification**: a second 2026-08-05 Windows run proved that `dotnet publish` also strips `-p:PublishDir` into a bare positional token. Round 9 now bypasses that parser with `dotnet msbuild -restore -target:Publish`; Windows must confirm it populates `runner/Release/dotnet`. Linux must still confirm `gstreamer-app-1.0` discovery after installing `libgstreamer-plugins-base1.0-dev`.
 
 ## Progress
 
@@ -45,7 +44,15 @@ Docker Build (Phase 1-4) — DONE, см. `04-implementation-log.md` Progress Tra
 - [x] Task 4.1 `docker/README.md` — создан
 - [x] Task 4.2 финальное обновление `_status.md`/`04-implementation-log.md` — сделано
 - [x] Implementation complete (Docker Build, Plan scope) — финальная приёмка `docker-build.yml` ждёт реального CI-прогона (не выполнимо локально агентом)
-- [x] **Windows CI MSB1008** — root cause не подтверждён, но выяснено, что custom target публикует неиспользуемый артефакт (hostfxr interop — TODO). Custom target закомментирован в `CMakeLists.txt`, diagnostic-шаг убран из `build.yml`. Ждём коммита/пуша пользователем и финального зелёного CI-прогона для подтверждения.
+- [x] Round 7 code changes applied for analyzer, standalone macOS tests, Windows publication boundary, and initial Linux GStreamer dependency
+- [x] Local verification: `flutter analyze`; focused `multimodal_paths_test.dart`
+- [x] 2026-08-05 CI: Windows reached direct batch publication but failed MSB1008 because `-o` became a bare `PublishDir` token; Linux failed discovery of `gstreamer-app-1.0`
+- [x] Round 8 code changes: explicit `-p:PublishDir=...`; `libgstreamer-plugins-base1.0-dev` in native and Docker Linux environments
+- [x] Round 8 local checks: workflow YAML parses; .NET 10.0.302 accepts and resolves the explicit `PublishDir` property
+- [x] 2026-08-05 Windows rerun: `dotnet publish` still failed MSB1008 because its parser stripped `-p:PublishDir` before invoking MSBuild
+- [x] Round 9 code change: invoke `dotnet msbuild -restore -target:Publish` with native MSBuild property switches
+- [x] Round 9 local check: exact direct-MSBuild command published a disposable .NET 10 project and produced the requested DLL
+- [ ] Real Native Build rerun green on Windows, Linux, macOS, and analyze jobs
 
 ## Context Notes
 
@@ -92,9 +99,9 @@ Key decisions and context for resuming:
 
 ## Next Actions
 
-1. **Windows MSB1008 (round 6)**: пользователь коммитит/пушит `apps/comics-editor/windows/editor_plugin/CMakeLists.txt`, перезапускает `build-windows` — присылает новый лог.
-2. Если round 6 тоже не поможет — не пробовать очередной content-level фикс; вынести `dotnet publish` из CMake в отдельный PowerShell-шаг `build.yml` после `flutter build windows` (см. `04-implementation-log.md` round 6 "In Progress").
-3. Docker Build (Phase 1-4) завершён — ничего не осталось после подтверждения Windows.
+1. User commits/pushes the scoped `apps/comics-editor` and flow changes, then reruns Native Build.
+2. Confirm Linux passes `gstreamer-app-1.0` package discovery and Windows's direct MSBuild `Publish` target writes `Comics.Editor.Flutter` into the uploaded `Release/dotnet` directory.
+3. If Windows still fails, diagnose the new MSBuild-target error from its logged command/output; do not return publication to CMake custom commands or the `dotnet publish` parser.
 
 ## Pinned Versions (зафиксировано на Plan)
 

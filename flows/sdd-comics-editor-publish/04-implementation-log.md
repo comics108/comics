@@ -334,3 +334,46 @@ match-free signing approach for both iOS and macOS — if it fails, the Fastfile
 header comments name exactly which of the 4-5 sequential operations (keychain → import → extract →
 build/sign → package) is implicated by where in the log it dies, same diagnostic discipline as
 `sdd-comics-editor-build`'s Windows MSB1008 investigation history.
+
+---
+
+### Session 2026-08-04 — Codex (local store publishing preflight)
+
+**Started at**: user resumed the flow and explicitly requested publication to the stores from the
+local computer rather than another CI-only verification round.
+
+#### Completed
+
+- Restored the approved requirements/specification/plan and checked the current application tree.
+- Confirmed that fastlane `2.237.0` is already installed globally, matching the lockfile, so a
+  network-dependent gem install is not required for local publication.
+- Confirmed store assets are present: 15 Apple screenshots, 10 Android image assets, and 107 total
+  metadata/image files across the three platform setups.
+- Confirmed app version is `3.2.0+1` and the expected package/bundle identifier is
+  `net.nativemind.comics.editor`.
+- Performed a credential/signing preflight without printing secret values: no required store
+  environment variables are set, Keychain has `0 valid identities`, and no usable `.p12`, Android
+  release keystore, or Play service-account JSON is available locally. The one discovered
+  provisioning profile fails `security cms` decoding and cannot be used.
+- Skipped the live privacy/support URL check at the user's explicit request.
+
+#### Blocker and exact resume input
+
+The upload lanes were deliberately not started because they would fail before producing a signed
+artifact. To resume locally, make these inputs available (values must not be committed):
+
+- Common Apple API: `ASC_KEY_ID`, `ASC_ISSUER_ID`, base64 `ASC_KEY_CONTENT`.
+- iOS: `ios/ios_distribution.p12`, `ios/ios_appstore.mobileprovision`,
+  `IOS_CERT_PASSWORD`, `SIGNING_KEYCHAIN_PASSWORD`.
+- macOS: `macos/macos_app.p12`, `macos/macos_installer.p12`,
+  `macos/macos_appstore.provisionprofile`, `MACOS_CERT_APP_PASSWORD`,
+  `MACOS_CERT_INSTALLER_PASSWORD`, `SIGNING_KEYCHAIN_PASSWORD`.
+- Android: `android/app/release.keystore`, `android/key.properties`, and raw service-account JSON
+  in `PLAY_STORE_JSON_KEY`.
+- Team identifiers where needed by Appfile: `APPLE_TEAM_ID`, `ASC_TEAM_ID`.
+
+After those inputs exist, run Android to `internal`, iOS to `testflight`, and macOS to App Store;
+promoting Android/iOS to production remains a separate deliberate action after processing/review.
+
+**Ended at**: local toolchain and publication content are ready; external signing/API credentials
+are the sole hard blocker to starting the real store uploads.

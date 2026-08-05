@@ -14,10 +14,19 @@ reach (see Blockers) — not something this flow can close by itself.
 
 ## Last Updated
 
-2026-07-31 by Claude
+2026-08-04 by Codex
 
 ## Blockers
 
+- **Local publishing preflight (2026-08-04)**: user asked to publish all store builds directly
+  from the local Mac. The repository metadata/assets and global fastlane `2.237.0` are present,
+  but no store credentials are available to the process: none of the required `ASC_*`, signing,
+  or `PLAY_STORE_JSON_KEY` environment variables are set; Keychain reports `0 valid identities`;
+  no `.p12`, Android release keystore, or Play service-account JSON was found. The only local
+  `.mobileprovision` file cannot be decoded by `security cms` and is unusable. Therefore none of
+  the three upload lanes can safely start until credentials/signing files are supplied locally.
+  User explicitly asked to skip the live privacy/support URL check, so it is not treated as a
+  blocker for this attempt.
 - **First real `release-ios` run happened (2026-07-31)** — failed at `app_store_connect_api_key`
   with `string contains null byte` in `OpenSSL::PKey::EC.new(key)`. Diagnosed: `ASC_KEY_CONTENT`
   almost certainly holds the raw `.p8` PEM text instead of its base64 encoding (`app_store_connect_
@@ -115,23 +124,13 @@ N/A — new flow, not a fork (see Context Notes for the flow it was split out of
 
 ## Next Actions
 
-1. User: `git add`/commit/push the `android/.gitignore` fix + the 3 now-unignored Gradle wrapper
-   files (`android/gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`) — the real,
-   currently-fatal blocker on `release-android`.
-2. User: export iOS Distribution cert + App Store provisioning profile, macOS app + installer
-   certs + Mac App Store provisioning profile, set all the new signing secrets (full list in the
-   published artifact this session — same URL, redeployed with match-free content) — replaces the
-   `match`-based prerequisites entirely, no certs git repo needed anymore.
-3. User: set `PLAY_STORE_JSON_KEY` (still blank in the last real log).
-4. User: create the macOS App Store Connect record (separate from iOS, same bundle id) — still
-   needed regardless of the match removal.
-5. User: get `zh-Hans`/`hi`/`th` store copy reviewed by a native/fluent speaker (ru/en-US are
+1. User: provide the local signing/API credentials listed in the 2026-08-04 implementation-log
+   entry; then run the three fastlane lanes locally (Android internal, iOS TestFlight, macOS App
+   Store) and retain their complete logs.
+2. User: create the macOS App Store Connect record (separate from iOS, same bundle id) if it does
+   not exist yet.
+3. User: get `zh-Hans`/`hi`/`th` store copy reviewed by a native/fluent speaker (ru/en-US are
    native-quality confidence) — not blocking, but should happen before really going live there.
-6. User: confirm `https://comics.nativemind.net/policy.html` and `/support.html` are real, live
-   pages before actual submission.
-7. User: set the Google Play category manually in Play Console (Art & Design recommended) — not
+4. User: set the Google Play category manually in Play Console (Art & Design recommended) — not
    part of `supply`'s file-based metadata.
-8. User: run a real `workflow_dispatch` of all 3 lanes and share the result — the match-free
-   signing rework (iOS `xcargs`-based manual signing, macOS's two-cert + profile-embedding flow)
-   is unverified and is now the highest-risk unverified piece of this whole flow.
-9. Once verified (or issues found and fixed from a real run's output): move to Documentation phase.
+5. Once verified (or issues found and fixed from the local runs): move to Documentation phase.

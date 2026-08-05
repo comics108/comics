@@ -1,0 +1,697 @@
+# Visual Mockups: comics-editor-bottombar-uiux
+
+> Version: 1.1  
+> Status: REVIEW  
+> Last Updated: 2026-08-05  
+> Requirements: [01-requirements.md](01-requirements.md)
+
+## Overview
+
+This design preserves the current responsive editor shell. It adds a dedicated
+Viewer surface and reorganizes Properties without moving existing desktop or
+tablet panes.
+
+The shared information model is:
+
+```text
+Scene       = select and manage Layers / Sounds
+Canvas      = edit the document (existing CanvasView)
+Viewer      = play/render the document through flutter_comics_viewer
+Properties  = Selection tab first, Document tab second
+Timeline    = existing animation timeline
+```
+
+`New` and `Open` remain in the existing top bar on every layout. They are not
+duplicated in phone bottom navigation.
+
+## Responsive Layout Map
+
+| Viewport | Existing shell retained | Focused addition |
+|---|---|---|
+| Phone `<=600` | Canvas + compact Timeline + bottom-sheet launchers | Bottom bar becomes `Scene / Viewer / Properties`; Viewer opens the same modal-sheet pattern |
+| Tablet `601–1024` | Narrow `Scene | Canvas | Properties` + expandable Timeline | Central workspace gets `Canvas / Viewer` tabs; Properties gets `Selection / Document` tabs |
+| Desktop `>=1025` | `Scene | Canvas | Properties` + docked Timeline | Same central `Canvas / Viewer` tabs and Properties tabs |
+| Windows desktop | Same Flutter desktop shell | `Viewer` tab hosts the WPF-backed implementation of `flutter_comics_viewer`; never opens a separate WPF window |
+
+## Screen: Phone — Canvas (Default)
+
+The main screen remains the existing editable Canvas and compact Timeline. The
+bottom bar now contains only three persistent destinations.
+
+```text
++--------------------------------------+
+| [logo] episode.comics  [+][open][save][...] |
++--------------------------------------+
+|                                      |
+|                                      |
+|         EXISTING EDIT CANVAS         |
+|          selection handles           |
+|                                      |
+|                                      |
++--------------------------------------+
+| (play) frame 120  [====|=====]       |  compact Timeline
++--------------------------------------+
+| [layers]      [play]       [tune]    |
+|  Scene        Viewer      Properties |
+|  active                               |
++--------------------------------------+
+|             safe area                |
++--------------------------------------+
+```
+
+### Phone bottom bar behavior
+
+- Equal-width destinations in fixed order: `Scene`, `Viewer`, `Properties`.
+- Minimum target height: 44 logical pixels plus safe-area padding.
+- Icon and text are both visible; active state uses icon/text color plus an
+  indicator, never color alone.
+- Opening a destination uses the existing modal bottom-sheet model. Closing it
+  returns to Canvas without changing the current layer/sound/animation.
+- `New` and `Open` remain the existing top-bar icons.
+
+## Screen: Phone — Scene Sheet
+
+Canvas size is moved out of Scene and into `Properties > Document`. Scene keeps
+its existing responsibility and gains the vertical space formerly occupied by
+the Canvas card.
+
+```text
++--------------------------------------+
+|                 ----                 |  grip
+| Scene                           [x]   |
++--------------------------------------+
+| LAYERS                  [+][up][dn][x]|
+| [eye] [Bln] speech-01.png             |
+| [eye] [Art] character-02.png  selected|
+| [off] [Bg ] background.png            |
+|                                      |
+|                                      |
++--------------------------------------+
+| SOUNDS                     [+][mute][x]|
+| [snd] narration-01.mp3                |
++--------------------------------------+
+```
+
+Empty Scene state:
+
+```text
+| LAYERS                       [+] |
+| No layers yet                    |
+|                                  |
+| SOUNDS                       [+] |
+| No sounds                        |
+```
+
+## Screen: Phone — Viewer Sheet
+
+Viewer follows the existing 85%-height sheet pattern so the global shell does
+not change. The native viewer owns the large content area; Flutter chrome stays
+compact and outside the PlatformView.
+
+```text
++--------------------------------------+
+|                 ----                 |
+| Viewer                          [x]   |
+| [play/pause] [sound] [preview]        |  compact controls
++--------------------------------------+
+|                                      |
+|                                      |
+|     flutter_comics_viewer            |
+|     native rendered content          |
+|                                      |
+|                                      |
++--------------------------------------+
+|  00:12 / 01:04      [====|=======]   |
++--------------------------------------+
+```
+
+### Viewer interactions
+
+- The current top-bar language is used; Viewer does not duplicate a language
+  selector.
+- `play/pause`, sound, and preview controls map to existing
+  `ComicsViewerController` capabilities. They are not new rendering behavior.
+- Drag/scroll gestures inside the viewer belong to the PlatformView. Sheet
+  dismissal is restricted to the grip/header area so vertical viewer gestures
+  do not accidentally close it.
+- Closing/reopening preserves viewer position while the document remains open.
+- A document edit triggers a non-blocking refresh state; selection in Scene and
+  active Properties tab remain unchanged.
+
+## Viewer States — All Platforms
+
+### Loading / refreshing
+
+```text
++--------------------------------------+
+| Viewer                               |
++--------------------------------------+
+|                                      |
+|             (spinner)                |
+|          Preparing preview…          |
+|                                      |
++--------------------------------------+
+```
+
+During refresh after a valid edit, the last successfully rendered frame may
+remain visible under a small progress banner instead of flashing blank:
+
+```text
+| [ Updating preview… ]                |
+| last successful rendered content     |
+```
+
+### Loaded / success
+
+```text
+| [pause] [sound on] [preview off]      |
+| rendered content                     |
+| 00:12 / 01:04 [====|=======]         |
+```
+
+### Empty document
+
+```text
++--------------------------------------+
+|              [image icon]            |
+| Nothing to preview yet               |
+| Add a layer in Scene.                |
+|            [Open Scene]              |
++--------------------------------------+
+```
+
+### No open/loadable document
+
+```text
++--------------------------------------+
+|              [file icon]             |
+| Open a comics document to use Viewer |
+|             [Open file]              |
++--------------------------------------+
+```
+
+`Open file` invokes the existing Open dialog; it is a recovery action inside an
+empty state, not a duplicate persistent navigation item.
+
+### Load error
+
+```text
++--------------------------------------+
+|                [!]                   |
+| Preview could not be loaded          |
+| <short actionable error summary>     |
+|        [Retry]  [Show details]       |
++--------------------------------------+
+```
+
+Details are selectable/copyable and remain collapsed by default.
+
+### Backend unavailable / unsupported runtime
+
+```text
++--------------------------------------+
+|                [!]                   |
+| Viewer is unavailable on this build  |
+| The editor is still available.       |
+|             [Show details]           |
++--------------------------------------+
+```
+
+The rest of the editor remains usable. This is a fallback state, not the
+intended result for an approved supported target.
+
+### Controls disabled while loading
+
+```text
+| [play disabled] [sound disabled] [preview disabled] |
+| Preparing preview…                                |
+```
+
+Disabled controls retain readable labels/tooltips and do not disappear.
+
+## Screen: Phone — Properties Sheet
+
+`Selection` is first and is the initial tab on first entry. The last active tab
+is remembered for the open document.
+
+```text
++--------------------------------------+
+|                 ----                 |
+| Properties                      [x]   |
++--------------------------------------+
+| [ Selection ]      Document          |
+| =================                    |
+|                                      |
+| selected artwork layer               |
+| [swatch] character-02.png      LAYER |
+|                                      |
+| Kind        [Character          v]   |
+| ARTWORK · PER LANGUAGE               |
+| [ En ] [ Ru ] [ Hi ]                 |
+| File   [character-02.png] [...]       |
+| Popup  [— none —       ] [...]       |
+| [x] Preview this layer               |
+|                                      |
+| ANIMATIONS                           |
+| [Translate] [Rotate] [+ Scale] ...   |
+| +----------------------------------+ |
+| | Translate                      x | |
+| | Start [0]       End [240]        | |
+| | X     [0.0]     Y   [128.0]      | |
+| +----------------------------------+ |
+|                                      |
++--------------------------------------+
+| keyboard/safe area; content scrolls  |
++--------------------------------------+
+```
+
+### Properties > Selection — no selection
+
+```text
+| [ Selection ]      Document          |
+|                                      |
+|            [cursor icon]             |
+| Select a layer or sound in Scene     |
+| to edit its properties.              |
+|             [Open Scene]             |
+```
+
+### Properties > Document
+
+```text
+| Selection        [ Document ]        |
+|                    ==========        |
+| CANVAS                               |
+| Width  [1080]    Height [1920]       |
+| [Convert artwork to canvas size]     |
+|                                      |
+| Changing canvas size affects the     |
+| document, not only the selected layer|
+```
+
+Width/Height/Convert are moved here and are not duplicated in Scene.
+
+### Properties > Document — Puzzle
+
+Puzzle documents show the same Canvas section plus the legacy view-only Scale
+control. The range and steps are visible through semantics/tooltips; the current
+value is also shown numerically so keyboard users are not forced to use only a
+slider.
+
+```text
+| Selection        [ Document ]        |
+|                    ==========        |
+| CANVAS                               |
+| Width  [1080]    Height [2160]       |
+| [Convert artwork to canvas size]     |
+|                                      |
+| PUZZLE VIEW                          |
+| Zoom / Scale                         |
+| 0.125  |--------o----------|  1.0    |
+|                    [ 0.50 ]          |
+| Small step 0.05 · Large step 0.10    |
+```
+
+- Default: `0.5`.
+- Minimum: `0.125`.
+- Maximum: `1.0`.
+- Small keyboard/step change: `0.05`.
+- Large keyboard/page change: `0.1`.
+- The control appears only for puzzle documents and changes the view scale,
+  not serialized document dimensions.
+
+## Properties > Selection Variants
+
+### Generic artwork layer
+
+```text
+| Header: swatch + layer name + LAYER  |
+| Kind                                 |
+| Artwork per language: File / Popup   |
+| Preview toggle                       |
+| Animations list/add/delete           |
+| Selected animation fields            |
+```
+
+### Balloon/caption layer
+
+```text
+| Header: balloon name + BALLOON       |
+| Kind / Style                         |
+| Language                             |
+| Balloon text                         |
+| Rendered artwork fields/actions      |
+| Preview toggle                       |
+| Animations list/add/delete           |
+| Selected animation fields            |
+```
+
+Existing `BalloonEditorCard` content is reused rather than redesigned.
+
+### Sound
+
+```text
+| Header: [sound] narration.mp3 SOUND  |
+| SOUND FILE                           |
+| File [narration.mp3] [...]           |
+| ANIMATIONS                           |
+| [Sound] [+ Sound cue]                |
+| +----------------------------------+ |
+| | Sound                           x | |
+| | Start [20]      End [180]         | |
+| +----------------------------------+ |
+```
+
+## Complete Numeric Property Inventory from v2.8
+
+This is the complete set of user-editable numeric controls represented by the
+v2.8 XAML. Every applicable field appears in Properties; shared `Start`/`End`
+are repeated in each selected animation card because only one animation is
+edited at a time.
+
+| Scope/type | Visible fields | Data type | Legacy initial/default | Enforced legacy range |
+|---|---|---|---|---|
+| Comics document | `Width`, `Height` | `int` | new document `1080`, `2160` | none |
+| Puzzle view | `Scale` | `double` slider | `0.5` | `0.125–1.0`; steps `0.05/0.1` |
+| Every animation | `Start`, `End` | `int` | CLR default `0`, `0` | none |
+| Translate | `X`, `Y` | `int` | `0`, `0` | none |
+| Rotate | `Center X`, `Center Y`, `Angle` | `double` | resting pivot `0.5`, `0.5`; angle `0` | none |
+| Scale | `Center X`, `Center Y`, `Scale X`, `Scale Y` | `double` | resting pivot `0.5`, `0.5`; scale `1`, `1` | none |
+| Alpha | `Alpha` | `double` | resting alpha `1` | none; v2.8 did not clamp to `0–1` |
+| Sound cue | no extra fields beyond `Start`, `End` | — | initial cue of a newly imported sound: `Start == End == current Scroll`; subsequently added cue: `End = Start + 200` | — |
+
+### Selected Translate animation — complete card
+
+```text
+| ANIMATIONS                           |
+| [Translate] [Rotate] [Scale] [Alpha] |
+| [+ Translate] [+ Rotate] ...         |
+| +----------------------------------+ |
+| | Translate                      x | |
+| | Start [0]       End [200]         | |  int
+| | X     [0]       Y   [0]           | |  int
+| +----------------------------------+ |
+```
+
+For a layer created at the current scroll position, its initial Translate has
+`Y = integer current Scroll`; `Start` and `End` otherwise use CLR default `0`
+until authored.
+
+### Selected Rotate animation — complete card
+
+```text
+| +----------------------------------+ |
+| | Rotate                         x | |
+| | Start    [0]     End      [200]  | |  int
+| | Center X [0.50]  Center Y [0.50] | |  double
+| | Angle    [0.0]                   | |  double
+| +----------------------------------+ |
+```
+
+`Angle` has no forced `0–360` normalization in v2.8. Negative and multi-turn
+values remain representable.
+
+### Selected Scale animation — complete card
+
+```text
+| +----------------------------------+ |
+| | Scale                          x | |
+| | Start    [0]     End      [200]  | |  int
+| | Center X [0.50]  Center Y [0.50] | |  double
+| | Scale X  [1.00]  Scale Y  [1.00] | |  double
+| +----------------------------------+ |
+```
+
+The UI does not invent a positive-only restriction because v2.8 did not enforce
+one; negative scale remains capable of representing a flip.
+
+### Selected Alpha animation — complete card
+
+```text
+| +----------------------------------+ |
+| | Alpha                          x | |
+| | Start [0]       End [200]         | |  int
+| | Alpha [1.00]                     | |  double
+| +----------------------------------+ |
+```
+
+The visual may explain the usual `0–1` meaning, but validation must not silently
+clamp legacy out-of-range data unless a later approved specification explicitly
+adds migration behavior.
+
+### Selected Sound cue — complete card
+
+```text
+| +----------------------------------+ |
+| | Sound                          x | |
+| | Start [120]     End [120]         | |  int
+| +----------------------------------+ |
+```
+
+`Start == End` is valid and means a one-shot cue. A range (`Start < End`) means
+looping behavior in v2.8; therefore equality must not be treated as a validation
+error.
+
+### New animation numeric behavior inherited from v2.8
+
+```text
+new animation Start = max(current Scroll, previous same-type End + 1)
+new animation End   = Start + 200
+new Sound cue       = Start + 200 through the generic Add path
+newly created sound = Start == End == integer current Scroll
+```
+
+These are creation behaviors, not additional visible fields. Existing saved
+values always take precedence over defaults.
+
+### Narrow/large-text field wrapping
+
+On very narrow or large-text layouts, each two-field row wraps into full-width
+fields without changing order:
+
+```text
+Start
+[0                                  ]
+End
+[200                                ]
+Center X
+[0.50                               ]
+Center Y
+[0.50                               ]
+```
+
+Labels never truncate into ambiguity.
+
+## Numeric Values Present in Data but Not Editable Fields in v2.8
+
+For completeness, these numeric values exist in the editor/model but were not
+shown as editable Properties. They remain excluded from the new visible form so
+the redesign does not invent controls:
+
+| Value | Type | Role | Visual treatment |
+|---|---|---|---|
+| `Image.Width` | `int` | Imported asset pixel width, filled during image update | Not shown as an editable field |
+| `Image.Height` | `int` | Imported asset pixel height | Not shown as an editable field |
+| `ComicsViewModel.Scroll` | `double` | Current scroll/time position | Represented by existing Canvas/Timeline, not Properties |
+| animation interpolation `Factor(scroll)` | `double` | Derived easing value | Never shown |
+| derived `Pivot` point | `Point(PivotX, PivotY)` | Rendering convenience | Edited only through Center X/Y |
+
+Layout constants such as XAML control widths, margins, thumbnail sizes, and the
+window's `1300 × 850` initial size are presentation implementation values, not
+document/property fields, and are intentionally not added to Properties.
+
+## Numeric Field States
+
+### Focused valid draft
+
+```text
+| Width                                |
+| [ 1080|                         ]    |  blue focus border
+```
+
+### Invalid partial value
+
+```text
+| Width                                |
+| [ -                             ] !  |  error border + icon
+| Enter a whole number greater than 0. |
+```
+
+- Invalid text remains a local draft and is not written to the document.
+- Leaving the field restores the last valid value unless the user corrects it.
+- Error text is announced to assistive technology.
+- Valid commits use the existing edit-history path and are undoable.
+
+### Successful commit
+
+```text
+| Width                                |
+| [ 1200                          ]    |
+| Preview: Updating…                   |
+```
+
+No success toast is shown for every numeric edit; the updated value and Viewer
+refresh are sufficient feedback.
+
+## Screen: Tablet — Existing Layout Preserved
+
+```text
++--------------------------------------------------------------+
+| existing compact TopBar: new / open / save / modes / more    |
++-------------+---------------------------+--------------------+
+| Scene       | [ Canvas ]  Viewer        | Properties         |
+| Layers      | ==========                | [Selection] Document|
+| Sounds      |                           |                    |
+|             | existing edit CanvasView  | selected values    |
+|             |                           | scroll             |
++-------------+---------------------------+--------------------+
+| existing expandable Timeline                       [expand]   |
++--------------------------------------------------------------+
+```
+
+Activating `Viewer` changes only the center pane:
+
+```text
+| Scene       | Canvas  [ Viewer ]        | Properties         |
+| unchanged   |         ==========        | unchanged          |
+|             | flutter_comics_viewer     |                    |
+|             | + compact controls        |                    |
+```
+
+No navigation rail or tablet bottom bar is added.
+
+## Screen: Desktop/macOS/Linux/Web — Existing Layout Preserved
+
+```text
++--------------------------------------------------------------------------------+
+| existing TopBar: document / mode / New / Open / Save / Undo / language          |
++------------------+----------------------------------------+----------------------+
+| Scene            | [ Canvas ]  Viewer                    | Properties           |
+| Layers           | ==========                            | [Selection] Document |
+|                  |                                       |                      |
+| Sounds           | existing editable CanvasView          | selected values      |
+|                  |                                       |                      |
++------------------+----------------------------------------+----------------------+
+| existing docked Timeline                                                        |
++--------------------------------------------------------------------------------+
+```
+
+Viewer active:
+
+```text
+| Scene unchanged  | Canvas  [ Viewer ]                    | Properties unchanged|
+|                  |         ==========                    |                     |
+|                  | [play][sound][preview]                 |                     |
+|                  | flutter_comics_viewer                  |                     |
+```
+
+- The center tab strip is keyboard reachable and does not alter selection.
+- The existing Scene and Properties widths remain unchanged.
+- No desktop bottom bar is introduced.
+- On a narrow resized desktop window, the existing responsive breakpoint—not
+  OS identity—continues to choose tablet/phone geometry.
+
+## Screen: Windows Desktop
+
+The visual structure is identical to the desktop mockup above. The only
+platform-specific difference is inside the Viewer content rectangle:
+
+```text
+Flutter TopBar / Scene / Properties / Timeline
+                    |
+                    +--> Viewer tab
+                           |
+                           +--> WPF-backed native viewer surface
+```
+
+- WPF does not create a second top-level editor window.
+- Flutter owns tabs, controls, loading/error overlays, sizing, and focus return.
+- WPF owns native rendered content and its internal pointer interaction.
+
+## Keyboard, Focus, and Assistive Technology
+
+### Desktop/tablet keyboard order
+
+```text
+TopBar
+  -> Scene controls/list
+  -> Canvas / Viewer tabs
+  -> active center content controls
+  -> Properties: Selection / Document tabs
+  -> active Properties fields
+  -> Timeline
+```
+
+- Arrow keys move between sibling tabs; Enter/Space activates.
+- Tab enters the active tab panel, never hidden tab content.
+- Switching Canvas/Viewer or Selection/Document returns focus to the activated
+  tab; it does not unexpectedly jump into the PlatformView.
+- Existing Ctrl+Z / Ctrl+Shift+Z behavior remains unchanged.
+
+### Phone focus order
+
+```text
+TopBar -> Canvas -> compact Timeline -> Scene -> Viewer -> Properties
+```
+
+When a sheet opens, focus is trapped within it until Close/back/dismiss. Closing
+returns focus to the bottom button that opened it.
+
+## Large Text, Keyboard, and Orientation
+
+### Phone with software keyboard
+
+```text
++--------------------------------------+
+| Properties: Selection / Document     |
+| scrollable fields                    |
+| focused numeric field + error        |
++--------------------------------------+
+| software keyboard                    |
++--------------------------------------+
+```
+
+- The focused field scrolls above the keyboard.
+- The sheet does not nest an independently scrolling form inside another
+  vertical form scroller.
+- Phone landscape retains the same three bottom destinations; labels remain
+  visible unless the approved accessibility text scale requires a documented
+  fallback to a taller bar.
+
+### 200% text / narrow Properties pane
+
+Two-column numeric rows wrap to single-column rows. Tab labels remain text,
+not icon-only. Content scrolls; headers and controls do not overlap.
+
+## Navigation and State Transitions
+
+```text
+[Phone Canvas]
+   |-- Scene ------> [Scene sheet] ------ close/back ------|
+   |-- Viewer -----> [Viewer sheet] ----- close/back ------|--> [Phone Canvas]
+   |-- Properties -> [Properties sheet] - close/back ------|
+
+[Tablet/Desktop Canvas tab] <--tab--> [Viewer tab]
+        selection/state preserved in both directions
+
+[Properties Selection] <--tab--> [Properties Document]
+        draft/scroll state preserved while document remains open
+```
+
+Opening a different document resets selection-specific state safely, returns
+Properties to `Selection`, and puts Viewer into Loading before Loaded/Error.
+
+## Explicit Non-Changes
+
+- No bottom navigation on tablet/desktop.
+- No rearrangement of `Scene | center workspace | Properties | Timeline`.
+- No duplication of New/Open in the phone bottom bar.
+- No removal of Scene, Layers, Sounds, current CanvasView, or Timeline.
+- No new animation types or numeric properties.
+- No separate WPF editor window on Windows.
+
+## Approval
+
+- [ ] Reviewed by: Anton
+- [ ] Approved on: —
+- [ ] Notes: Awaiting explicit visual approval before specifications.

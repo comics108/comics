@@ -326,3 +326,11 @@ Status: COMPLETED
 ## Phase 6: Validation & Testing
 
 Status: PENDING
+
+### 2026-08-05 Alignment and iOS Build-Recovery Handoff
+
+- Re-read the approved `sdd-comics-viewer` artifacts and the earlier `sdd-flutter-comics-viewer` analysis before resuming validation work.
+- Confirmed that this main flow is authoritative where the older Flutter flow conflicts with it; the active implementation remains native-first with thin Flutter and React Native bridges.
+- Confirmed the current `comics-viewer-ios` regression blocks Flutter iOS task 4.3.3, React Native iOS task 5.3.3, and full validation task 6.2.2.
+- Created/aligned the corrective child flow `flows/sdd-comics-viewer-ios/`, preserving the approved unified API, archived `sample.comics` fixture, shared comics+puzzle package, platform minimums, and bundle identifiers.
+- No production code was changed in this alignment step. The child flow remains at its requirements approval gate.
