@@ -6,7 +6,7 @@ IMPLEMENTATION
 
 ## Phase Status
 
-IMPLEMENTED — external CI verification blockers remain
+IMPLEMENTED LOCALLY — patched CI rerun remains
 
 ## Last Updated
 
@@ -14,11 +14,13 @@ IMPLEMENTED — external CI verification blockers remain
 
 ## Blockers
 
-- Remote `comics108/comics-viewer-ios` branch `main` currently has Swift compile
-  errors, so the iOS job cannot become green without an upstream fix or newly
-  approved dependency pin.
-- Linux and Windows builds require their GitHub-hosted native runners; no Actions
-  run has been observed for the remaining uncommitted native fixes.
+- The first Actions run exposed Linux/Windows CMake integration defects. They
+  were partially fixed in externally-created commit `6d0996d`; its run then
+  exposed missing package-namespaced forwarding headers. Those headers are now
+  added locally and still require a rerun on GitHub-hosted runners.
+- iOS is now locally green on upstream `comics-viewer-ios/main` revision
+  `4cd96df`; the updated workflow and SwiftPM lockfiles still require the same
+  post-push Actions rerun for CI confirmation.
 
 ## Progress
 
@@ -60,8 +62,30 @@ IMPLEMENTED — external CI verification blockers remain
   the session; Codex did not commit or push.
 - Scoped format/analyze/test pass. Local Web, macOS and Android release builds
   pass with Flutter 3.44.6 after build-only packaging/wiring compatibility fixes.
-- iOS reaches the remote Swift package but fails inside its current `main`
-  source. No `continue-on-error` or unapproved pin was introduced.
+- iOS upstream was rechecked at `4cd96df`; its former Swift errors are fixed.
+  Both tracked SwiftPM lockfiles now resolve that commit and ZIPFoundation
+  0.9.20. The local Swift package target was aligned with Flutter's expected
+  `flutter_comics_viewer` module, after which the unsigned simulator build
+  produced `Runner.app` successfully.
+- Push run
+  [`30975574221`](https://github.com/comics108/flutter_comics_viewer/actions/runs/30975574221)
+  proved validation plus Android/macOS/Web jobs and artifact uploads green.
+  Linux failed on the stale native target name, Windows on GoogleTest 1.11 with
+  CMake 4, and iOS first on a forced Xcode installation lacking the simulator
+  platform.
+- Linux/Windows target naming and consumer test opt-in are fixed locally. iOS
+  now uses the runner-selected Xcode/SDK and passes locally with Xcode 26.6.
+- A signed debug build was installed and launched on the attached iPhone running
+  iOS 15.8.4. A legacy `viewer` method-channel alias was added after the first
+  run exposed a mismatch; the second run connected to the Dart VM Service with
+  no runtime exception.
+- Push run
+  [`30976166970`](https://github.com/comics108/flutter_comics_viewer/actions/runs/30976166970)
+  on `6d0996d` reconfirmed validation/Android/macOS/Web green. Linux/Windows
+  reached compilation and failed only because their generated registrants use
+  the package header namespace; forwarding headers now cover it. iOS in that
+  run still used the old committed SwiftPM pin, predating the locally verified
+  lock/target fixes.
 - Implementation details and exact verification evidence are recorded in
   `04-implementation-log.md`.
 
@@ -71,8 +95,7 @@ IMPLEMENTED — external CI verification blockers remain
 
 ## Next Actions
 
-1. Commit/push the remaining nested-repository native compatibility fixes when
-   desired, then run `Example Build` via `workflow_dispatch` or a PR.
-2. Repair `comics-viewer-ios` `main` or approve a pinned known-good revision.
-3. Confirm Linux and Windows jobs/artifacts on GitHub-hosted runners; then mark
+1. Commit/push the remaining nested-repository CMake/workflow compatibility
+   fixes when explicitly desired, then rerun `Example Build`.
+2. Confirm iOS, Linux and Windows jobs/artifacts on GitHub-hosted runners; then mark
    implementation complete.

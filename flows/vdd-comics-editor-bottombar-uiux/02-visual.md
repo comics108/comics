@@ -1,7 +1,7 @@
 # Visual Mockups: comics-editor-bottombar-uiux
 
 > Version: 1.8
-> Status: REVIEW  
+> Status: APPROVED
 > Last Updated: 2026-08-05  
 > Requirements: [01-requirements.md](01-requirements.md)
 
@@ -1048,6 +1048,7 @@ Properties to `Selection`, and puts Viewer into Loading before Loaded/Error.
 
 ## Approval
 
-- [ ] Reviewed by: Anton
-- [ ] Approved on: —
-- [ ] Notes: Awaiting explicit visual approval before specifications.
+- [x] Reviewed by: Anton
+- [x] Approved on: 2026-08-05
+- [x] Notes: Explicitly approved in conversation. Product version shown by the
+      approved reference and implemented by the app is `3.2.1`.

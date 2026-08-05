@@ -1,6 +1,6 @@
 # Implementation Log: flutter-comics-viewer-example-build
 
-> Status: IMPLEMENTED — external verification blockers remain  
+> Status: IMPLEMENTED LOCALLY — patched CI rerun and upstream iOS fix remain
 > Started: 2026-08-05  
 > Plan: [03-plan.md](03-plan.md)
 
@@ -13,8 +13,8 @@
 - [x] GitHub Actions workflow implemented and checked.
 - [x] Local validation and feasible host builds attempted.
 - [x] Final safety review completed.
-- [ ] All six CI jobs proven green; iOS upstream currently fails and Linux/
-  Windows require GitHub runners.
+- [ ] All six CI jobs proven green; the first observed Actions run exposed
+  Linux/Windows build integration defects and an iOS runner/upstream failure.
 
 ## Session Log
 
@@ -113,14 +113,103 @@ remain red until the upstream branch is repaired or a new SDD decision approves
 pinning.
 
 Linux and Windows builds were not locally executable on macOS. Their commands,
-runner selection and artifact paths are present in the workflow and await an
-Actions run.
+runner selection and artifact paths are present in the workflow.
+
+### 2026-08-05 — First GitHub Actions execution and follow-up fixes
+
+Observed push run
+[`30975574221`](https://github.com/comics108/flutter_comics_viewer/actions/runs/30975574221)
+for nested-repository commit `6123669c5348afdaa9e6985976223569207f20db`.
+It completed with these independent results:
+
+- passed: `validate-example`, `build-android`, `build-macos`, `build-web`;
+- failed: `build-linux`, `build-windows`, `build-ios`.
+
+Uploaded artifacts were proven for Android, macOS and Web. Failure diagnosis and
+local corrections:
+
+1. Linux generated CMake links `${plugin}_plugin`, which resolves to
+   `flutter_comics_viewer_plugin`, while the plugin declared `viewer_plugin`.
+   Linux and Windows plugin project/target/bundled-library names now follow the
+   Flutter package name expected by generated build rules.
+2. Windows release configuration fetched the scaffold's GoogleTest 1.11 and
+   failed under runner CMake 4 before compiling the app. Example consumer builds
+   no longer opt into native plugin test targets; Dart/widget tests remain in
+   the validation gate.
+3. iOS selected `/Applications/Xcode_16.app`, but that runner installation did
+   not have the requested iOS 18 simulator platform. The iOS job now uses the
+   runner-selected Xcode/SDK and reports its version instead of forcing an
+   incompatible installation. A local Xcode 26.6 build then independently
+   confirmed the remaining remote `comics-viewer-ios/main` source errors.
+
+Ruby YAML parsing and `git diff --check` pass after these changes. Linux and
+Windows need a new Actions run after commit/push. Per the approved Git constraint,
+Codex did not create a commit or push the patched workflow.
+
+### 2026-08-05 — iOS upstream re-verification
+
+`comics108/comics-viewer-ios/main` advanced from `8337b59` to `4cd96df` and its
+local checkout is clean and equal to the remote branch. The first repeat build
+still compiled `8337b59` because both tracked Xcode `Package.resolved` files
+pinned that revision. Resolving from a fresh SwiftPM clone cache updated the
+dependency graph to:
+
+- `comics-viewer-ios` `4cd96df` on branch `main`;
+- ZIPFoundation `0.9.20` (`22787ff`).
+
+The former upstream Swift errors disappeared. Compilation then exposed a local
+SwiftPM module mismatch: the package product built legacy target `viewer`, but
+Flutter's generated registrant imports `flutter_comics_viewer`; the current
+plugin source already lives under `Sources/flutter_comics_viewer`. Updating the
+product target to `flutter_comics_viewer` and synchronizing both tracked lockfiles
+fixed the integration without changing runtime API or UI.
+
+Final command `./tool/build-example.sh ios` passed with local Xcode 26.6 and
+produced `example/build/ios/iphonesimulator/Runner.app` (139 MB). Only the
+non-fatal missing example build name/number warning remains; this unsigned
+simulator verification build is not an App Store submission.
+
+### 2026-08-05 — Second GitHub Actions execution
+
+An external actor committed the first CMake/workflow corrections as `6d0996d`;
+Codex did not create that commit or push it. Push run
+[`30976166970`](https://github.com/comics108/flutter_comics_viewer/actions/runs/30976166970)
+again passed validation, Android, macOS and Web. It provided two additional
+native diagnostics:
+
+- Linux and Windows generated registrants include package-namespaced headers
+  `flutter_comics_viewer/viewer_plugin.h` and
+  `flutter_comics_viewer/viewer_plugin_c_api.h`, while the legacy public headers
+  remain under `include/viewer`. Two forwarding headers were added under the
+  generated package namespace, preserving the existing C/C++ API.
+- iOS used Xcode 16.4 successfully but still consumed the then-committed
+  `8337b59` lockfile, producing its old duplicate-method error. The subsequent
+  local lockfile update to `4cd96df` and Swift target alignment are not part of
+  this run; the local green build verifies those follow-up changes.
+
+A third Actions execution is required after the current iOS lock/target and
+desktop forwarding-header changes are committed and pushed.
+
+### 2026-08-05 — Attached iPhone smoke run
+
+Flutter detected `Anton iPhone` (`iOS 15.8.4`) over USB. The first signed debug
+deployment built, installed and launched, but the example's legacy `Viewer` API
+called method channel `viewer` while the current iOS plugin registered only
+`flutter_comics_viewer`, causing `MissingPluginException`. The iOS registrar now
+registers the same plugin instance on both the current and legacy channels.
+
+The second `flutter run -d 028bf5298942f7cfa1e9585d304fbb181750b046
+--debug` passed code signing with the saved Apple Development identity, installed
+and launched on the physical phone, connected the Dart VM Service, and emitted
+no plugin/runtime exception. Flutter CLI was detached so the installed app could
+remain on the device.
 
 ### 2026-08-05 — Safety review
 
 - `git diff --check`: passed in the nested repository.
 - Existing `.github/workflows/build.yml` and `publish.yml`: no diff.
-- Generated SwiftPM resolution files from the failed iOS attempt were removed.
+- Both tracked SwiftPM resolution files are synchronized to the verified
+  upstream revision and ZIPFoundation dependency.
 - The Gradle problems report was restored to its committed contents after local
   Android verification changed its requested-task metadata.
 - No cleanup, signing, publishing, commit, push or release command was run.

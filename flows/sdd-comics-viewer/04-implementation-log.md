@@ -336,3 +336,8 @@ Status: PENDING
 - No production code was changed in this alignment step. The child flow remains at its requirements approval gate.
 - Follow-up: requirements v1.1 were approved on 2026-08-05 and the child flow advanced to specifications review; production code is still unchanged.
 - Follow-up: specifications v1.0 were approved on 2026-08-05. Child plan v1.0 now awaits approval and separates package-local validation from the authoritative post-landing Flutter remote dependency build; production code remains unchanged.
+- Follow-up: child plan v1.0 was approved on 2026-08-05 and package-local implementation began. Remote Flutter acceptance remains a post-landing gate, not a local-path substitute.
+- Follow-up: child Tasks 0.1–5.3 now pass locally. Evidence includes a clean Swift manifest/build, 10/10 macOS tests, full iOS 13 production/test-target compilation, clean generic iOS Simulator Xcode build, and 16/16 XCTest cases on an iPhone 17 Pro simulator.
+- Flutter and React Native iOS bridge calls remain source-compatible with the repaired facade; no consumer bridge patch was needed. React Native has no buildable iOS example/workspace scaffold, so its current evidence is source audit plus UIKit package compilation/tests.
+- The archived Flutter fixture is unchanged (SHA-256 `b753bdbbd2c2a86f56120ca9ea0340a6cb2f37ddad34fde4c66cafcb380737b3`, 19,230,800 bytes, 520 entries).
+- Authoritative Flutter iOS build/manual acceptance remains post-landing because the plugin resolves the package's remote `main`. A separate concurrent Flutter/Dart change currently leaves `test/dart_comics_viewer_backend_test.dart:14` uncompilable; it was not modified by the iOS child flow.

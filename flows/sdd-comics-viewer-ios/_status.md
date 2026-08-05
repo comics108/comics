@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-PLAN
+IMPLEMENTATION
 
 ## Phase Status
 
-REVIEW
+IN_PROGRESS
 
 ## Last Updated
 
@@ -14,7 +14,9 @@ REVIEW
 
 ## Blockers
 
-- Waiting for explicit implementation-plan approval or corrections.
+- Package-local implementation has no blocker and passes macOS plus iOS Simulator builds/tests.
+- Authoritative Flutter iOS build and manual simulator acceptance require a separately authorized commit/push of this package revision to the remote `main` branch consumed by SwiftPM.
+- The concurrently edited Flutter package currently has an independent Dart test compile error at `test/dart_comics_viewer_backend_test.dart:14`; it is not caused by the preserved iOS facade.
 
 ## Progress
 
@@ -23,20 +25,20 @@ REVIEW
 - [x] Specifications drafted
 - [x] Specifications approved
 - [x] Plan drafted
-- [ ] Plan approved
-- [ ] Implementation started
+- [x] Plan approved
+- [x] Implementation started
 - [ ] Implementation complete
-- [ ] Documentation drafted
+- [x] Documentation drafted
 - [ ] Documentation approved
 
 ## Context Notes
 
 - The flow directory follows the user's requested identifier exactly: `flows/sdd-comics-viewer-ios`.
 - The nested `comics-viewer-ios` repository was clean at baseline, at commit `8337b59` on `main`.
-- The observed iOS build failure is deterministic API drift in the Swift Package controllers, not a Flutter dependency-resolution failure.
-- `ArchiveManager` currently exposes instance-based archive access, while controllers reference a nonexistent static loader.
-- `Comics` exposes `process(scrollOffset:)` and `hasPreview()` but not the facade methods referenced by the controllers.
-- `PuzzleViewerController` contains a private/public method-signature collision.
+- The original iOS build failure was deterministic API drift in the Swift Package controllers, not a Flutter dependency-resolution failure.
+- The repaired controllers now use owned archive sessions instead of the nonexistent static loader.
+- Presentation operations now route through `ImageScrollView` while the persistent `Comics` model remains unchanged.
+- The `PuzzleViewerController` private/public method-signature collision has been removed.
 - The Flutter platform view is treated as the required external consumer contract.
 - Alignment audit completed against `sdd-comics-viewer` and `sdd-flutter-comics-viewer`.
 - `sdd-comics-viewer` is authoritative; `sdd-flutter-comics-viewer` is historical analysis where the two differ.
@@ -48,8 +50,11 @@ REVIEW
 - The specifications deferred the concrete ZIP package/version to planning; plan v1.0 selects ZIPFoundation without leaking it into public API.
 - Specifications v1.0 were explicitly approved by the user on 2026-08-05.
 - Plan v1.0 selects ZIPFoundation 0.9.20 with a patch-compatible range, defines archive safety limits, and separates local package validation from the post-landing remote Flutter gate.
+- Plan v1.0 was explicitly approved by the user on 2026-08-05; implementation started from Task 0.1.
 - Local planning toolchain observed: Swift 6.3.3 and Xcode 26.6; CI remains aligned to its supported macOS 15/Xcode 16 image unless execution disproves availability.
-- No implementation, commits, pushes, tags, or releases have been performed.
+- Package-local Tasks 0.1–5.3 are implemented and verified: macOS build, 10 macOS tests, iOS test-target cross-compilation, generic iOS Simulator Xcode build, and 16 iOS Simulator XCTest cases all pass.
+- Consumer API audit is complete for Flutter and React Native without bridge changes or a committed local-path override.
+- No commits, pushes, tags, signing, or releases have been performed.
 
 ## Fork History
 
@@ -57,5 +62,6 @@ REVIEW
 
 ## Next Actions
 
-1. Receive `plan approved`, or incorporate requested plan corrections.
-2. Begin Task 0.1 only after explicit plan approval.
+1. Review and separately authorize landing the repaired `comics-viewer-ios` revision on remote `main`.
+2. After landing, run `./tool/build-example.sh ios` and confirm the consumed remote revision plus the GitHub Actions `build-ios` job.
+3. Run the Flutter simulator behavior checklist, then reconcile the remote/manual evidence and mark implementation complete.

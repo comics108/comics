@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-VISUAL
+DOCUMENTATION
 
 ## Phase Status
 
-REVIEW
+AWAITING_APPROVAL
 
 ## Last Updated
 
@@ -14,21 +14,21 @@ REVIEW
 
 ## Blockers
 
-- None; the visual draft is awaiting explicit user approval.
+- None.
 
 ## Progress
 
 - [x] Requirements drafted
 - [x] Requirements approved (2026-08-05, explicit user approval)
 - [x] Visuals drafted (2026-08-05)
-- [ ] Visuals approved
-- [ ] Specifications drafted
-- [ ] Specifications approved
-- [ ] Plan drafted
-- [ ] Plan approved
-- [ ] Implementation started
-- [ ] Implementation complete
-- [ ] Documentation drafted
+- [x] Visuals approved (2026-08-05, explicit user approval)
+- [x] Specifications drafted (2026-08-05)
+- [x] Specifications approved (2026-08-05, explicit user approval)
+- [x] Plan drafted (2026-08-05)
+- [x] Plan approved (2026-08-05, explicit user approval)
+- [x] Implementation started (2026-08-05)
+- [x] Implementation complete (2026-08-05)
+- [x] Documentation drafted (2026-08-05)
 - [ ] Documentation approved
 
 ## Evidence
@@ -74,6 +74,28 @@ REVIEW
 - Visual version 1.8 records `Comics Editor Bottombar Devices v2.dc.html` as the
   primary cross-device visual reference while preserving existing responsive
   breakpoints.
+- Visual version 1.8 was explicitly approved by Anton on 2026-08-05.
+- Comics Editor product version was advanced from `3.2.0+1` to `3.2.1+1`;
+  `AppVersion.fallback` and the approved HTML reference badge were synchronized
+  to `3.2.1`.
+- Specifications 1.0 map the approved UI to current Flutter/controller/core,
+  mobile viewer channels, cross-platform renderer backends, and the Windows
+  hostfxr/WPF child-surface constraints.
+- Specifications 1.0 were explicitly approved by Anton on 2026-08-05.
+- Plan 1.0 sequences viewer contracts/backends, preview snapshots, numeric and
+  Properties work, responsive UI, Windows hosting, and integrated verification.
+- Plan 1.0 was explicitly approved by Anton on 2026-08-05; implementation
+  started with Task 1 viewer contracts and isolation tests.
+- Implementation Task 1 is complete: 9 Viewer Dart tests pass, analysis is
+  clean, Android compiles/tests successfully, and mobile commands/callbacks are
+  bound to `flutter_comics_viewer_<viewId>` with correlated load IDs.
+- Implementation Tasks 2–11 are complete on available toolchains. Editor
+  analysis is clean; its complete suite passes 329 tests with 3 environment
+  skips; Viewer analysis is clean and 13 tests pass; 81 real legacy documents
+  pass recursive round-trip verification; three golden UI states are saved.
+- Windows managed WPF payload cross-build succeeds with 0 errors. Live child
+  HWND/C++ runner verification remains a Windows-runner gate and was not
+  silently claimed as exercised on macOS.
 
 ## Context Notes
 
@@ -128,6 +150,5 @@ REVIEW
 
 ## Next Actions
 
-1. Obtain explicit visual approval.
-2. After approval, inspect affected implementation interfaces in detail and
-   draft `03-specifications.md`.
+1. Review `06-readme.md`.
+2. Approve documentation or request corrections.
