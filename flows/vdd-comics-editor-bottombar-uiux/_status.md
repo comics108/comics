@@ -51,6 +51,13 @@ REVIEW
 - Visual version 1.1 records the complete v2.8 numeric inventory: document
   dimensions, Puzzle Scale, Start/End, every animation-specific field, defaults,
   ranges/steps, creation behavior, and non-editable internal numeric values.
+- Visual version 1.2 removes the fixed three-language assumption and records
+  dynamic used-language tabs, Add/Manage states, append-only slot stability,
+  and soft deactivate/reactivate behavior.
+- Visual version 1.3 adds the independent content-scroll/device-orientation
+  groups from `tdd-dot-comics-format`: vertical infinity scroll + portrait are
+  defaults; horizontal infinity scroll + landscape are visible but disabled;
+  Puzzle remains available.
 
 ## Context Notes
 
@@ -70,6 +77,11 @@ REVIEW
   already convenient and must be preserved; no desktop/tablet shell redesign.
 - Anton requested on 2026-08-05 that the visual artifact show and save the full
   v2.8 numeric field/value list; Visual 1.1 incorporates it.
+- Anton requested on 2026-08-05 that the visual artifact reflect the earlier
+  dynamic-language decision; Visual 1.2 incorporates it.
+- Anton requested on 2026-08-05 that the visual artifact restore the previously
+  decided vertical/portrait defaults and disabled horizontal/landscape choices;
+  Visual 1.3 incorporates them as independent groups.
 - Proposed usability improvements may be documented as `Should Have`, but any
   material visual/behavioral addition returns to the relevant approval gate.
 - `new` was interpreted as VDD `start` for the safe normalized name

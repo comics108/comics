@@ -32,6 +32,13 @@ and plan.
   inventory, full cards for every animation type, Puzzle Scale range/steps,
   creation defaults, and an explicit list of internal numeric values that were
   not visible/editable in v2.8.
+- Visual draft corrected to the existing dynamic-language model: used-language
+  tabs plus Add, searchable add picker, append-only registry, safe soft
+  deactivate/reactivate, and preservation of inactive languages used by older
+  documents.
+- Visual draft expanded with the previously decided New Document defaults:
+  Vertical infinity scroll comic strip + Portrait selected; Horizontal
+  infinity scroll + Landscape shown independently but disabled; Puzzle retained.
 
 ## Completion Checklist
 

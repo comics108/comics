@@ -1,6 +1,6 @@
 # Visual Mockups: comics-editor-bottombar-uiux
 
-> Version: 1.1  
+> Version: 1.3
 > Status: REVIEW  
 > Last Updated: 2026-08-05  
 > Requirements: [01-requirements.md](01-requirements.md)
@@ -32,6 +32,92 @@ duplicated in phone bottom navigation.
 | Tablet `601–1024` | Narrow `Scene | Canvas | Properties` + expandable Timeline | Central workspace gets `Canvas / Viewer` tabs; Properties gets `Selection / Document` tabs |
 | Desktop `>=1025` | `Scene | Canvas | Properties` + docked Timeline | Same central `Canvas / Viewer` tabs and Properties tabs |
 | Windows desktop | Same Flutter desktop shell | `Viewer` tab hosts the WPF-backed implementation of `flutter_comics_viewer`; never opens a separate WPF window |
+
+## Screen: New Document — Format and Orientation Defaults
+
+The existing New dialog keeps `Puzzle` and makes the two independent choices
+explicit: content scroll type and target device orientation. Disabled future
+options are informative, not interactive.
+
+### Desktop/tablet
+
+```text
++--------------------------------------------------------------------------+
+| New document                                                        [x]  |
++--------------------------------------------------------------------------+
+| CONTENT TYPE                                                            |
+|                                                                          |
+| +----------------------+ +----------------------+ +--------------------+ |
+| | [selected]           | | [disabled]           | |                    | |
+| | Vertical infinity    | | Horizontal infinity  | | Puzzle             | |
+| | scroll comic strip   | | scroll comic strip   | |                    | |
+| |                      | |                      | | Zoomable board of  | |
+| | Continuous vertical  | | Continuous horizontal| | draggable pieces. | |
+| | strip.               | | strip.               | |                    | |
+| | Default              | | Coming later         | |                    | |
+| +----------------------+ +----------------------+ +--------------------+ |
+|                                                                          |
+| DEVICE ORIENTATION                                                       |
+| +------------------------------+ +-------------------------------------+ |
+| | [selected] Portrait          | | [disabled] Landscape                | |
+| | Default                      | | Coming later                        | |
+| +------------------------------+ +-------------------------------------+ |
+|                                                                          |
+| Scroll direction and device orientation are independent settings.        |
+|                                                   [Cancel] [Create]       |
++--------------------------------------------------------------------------+
+```
+
+### Phone
+
+Cards stack in a single scroll surface; defaults and disabled states remain
+visible without horizontal scrolling.
+
+```text
++--------------------------------------+
+| New document                    [x]   |
+|                                      |
+| CONTENT TYPE                         |
+| +----------------------------------+ |
+| | [selected] Vertical infinity    | |
+| | scroll comic strip · Default    | |
+| +----------------------------------+ |
+| +----------------------------------+ |
+| | [disabled] Horizontal infinity  | |
+| | scroll comic strip · Coming later| |
+| +----------------------------------+ |
+| +----------------------------------+ |
+| | Puzzle                           | |
+| +----------------------------------+ |
+|                                      |
+| DEVICE ORIENTATION                   |
+| +----------------------------------+ |
+| | [selected] Portrait · Default    | |
+| +----------------------------------+ |
+| +----------------------------------+ |
+| | [disabled] Landscape            | |
+| | Coming later                     | |
+| +----------------------------------+ |
+|                                      |
+| [Cancel]                    [Create] |
++--------------------------------------+
+```
+
+### Selection and disabled semantics
+
+- On entry, `Vertical infinity scroll comic strip` and `Portrait` are selected.
+- `Puzzle` remains selectable. If Puzzle is selected, orientation stays a
+  separate device-target choice rather than being inferred from document type.
+- Horizontal and Landscape remain in focus/semantics reading order so their
+  existence and disabled reason are discoverable, but they cannot receive an
+  activation action or change dialog state.
+- Disabled cards use reduced emphasis plus a lock/disabled indicator and text;
+  opacity alone is insufficient.
+- `Create` produces today's supported vertical/portrait behavior. The absent
+  `scrollType` field continues to mean vertical for legacy compatibility.
+- The UI never automatically pairs vertical with portrait or horizontal with
+  landscape; the current defaults happen to be vertical + portrait, but the
+  two groups are modeled independently.
 
 ## Screen: Phone — Canvas (Default)
 
@@ -127,8 +213,9 @@ compact and outside the PlatformView.
 
 ### Viewer interactions
 
-- The current top-bar language is used; Viewer does not duplicate a language
-  selector.
+- Viewer uses the current shared language selection. The language control is
+  data-driven: it shows document-used languages plus active
+  `LanguageRegistry` entries, never a fixed three-value enum.
 - `play/pause`, sound, and preview controls map to existing
   `ComicsViewerController` capabilities. They are not new rendering behavior.
 - Drag/scroll gestures inside the viewer belong to the PlatformView. Sheet
@@ -247,7 +334,7 @@ is remembered for the open document.
 |                                      |
 | Kind        [Character          v]   |
 | ARTWORK · PER LANGUAGE               |
-| [ En ] [ Ru ] [ Hi ]                 |
+| [ English ] [ Українська ] [ + Add ] |
 | File   [character-02.png] [...]       |
 | Popup  [— none —       ] [...]       |
 | [x] Preview this layer               |
@@ -291,6 +378,79 @@ is remembered for the open document.
 
 Width/Height/Convert are moved here and are not duplicated in Scene.
 
+## Dynamic Language Controls
+
+The labels below are examples of runtime registry/document data, not a fixed
+set. A document may show one, three, twenty, or more languages.
+
+### Localized artwork / balloon language row
+
+```text
+| LANGUAGE                             |
+| [English] [Українська] [ไทย]         |
+| [+ Add] [Manage]                     |
+```
+
+- Used languages come first in stable registry order.
+- `[+ Add]` opens a searchable picker containing active registry languages not
+  yet used by the current object/document.
+- A horizontally constrained phone row wraps chips; it never compresses names
+  into unreadable two-letter-only labels.
+- The selected language is indicated by fill, border, and semantics.
+
+### Add language picker
+
+```text
++--------------------------------------+
+| Add language                    [x]   |
+| [ Search by name or ISO code…      ] |
+|                                      |
+| Bengali                    বাংলা     |
+| Hebrew                     עברית     |
+| Japanese                   日本語    |
+| Marathi                    मराठी      |
+|                                      |
+| Language not listed? [+ Add custom]  |
++--------------------------------------+
+```
+
+Adding a custom language appends a new registry entry. It never inserts before
+or between existing entries.
+
+### Manage available languages
+
+```text
++--------------------------------------+
+| Manage languages               [x]   |
+| Stable slots are never reordered.    |
+|                                      |
+| 0  English      [active]  [protected]|
+| 1  Russian      [active]  [protected]|
+| 2  Hindi        [active]  [protected]|
+| 3  Ukrainian    [active]             |
+| 4  Thai         [inactive]           |
+| ...                                  |
+|                         [+ Add]       |
++--------------------------------------+
+```
+
+- “Remove” means mark inactive/hide from future `[+ Add]` choices; the row and
+  slot remain in the registry.
+- Existing documents using an inactive language still show it in their used
+  language row, with an `Inactive` badge and normal editing access.
+- Reactivating restores it to `[+ Add]` choices.
+- No drag-to-reorder and no hard-delete action are offered.
+
+### Existing document uses an inactive language
+
+```text
+| [English] [ไทย · Inactive] [+ Add]   |
+| Thai content remains visible/editable|
+```
+
+This prevents language-list maintenance from corrupting localized `Images[]`
+slot mappings.
+
 ### Properties > Document — Puzzle
 
 Puzzle documents show the same Canvas section plus the legacy view-only Scale
@@ -327,6 +487,7 @@ slider.
 ```text
 | Header: swatch + layer name + LAYER  |
 | Kind                                 |
+| Dynamic used-language tabs + Add     |
 | Artwork per language: File / Popup   |
 | Preview toggle                       |
 | Animations list/add/delete           |
@@ -338,7 +499,7 @@ slider.
 ```text
 | Header: balloon name + BALLOON       |
 | Kind / Style                         |
-| Language                             |
+| Dynamic used-language tabs + Add     |
 | Balloon text                         |
 | Rendered artwork fields/actions      |
 | Preview toggle                       |
@@ -564,7 +725,7 @@ No navigation rail or tablet bottom bar is added.
 
 ```text
 +--------------------------------------------------------------------------------+
-| existing TopBar: document / mode / New / Open / Save / Undo / language          |
+| existing TopBar: document / mode / New / Open / Save / Undo / dynamic language  |
 +------------------+----------------------------------------+----------------------+
 | Scene            | [ Canvas ]  Viewer                    | Properties           |
 | Layers           | ==========                            | [Selection] Document |
@@ -689,6 +850,12 @@ Properties to `Selection`, and puts Viewer into Loading before Loaded/Error.
 - No removal of Scene, Layers, Sounds, current CanvasView, or Timeline.
 - No new animation types or numeric properties.
 - No separate WPF editor window on Windows.
+- No fixed three-language assumption in Properties or Viewer.
+- No physical deletion/reordering of registry entries or shifting of language
+  image-slot indices.
+- No functional horizontal-scroll engine or landscape viewer support yet;
+  those choices are visible but disabled.
+- No coupling between comic-strip scroll direction and device orientation.
 
 ## Approval
 

@@ -1,6 +1,6 @@
 # Requirements: comics-editor-bottombar-uiux
 
-> Version: 1.1  
+> Version: 1.3
 > Status: APPROVED  
 > Last Updated: 2026-08-05
 
@@ -70,6 +70,37 @@ removed merely because they did not exist in v2.8.
 - Localized `File` and `Popup` asset for every supported language
 - `Preview` toggle
 - Existing additive fields: `Kind`; balloon/caption fields where applicable
+
+### Languages
+
+- Language count is dynamic and sourced from the existing data-driven
+  `LanguageRegistry`, never presented as a fixed `En/Ru/Hi` list.
+- The UI shows languages already used by the current document/object plus an
+  `[+ Add]` picker for other active registry entries.
+- New registry languages are appended without a Dart/C# enum change.
+- Removing a language from the available list is a soft deactivate/hide: its
+  stable registry slot is retained so existing `Images[]` indices do not move.
+- `en`, `ru`, and `hi` retain the load-bearing slot indices `0`, `1`, and `2`.
+  They and every later entry must never be physically reordered or deleted.
+- A document that already uses a deactivated language continues to display and
+  round-trip it; deactivation only prevents offering it for new additions.
+
+### New document format and device orientation
+
+- The default comics content type is `Vertical infinity scroll comic strip`.
+- `Horizontal infinity scroll comic strip` is displayed as a separate option
+  but remains disabled because no editor/viewer engine supports it yet.
+- The default target device orientation is `Portrait`.
+- `Landscape` is displayed as a separate orientation option but remains
+  disabled because deliberate landscape viewer support is not built yet.
+- Content scroll type (`vertical`/`horizontal`) and target device orientation
+  (`portrait`/`landscape`) are independent groups. Selecting or enabling one
+  must never infer or force the other.
+- The existing `Puzzle` document type remains available and is not replaced by
+  either comic-strip option.
+- Existing files without a `scrollType` field resolve to `vertical`; the UI
+  default must not require rewriting legacy files merely to preserve their
+  current behavior.
 
 ### Layer animation
 
@@ -157,6 +188,33 @@ usable; the requirement is that editable values are consolidated under
     **Then** existing values round-trip without schema loss introduced by this
     navigation/UI change.
 
+11. **Given** the language registry contains any number of active languages
+    **When** a localized artwork/balloon language selector is displayed
+    **Then** it shows the current document/object's used languages plus
+    `[+ Add]`, without assuming exactly three entries.
+
+12. **Given** a registry language is removed from the available list
+    **When** older content still references its stable slot/code
+    **Then** that content remains visible and editable, while the language is
+    absent only from new-language choices; no `Images[]` index shifts.
+
+13. **Given** the New Document dialog is opened
+    **When** no choice has been changed
+    **Then** `Vertical infinity scroll comic strip` and `Portrait` are visibly
+    selected as defaults.
+
+14. **Given** the New Document dialog is displayed
+    **When** the user reviews future format/orientation choices
+    **Then** `Horizontal infinity scroll comic strip` and `Landscape` are
+    visible with an explicit unavailable/coming-later explanation and cannot be
+    selected by pointer, keyboard, or assistive technology.
+
+15. **Given** any future combination of content scroll type and device
+    orientation
+    **When** its behavior is eventually enabled
+    **Then** these values remain independent; horizontal does not imply
+    landscape and vertical does not imply portrait.
+
 ### Should Have
 
 - Properties uses primary tabs ordered `Selection`, then `Document`. Within `Selection`,
@@ -183,6 +241,10 @@ usable; the requirement is that editable values are consolidated under
 - Silent restoration of the currently deleted
   `libs/comics_editor/flutter_comics_editor` gitlink; it is user-owned working
   tree state and will not be modified without explicit scope.
+- Physical deletion or reordering of language registry entries and reuse of
+  their historical `Images[]` indices.
+- Horizontal-scroll authoring/rendering or landscape viewer behavior in this
+  iteration; both appear only as disabled forward-looking choices.
 
 ## Platform and Responsive Constraints
 
@@ -250,6 +312,15 @@ The Visual phase must cover:
       `Image.Width`, `Image.Height`, `Scroll`, interpolation factor, and derived
       `Pivot` documented but not invent new visible fields for values that v2.8
       did not expose (requested by Anton on 2026-08-05 after approval).
+- [x] Dynamic-language clarification: language controls use document/object
+      languages plus `[+ Add]`; adding appends registry entries, while removal
+      is a soft deactivate that preserves stable indices and existing document
+      content (requested by Anton on 2026-08-05 after approval).
+- [x] New-document defaults clarification: show independent content-scroll and
+      device-orientation groups; default to vertical infinity scroll + portrait,
+      keep horizontal infinity scroll + landscape visible but disabled, and
+      retain Puzzle (requested by Anton on 2026-08-05 after approval; sourced
+      from `tdd-dot-comics-format` Category B/C decisions).
 - [x] `Scene` remains a separate destination for Layers/Sounds; `Viewer` is an
       additional button rather than a rename/replacement (confirmed by Anton
       on 2026-08-05).
@@ -283,4 +354,9 @@ The Visual phase must cover:
 - [x] Notes: Explicitly approved in conversation. Preserve the current
       responsive shell; add focused Viewer/Properties changes only. Version
       1.1 incorporates the subsequently requested complete v2.8 numeric
-      inventory, including Puzzle Scale.
+      inventory, including Puzzle Scale. Version 1.2 restores the previously
+      established dynamic-language behavior from
+      `vdd-comics-editor-uiux-lettering` and defines safe soft removal. Version
+      1.3 restores the independent vertical/horizontal scroll-type and
+      portrait/landscape device-orientation decisions from
+      `tdd-dot-comics-format`.
