@@ -14,7 +14,7 @@ IN_PROGRESS
 
 ## Blockers
 
-- iOS Swift Package `main` currently fails the Flutter iOS Simulator consumer build because its controller facade drifted from `ArchiveManager`/`Comics` APIs and contains a duplicate method signature. Corrective work is tracked in `flows/sdd-comics-viewer-ios/` and awaits that flow's requirements approval.
+- iOS Swift Package `main` currently fails the Flutter iOS Simulator consumer build because its controller facade drifted from `ArchiveManager`/`Comics` APIs and contains a duplicate method signature. Corrective work is tracked in `flows/sdd-comics-viewer-ios/`; requirements and specifications are approved, and the implementation plan awaits approval.
 - One item needs a human with real backend access: SplashActivity in mahabharata-mobile-java-v2026 blocks on a network call to comics.dev.ironwaterstudio.com before reaching any comics/puzzle screen, which isn't reachable from this sandbox — so the sound/language/puzzle behavior changes in 3.1 are verified by code inspection + clean build/boot, not by actually seeing/hearing them run.
 
 ## Progress
@@ -56,7 +56,7 @@ N/A - New SDD flow
 
 ## Next Actions
 
-1. Approve and execute `sdd-comics-viewer-ios` to restore the package build and unblock iOS consumers.
+1. Approve the implementation plan and execute `sdd-comics-viewer-ios` to restore the package build and unblock iOS consumers.
 2. Complete main-plan tasks 4.3.3 and 5.3.3: build/run Flutter and React Native examples on iOS against the repaired package.
 3. Complete Phase 3.2 manual Xcode steps for mahabharata-mobile-swift-v2026 (add SPM dependency, remove stale file references, build/run).
 4. Human verification of mahabharata-mobile-java-v2026 on a device/emulator with real backend access: confirm comics viewing, puzzle viewing, sound toggle, and language switching all still behave as before.

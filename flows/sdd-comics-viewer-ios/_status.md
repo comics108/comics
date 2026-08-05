@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-REQUIREMENTS
+PLAN
 
 ## Phase Status
 
@@ -14,15 +14,15 @@ REVIEW
 
 ## Blockers
 
-- Waiting for explicit requirements approval or corrections.
+- Waiting for explicit implementation-plan approval or corrections.
 
 ## Progress
 
 - [x] Requirements drafted
-- [ ] Requirements approved
-- [ ] Specifications drafted
-- [ ] Specifications approved
-- [ ] Plan drafted
+- [x] Requirements approved
+- [x] Specifications drafted
+- [x] Specifications approved
+- [x] Plan drafted
 - [ ] Plan approved
 - [ ] Implementation started
 - [ ] Implementation complete
@@ -42,6 +42,13 @@ REVIEW
 - `sdd-comics-viewer` is authoritative; `sdd-flutter-comics-viewer` is historical analysis where the two differ.
 - This flow is the corrective slice that unblocks parent-plan tasks 4.3.3, 5.3.3, and 6.2.2.
 - Inherited decisions resolve all scope questions: native-first renderer, archived `sample.comics`, puzzle in the core package, iOS 13 + macOS 10.15, unified facade, and no release.
+- Requirements v1.1 explicitly approved by the user on 2026-08-05.
+- Specifications place archive extraction in an owned session layer and presentation controls in `ImageScrollView`; the persistent models remain unchanged.
+- Controller-driven resource resolution is session-scoped so multiple viewers/puzzle pieces cannot corrupt each other through `ArchiveManager.shared`.
+- The concrete ZIP package/version is intentionally deferred to the implementation plan after compatibility verification; it will not leak into public API.
+- Specifications v1.0 were explicitly approved by the user on 2026-08-05.
+- Plan v1.0 selects ZIPFoundation 0.9.20 with a patch-compatible range, defines archive safety limits, and separates local package validation from the post-landing remote Flutter gate.
+- Local planning toolchain observed: Swift 6.3.3 and Xcode 26.6; CI remains aligned to its supported macOS 15/Xcode 16 image unless execution disproves availability.
 - No implementation, specification design, commits, pushes, tags, or releases have been performed.
 
 ## Fork History
@@ -50,5 +57,5 @@ REVIEW
 
 ## Next Actions
 
-1. Receive `requirements approved` / `reqs approved`, or incorporate requested corrections to the aligned requirements v1.1.
-2. Draft architectural specifications only after approval.
+1. Receive `plan approved`, or incorporate requested plan corrections.
+2. Begin Task 0.1 only after explicit plan approval.

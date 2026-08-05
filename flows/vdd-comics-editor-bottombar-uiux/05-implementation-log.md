@@ -37,8 +37,21 @@ and plan.
   deactivate/reactivate, and preservation of inactive languages used by older
   documents.
 - Visual draft expanded with the previously decided New Document defaults:
-  Vertical infinity scroll comic strip + Portrait selected; Horizontal
+  `Vertical-scroll comic strip` + Portrait selected; Horizontal
   infinity scroll + Landscape shown independently but disabled; Puzzle retained.
+- Visual draft aligned to `design/comics-editor-v3.1.0-maket` and amended with
+  slider-first/collapsible exact numeric input, review-only Viewer with editing
+  panes hidden, and eye/eye-off layer visibility on every platform.
+- Numeric interaction refined by platform: persistent adjacent editable inputs
+  on desktop; single-tap inline exact entry with selected text and numeric
+  keyboard on phone/touch-tablet.
+- Viewer position control corrected from a bottom horizontal rail to a vertical
+  rail along the right edge for the default/legacy-fallback
+  `Vertical-scroll comic strip`. The bottom rail is reserved for the future disabled
+  horizontal infinity-scroll type; device orientation does not affect the
+  control axis.
+- Canonical default document-type wording corrected to
+  `Vertical-scroll comic strip`; the position-axis behavior is unchanged.
 
 ## Completion Checklist
 

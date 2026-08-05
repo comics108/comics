@@ -1,7 +1,7 @@
 # Requirements: Comics Viewer iOS Package Build Recovery
 
 > Version: 1.1  
-> Status: REVIEW  
+> Status: APPROVED
 > Last Updated: 2026-08-05
 
 ## Problem Statement
@@ -158,6 +158,6 @@ This is a corrective implementation slice of the approved [`sdd-comics-viewer`](
 
 ## Approval
 
-- [ ] Reviewed by: user
-- [ ] Approved on: pending
-- [ ] Notes: Awaiting explicit requirements approval; scope decisions are inherited from the approved parent flows and no open questions remain.
+- [x] Reviewed by: user
+- [x] Approved on: 2026-08-05
+- [x] Notes: Approved as aligned with `sdd-comics-viewer`; inherited scope decisions remain authoritative.

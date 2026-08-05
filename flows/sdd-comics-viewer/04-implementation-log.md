@@ -334,3 +334,5 @@ Status: PENDING
 - Confirmed the current `comics-viewer-ios` regression blocks Flutter iOS task 4.3.3, React Native iOS task 5.3.3, and full validation task 6.2.2.
 - Created/aligned the corrective child flow `flows/sdd-comics-viewer-ios/`, preserving the approved unified API, archived `sample.comics` fixture, shared comics+puzzle package, platform minimums, and bundle identifiers.
 - No production code was changed in this alignment step. The child flow remains at its requirements approval gate.
+- Follow-up: requirements v1.1 were approved on 2026-08-05 and the child flow advanced to specifications review; production code is still unchanged.
+- Follow-up: specifications v1.0 were approved on 2026-08-05. Child plan v1.0 now awaits approval and separates package-local validation from the authoritative post-landing Flutter remote dependency build; production code remains unchanged.

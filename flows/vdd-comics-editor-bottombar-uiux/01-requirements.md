@@ -1,6 +1,6 @@
 # Requirements: comics-editor-bottombar-uiux
 
-> Version: 1.3
+> Version: 1.7
 > Status: APPROVED  
 > Last Updated: 2026-08-05
 
@@ -70,6 +70,8 @@ removed merely because they did not exist in v2.8.
 - Localized `File` and `Popup` asset for every supported language
 - `Preview` toggle
 - Existing additive fields: `Kind`; balloon/caption fields where applicable
+- Layer visibility uses a consistent eye/eye-off control in every Scene/layer
+  list on phone, tablet, and desktop.
 
 ### Languages
 
@@ -87,7 +89,7 @@ removed merely because they did not exist in v2.8.
 
 ### New document format and device orientation
 
-- The default comics content type is `Vertical infinity scroll comic strip`.
+- The default comics content type is `Vertical-scroll comic strip`.
 - `Horizontal infinity scroll comic strip` is displayed as a separate option
   but remains disabled because no editor/viewer engine supports it yet.
 - The default target device orientation is `Portrait`.
@@ -101,6 +103,55 @@ removed merely because they did not exist in v2.8.
 - Existing files without a `scrollType` field resolve to `vertical`; the UI
   default must not require rewriting legacy files merely to preserve their
   current behavior.
+
+### Numeric editing interaction
+
+- Numeric properties are slider/scrubber-first so common adjustments can be
+  made directly without keeping a grid of visually dominant text boxes open.
+- On desktop, the current number is always visible as a compact editable input
+  immediately beside the slider. Clicking or tabbing into it permits exact
+  entry without entering another mode or opening an overlay.
+- On phone and touch-tablet, the current number is a compact value control
+  immediately beside/below the slider. One tap converts it inline to an exact
+  input, selects the current value, focuses it, and opens the numeric keyboard;
+  no second edit action or nested screen is required.
+- Exact input is easy to dismiss/commit, while desktop retains keyboard arrows
+  and fine/coarse modifiers.
+- Slider presentation must not silently clamp valid legacy values that fall
+  outside a convenient visual range; exact input remains the source of truth
+  and out-of-presentation-range values get an overflow indication.
+- Invalid exact-input drafts are never persisted and restore the last valid
+  value on cancellation/blur according to the approved validation behavior.
+
+### Editor versus Viewer presentation
+
+- `Editor` is the editable workspace containing the existing Canvas, Scene,
+  Properties, and Timeline.
+- `Viewer` is a review-only presentation of the rendered result. Layer
+  selection and property editing are unavailable there.
+- While Viewer is active, the `Selection` and `Document` Properties tabs are
+  hidden rather than shown disabled or empty. Editing resumes only after
+  returning to Editor.
+- Returning from Viewer restores the previous selection, Properties tab,
+  scroll positions, and expanded exact-input state where safe.
+
+### Viewer position selector
+
+- For the current/default `Vertical-scroll comic strip`, the Viewer
+  position selector is vertical and inset along the right edge of the rendered
+  content. It must not be drawn along the bottom edge.
+- The selector maps document start to the top and document end to the bottom;
+  its thumb represents the same shared scroll/animation position used by the
+  Viewer.
+- A bottom-edge horizontal selector belongs only to the future
+  `Horizontal infinity scroll comic strip`. Because that document type remains
+  disabled, the horizontal selector is documented for consistency but is not
+  rendered by the current working Viewer.
+- Selector orientation is derived only from content `scrollType`, including the
+  legacy absent-field fallback to `vertical`. It does not change when the
+  device/window changes between portrait and landscape geometry.
+- The same rule applies on phone, tablet, desktop, web, and the Windows
+  WPF-backed Viewer surface.
 
 ### Layer animation
 
@@ -200,7 +251,7 @@ usable; the requirement is that editable values are consolidated under
 
 13. **Given** the New Document dialog is opened
     **When** no choice has been changed
-    **Then** `Vertical infinity scroll comic strip` and `Portrait` are visibly
+    **Then** `Vertical-scroll comic strip` and `Portrait` are visibly
     selected as defaults.
 
 14. **Given** the New Document dialog is displayed
@@ -214,6 +265,34 @@ usable; the requirement is that editable values are consolidated under
     **When** its behavior is eventually enabled
     **Then** these values remain independent; horizontal does not imply
     landscape and vertical does not imply portrait.
+
+16. **Given** a numeric property is shown in Editor
+    **When** the user makes an ordinary adjustment
+    **Then** a slider/scrubber is the primary affordance; desktop shows a
+    directly editable number beside it, while touch layouts enter precise
+    numeric editing with one tap on the adjacent value.
+
+17. **Given** Viewer is active
+    **When** the rendered result is displayed
+    **Then** `Selection`/`Document` and all editable property controls are
+    absent, and layer rows cannot be selected or edited until Editor is active.
+
+18. **Given** any Scene/layer list on any platform
+    **When** a layer is visible or hidden
+    **Then** an eye or eye-off icon communicates the state with matching
+    semantics/tooltip, and toggling it follows the existing visibility/history
+    behavior.
+
+19. **Given** a `Vertical-scroll comic strip` is open, including a legacy file
+    without an explicit `scrollType`
+    **When** Viewer reaches its loaded state on any supported platform
+    **Then** its position selector is vertical along the right edge, with start
+    at the top and end at the bottom, and no bottom-edge selector is shown.
+
+20. **Given** the viewport or target-device orientation changes
+    **When** the document `scrollType` remains vertical
+    **Then** the position selector remains on the right edge; orientation does
+    not rotate or relocate it.
 
 ### Should Have
 
@@ -245,6 +324,7 @@ usable; the requirement is that editable values are consolidated under
   their historical `Images[]` indices.
 - Horizontal-scroll authoring/rendering or landscape viewer behavior in this
   iteration; both appear only as disabled forward-looking choices.
+- Property/layer editing inside Viewer.
 
 ## Platform and Responsive Constraints
 
@@ -306,7 +386,8 @@ The Visual phase must cover:
       Anton on 2026-08-05).
 - [x] Responsive shell: preserve the current phone/tablet/desktop adaptation;
       bottom navigation remains phone-only and no desktop/tablet pane
-      rearrangement is required (confirmed by Anton on 2026-08-05).
+      rearrangement occurs in Editor. Viewer intentionally hides editing panes
+      for focused review (confirmed/refined by Anton on 2026-08-05).
 - [x] Numeric inventory clarification: include the legacy puzzle view `Scale`
       control in the complete visual/property inventory; keep internal
       `Image.Width`, `Image.Height`, `Scroll`, interpolation factor, and derived
@@ -317,10 +398,25 @@ The Visual phase must cover:
       is a soft deactivate that preserves stable indices and existing document
       content (requested by Anton on 2026-08-05 after approval).
 - [x] New-document defaults clarification: show independent content-scroll and
-      device-orientation groups; default to vertical infinity scroll + portrait,
+      device-orientation groups; default to `Vertical-scroll comic strip` + portrait,
       keep horizontal infinity scroll + landscape visible but disabled, and
       retain Puzzle (requested by Anton on 2026-08-05 after approval; sourced
       from `tdd-dot-comics-format` Category B/C decisions).
+- [x] v3.1 visual refinement: use
+      `design/comics-editor-v3.1.0-maket` as the style/layout reference;
+      numeric controls become slider-first with one-action exact entry; Viewer
+      hides editable Properties and is review-only; eye/eye-off visibility is
+      consistent across all platforms (requested by Anton on 2026-08-05).
+- [x] Numeric platform refinement: desktop always shows an editable compact
+      number beside each slider; phone/touch-tablet uses one-tap inline exact
+      entry with immediate selection and numeric keyboard (requested by Anton
+      on 2026-08-05).
+- [x] Viewer position-axis clarification: for `Vertical-scroll comic strip`, rotate
+      the formerly bottom-edge selector by 90 degrees and place it along the
+      right edge on every platform; reserve the bottom-edge axis for the future
+      horizontal document type. This direct user clarification is authoritative
+      even where `vdd-comics-editor-vertical-scroll` is ambiguous (requested by
+      Anton on 2026-08-05).
 - [x] `Scene` remains a separate destination for Layers/Sounds; `Viewer` is an
       additional button rather than a rename/replacement (confirmed by Anton
       on 2026-08-05).
@@ -346,6 +442,10 @@ The Visual phase must cover:
 - `legacy/comics-editor-v2.8/Comics.Editor/Controls/*.xaml`
 - `libs/comics_viewer/flutter_comics_viewer/`
 - `flows/sdd-flutter-comics-editor-pview/`
+- `flows/tdd-dot-comics-format/`
+- `flows/vdd-comics-editor-uiux-lettering/`
+- `flows/vdd-comics-editor-vertical-scroll/`
+- `design/comics-editor-v3.1.0-maket/`
 
 ## Approval
 
@@ -360,3 +460,11 @@ The Visual phase must cover:
       1.3 restores the independent vertical/horizontal scroll-type and
       portrait/landscape device-orientation decisions from
       `tdd-dot-comics-format`.
+      Version 1.4 adds the v3.1 reference-driven numeric, Viewer-focus, and
+      layer-visibility refinements.
+      Version 1.5 defines the platform-specific one-step exact-number behavior.
+      Version 1.6 makes the Viewer position selector axis follow document
+      `scrollType`: right edge for current/default vertical, bottom edge only
+      for future horizontal.
+      Version 1.7 corrects the canonical default type label to
+      `Vertical-scroll comic strip`.

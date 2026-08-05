@@ -1,22 +1,27 @@
 # Visual Mockups: comics-editor-bottombar-uiux
 
-> Version: 1.3
+> Version: 1.7
 > Status: REVIEW  
 > Last Updated: 2026-08-05  
 > Requirements: [01-requirements.md](01-requirements.md)
 
 ## Overview
 
-This design preserves the current responsive editor shell. It adds a dedicated
+This design preserves the current responsive Editor shell. It adds a dedicated
 Viewer surface and reorganizes Properties without moving existing desktop or
-tablet panes.
+tablet panes while Editor is active. Viewer intentionally hides editing panes
+to become a focused review surface.
+
+Visual styling, density, panel proportions, typography, and color hierarchy use
+`design/comics-editor-v3.1.0-maket` as the reference. The additions below amend
+that reference where explicitly requested.
 
 The shared information model is:
 
 ```text
-Scene       = select and manage Layers / Sounds
-Canvas      = edit the document (existing CanvasView)
-Viewer      = play/render the document through flutter_comics_viewer
+Scene       = select and manage Layers / Sounds in Editor
+Editor      = editable workspace containing the existing CanvasView
+Viewer      = review-only rendered result through flutter_comics_viewer
 Properties  = Selection tab first, Document tab second
 Timeline    = existing animation timeline
 ```
@@ -29,8 +34,8 @@ duplicated in phone bottom navigation.
 | Viewport | Existing shell retained | Focused addition |
 |---|---|---|
 | Phone `<=600` | Canvas + compact Timeline + bottom-sheet launchers | Bottom bar becomes `Scene / Viewer / Properties`; Viewer opens the same modal-sheet pattern |
-| Tablet `601–1024` | Narrow `Scene | Canvas | Properties` + expandable Timeline | Central workspace gets `Canvas / Viewer` tabs; Properties gets `Selection / Document` tabs |
-| Desktop `>=1025` | `Scene | Canvas | Properties` + docked Timeline | Same central `Canvas / Viewer` tabs and Properties tabs |
+| Tablet `601–1024` | Narrow `Scene | Canvas | Properties` + expandable Timeline in Editor | Workspace switch gets `Editor / Viewer`; Viewer hides editing panes/tabs |
+| Desktop `>=1025` | `Scene | Canvas | Properties` + docked Timeline in Editor | Same `Editor / Viewer` switch; Viewer becomes a focused review surface |
 | Windows desktop | Same Flutter desktop shell | `Viewer` tab hosts the WPF-backed implementation of `flutter_comics_viewer`; never opens a separate WPF window |
 
 ## Screen: New Document — Format and Orientation Defaults
@@ -105,7 +110,7 @@ visible without horizontal scrolling.
 
 ### Selection and disabled semantics
 
-- On entry, `Vertical infinity scroll comic strip` and `Portrait` are selected.
+- On entry, `Vertical-scroll comic strip` and `Portrait` are selected.
 - `Puzzle` remains selectable. If Puzzle is selected, orientation stays a
   separate device-target choice rather than being inferred from document type.
 - Horizontal and Landscape remain in focus/semantics reading order so their
@@ -167,9 +172,9 @@ the Canvas card.
 | Scene                           [x]   |
 +--------------------------------------+
 | LAYERS                  [+][up][dn][x]|
-| [eye] [Bln] speech-01.png             |
-| [eye] [Art] character-02.png  selected|
-| [off] [Bg ] background.png            |
+| [eye]     [Bln] speech-01.png          |
+| [eye]     [Art] character-02.png sel.  |
+| [eye-off] [Bg ] background.png         |
 |                                      |
 |                                      |
 +--------------------------------------+
@@ -188,6 +193,22 @@ Empty Scene state:
 | No sounds                        |
 ```
 
+### Layer visibility — all platforms
+
+```text
+Visible layer: [eye]     character-02.png
+Hidden layer:  [eye-off] background.png    (row content de-emphasized)
+```
+
+- Replace the switch-like visibility control with Material-style
+  `visibility` / `visibility_off` icons everywhere a layer row appears.
+- Desktop target is at least 32px; touch layouts use at least 44px.
+- Tooltip/semantic action reads `Hide layer <name>` or `Show layer <name>`.
+- The hidden row remains present and selectable in Editor; only its Canvas
+  rendering is hidden.
+- Viewer is review-only, so no visibility toggle is exposed there.
+- Eye state uses icon shape plus row opacity; color is not the only signal.
+
 ## Screen: Phone — Viewer Sheet
 
 Viewer follows the existing 85%-height sheet pattern so the global shell does
@@ -200,14 +221,13 @@ compact and outside the PlatformView.
 | Viewer                          [x]   |
 | [play/pause] [sound] [preview]        |  compact controls
 +--------------------------------------+
-|                                      |
-|                                      |
-|     flutter_comics_viewer            |
-|     native rendered content          |
-|                                      |
-|                                      |
-+--------------------------------------+
-|  00:12 / 01:04      [====|=======]   |
+|                                   0  |
+|     flutter_comics_viewer          | |
+|     native rendered content        | |
+|                                  42%o|  position thumb
+|                                    | |
+|                                    | |
+|                                 end  |
 +--------------------------------------+
 ```
 
@@ -221,6 +241,14 @@ compact and outside the PlatformView.
 - Drag/scroll gestures inside the viewer belong to the PlatformView. Sheet
   dismissal is restricted to the grip/header area so vertical viewer gestures
   do not accidentally close it.
+- For the current/default `Vertical-scroll comic strip`, the position
+  selector is inset along the right edge: top is document start, bottom is
+  document end, and the thumb follows the shared scroll/animation position.
+  The narrow visible rail sits inside a 44px touch target and the platform safe
+  area, so it remains usable without colliding with system edge gestures.
+- Tapping the rail jumps to that position; dragging the thumb scrubs
+  continuously. The adjacent compact percentage appears at/near the thumb and
+  does not create a second bottom control.
 - Closing/reopening preserves viewer position while the document remains open.
 - A document edit triggers a non-blocking refresh state; selection in Scene and
   active Properties tab remain unchanged.
@@ -251,10 +279,45 @@ remain visible under a small progress banner instead of flashing blank:
 ### Loaded / success
 
 ```text
-| [pause] [sound on] [preview off]      |
-| rendered content                     |
-| 00:12 / 01:04 [====|=======]         |
+| [pause] [sound on] [preview off]   0  |
+| rendered content                  |  |
+|                                42%o  |
+|                                   |  |
+|                                 end  |
 ```
+
+### Position selector orientation by document scroll type
+
+Current, enabled `Vertical-scroll comic strip`:
+
+```text
++-----------------------------+
+| rendered content          0 |
+|                           | |
+|                        42%o |  <- right-edge vertical selector
+|                           | |
+|                         end |
++-----------------------------+
+```
+
+Future horizontal infinity scroll, shown here only to record the mapping:
+
+```text
++-----------------------------+
+| rendered content            |
+|                             |
+|                             |
+| 0 -----------o--------- end |  <- bottom-edge selector
++-----------------------------+
+```
+
+- The second layout is not rendered while `Horizontal infinity scroll comic
+  strip` remains disabled.
+- `scrollType` alone selects the control axis. Portrait/landscape device or
+  window geometry never rotates the selector.
+- A missing legacy `scrollType` resolves to vertical, therefore uses the
+  right-edge layout.
+- Loading, empty, error, and unsupported states do not show an active selector.
 
 ### Empty document
 
@@ -343,8 +406,10 @@ is remembered for the open document.
 | [Translate] [Rotate] [+ Scale] ...   |
 | +----------------------------------+ |
 | | Translate                      x | |
-| | Start [0]       End [240]        | |
-| | X     [0.0]     Y   [128.0]      | |
+| | Start |---o-------|  0           | |
+| | End   |-------o---|  240         | |
+| | X     |----o------|  0           | |
+| | Y     |------o----|  128         | |
 | +----------------------------------+ |
 |                                      |
 +--------------------------------------+
@@ -369,7 +434,8 @@ is remembered for the open document.
 | Selection        [ Document ]        |
 |                    ==========        |
 | CANVAS                               |
-| Width  [1080]    Height [1920]       |
+| Width  |------o------|  1080         |
+| Height |---------o---|  1920         |
 | [Convert artwork to canvas size]     |
 |                                      |
 | Changing canvas size affects the     |
@@ -462,7 +528,8 @@ slider.
 | Selection        [ Document ]        |
 |                    ==========        |
 | CANVAS                               |
-| Width  [1080]    Height [2160]       |
+| Width  |------o------|  1080         |
+| Height |---------o---|  2160         |
 | [Convert artwork to canvas size]     |
 |                                      |
 | PUZZLE VIEW                          |
@@ -519,7 +586,8 @@ Existing `BalloonEditorCard` content is reused rather than redesigned.
 | [Sound] [+ Sound cue]                |
 | +----------------------------------+ |
 | | Sound                           x | |
-| | Start [20]      End [180]         | |
+| | Start |--o---------|  20          | |
+| | End   |--------o---|  180         | |
 | +----------------------------------+ |
 ```
 
@@ -549,8 +617,10 @@ edited at a time.
 | [+ Translate] [+ Rotate] ...         |
 | +----------------------------------+ |
 | | Translate                      x | |
-| | Start [0]       End [200]         | |  int
-| | X     [0]       Y   [0]           | |  int
+| | Start |--o---------|  0           | |  int
+| | End   |-------o----|  200         | |  int
+| | X     |-----o------|  0           | |  int
+| | Y     |-----o------|  0           | |  int
 | +----------------------------------+ |
 ```
 
@@ -563,9 +633,11 @@ until authored.
 ```text
 | +----------------------------------+ |
 | | Rotate                         x | |
-| | Start    [0]     End      [200]  | |  int
-| | Center X [0.50]  Center Y [0.50] | |  double
-| | Angle    [0.0]                   | |  double
+| | Start    |--o-------|  0         | |  int
+| | End      |------o---|  200       | |  int
+| | Center X |-----o----|  0.50      | |  double
+| | Center Y |-----o----|  0.50      | |  double
+| | Angle    |-----o----|  0.0       | |  double
 | +----------------------------------+ |
 ```
 
@@ -577,9 +649,12 @@ values remain representable.
 ```text
 | +----------------------------------+ |
 | | Scale                          x | |
-| | Start    [0]     End      [200]  | |  int
-| | Center X [0.50]  Center Y [0.50] | |  double
-| | Scale X  [1.00]  Scale Y  [1.00] | |  double
+| | Start    |--o-------|  0         | |  int
+| | End      |------o---|  200       | |  int
+| | Center X |-----o----|  0.50      | |  double
+| | Center Y |-----o----|  0.50      | |  double
+| | Scale X  |-----o----|  1.00      | |  double
+| | Scale Y  |-----o----|  1.00      | |  double
 | +----------------------------------+ |
 ```
 
@@ -591,8 +666,9 @@ one; negative scale remains capable of representing a flip.
 ```text
 | +----------------------------------+ |
 | | Alpha                          x | |
-| | Start [0]       End [200]         | |  int
-| | Alpha [1.00]                     | |  double
+| | Start |--o---------|  0           | |  int
+| | End   |-------o----|  200         | |  int
+| | Alpha |----------o-|  1.00        | |  double
 | +----------------------------------+ |
 ```
 
@@ -605,7 +681,8 @@ adds migration behavior.
 ```text
 | +----------------------------------+ |
 | | Sound                          x | |
-| | Start [120]     End [120]         | |  int
+| | Start |-----o------|  120         | |  int
+| | End   |-----o------|  120         | |  int
 | +----------------------------------+ |
 ```
 
@@ -631,14 +708,10 @@ On very narrow or large-text layouts, each two-field row wraps into full-width
 fields without changing order:
 
 ```text
-Start
-[0                                  ]
-End
-[200                                ]
-Center X
-[0.50                               ]
-Center Y
-[0.50                               ]
+Start     |--------o-----------|   0
+End       |-------------o------|   200
+Center X  |----------o---------|   0.50
+Center Y  |----------o---------|   0.50
 ```
 
 Labels never truncate into ambiguity.
@@ -653,7 +726,7 @@ the redesign does not invent controls:
 |---|---|---|---|
 | `Image.Width` | `int` | Imported asset pixel width, filled during image update | Not shown as an editable field |
 | `Image.Height` | `int` | Imported asset pixel height | Not shown as an editable field |
-| `ComicsViewModel.Scroll` | `double` | Current scroll/time position | Represented by existing Canvas/Timeline, not Properties |
+| `ComicsViewModel.Scroll` | `double` | Current scroll/time position | Represented by Canvas/Timeline in Editor and the axis-matched position selector in Viewer; not Properties |
 | animation interpolation `Factor(scroll)` | `double` | Derived easing value | Never shown |
 | derived `Pivot` point | `Point(PivotX, PivotY)` | Rendering convenience | Edited only through Center X/Y |
 
@@ -661,20 +734,97 @@ Layout constants such as XAML control widths, margins, thumbnail sizes, and the
 window's `1300 × 850` initial size are presentation implementation values, not
 document/property fields, and are intentionally not added to Properties.
 
+## Slider-First Numeric Control
+
+The v3.1 reference's panel density is retained, but persistent numeric text
+boxes are paired with a compact slider/scrubber row. Exact values stay adjacent
+to their slider but use platform-appropriate interaction.
+
+### Desktop — always-visible editable number
+
+```text
+| X          |--------o-----------| [ 128 ] |
+|                                      ^    |
+|                         compact editable input|
+```
+
+- Drag the track/thumb for the common adjustment path.
+- Click directly into `[128]` or reach it with Tab to type an exact value; there
+  is no separate reveal/edit mode on desktop.
+- Enter commits; Escape restores the last valid value; blur follows the same
+  validation rule.
+- Arrow keys adjust by the normal step; Shift+Arrow uses the coarse step and
+  Alt/Option+Arrow uses the fine step where the field supports decimals.
+- The input is visually compact so sliders remain primary, but its border and
+  text remain continuously visible.
+
+### Phone and touch-tablet — one-tap exact entry
+
+Resting:
+
+```text
+| X          |--------o-----------|  128 |
+```
+
+One tap on `128` performs the complete transition:
+
+```text
+tap 128
+   -> | X    |--------o-----------| [128|] |
+   -> value selected
+   -> numeric keyboard opens
+```
+
+- No pencil button, long-press, double-tap, secondary dialog, or nested sheet.
+- The control remains inline and scrolls above the keyboard.
+- Done/Enter commits and collapses; system Back/Cancel restores the last valid
+  value and collapses.
+- Tapping/dragging the slider never opens the keyboard.
+- Tap is chosen instead of swipe because swipe already belongs to the slider
+  and tap remains keyboard/screen-reader equivalent.
+
+### Touch layout with limited width
+
+If slider plus value cannot fit beside each other, the value stays one tap away
+directly below the same labeled control—not in another screen:
+
+```text
+| Center X                             |
+| |-------------o------------------|   |
+|                              0.50    |
+```
+
+### Contextual range and legacy overflow
+
+```text
+| Angle   <overflow |o------------------|  720.0 |
+```
+
+- The slider's convenient presentation range is contextual and will be
+  specified per property later; it is not a new persistence constraint.
+- A loaded/exact value outside that range remains unchanged, the thumb pins to
+  the relevant edge, and an overflow marker is shown.
+- Opening exact entry always exposes the real value. No silent clamping.
+
 ## Numeric Field States
 
 ### Focused valid draft
 
+Desktop:
+
 ```text
 | Width                                |
-| [ 1080|                         ]    |  blue focus border
+| |---------o----------| [ 1080| ]    |  blue focus border
 ```
+
+Phone/touch after one tap uses the same focused inline field and immediately
+opens the numeric keyboard.
 
 ### Invalid partial value
 
 ```text
 | Width                                |
-| [ -                             ] !  |  error border + icon
+| |---------o----------| [ -    ] !   |  error border + icon
 | Enter a whole number greater than 0. |
 ```
 
@@ -687,20 +837,20 @@ document/property fields, and are intentionally not added to Properties.
 
 ```text
 | Width                                |
-| [ 1200                          ]    |
+| |-----------o--------|   1200       |
 | Preview: Updating…                   |
 ```
 
 No success toast is shown for every numeric edit; the updated value and Viewer
 refresh are sufficient feedback.
 
-## Screen: Tablet — Existing Layout Preserved
+## Screen: Tablet — Editor
 
 ```text
 +--------------------------------------------------------------+
 | existing compact TopBar: new / open / save / modes / more    |
 +-------------+---------------------------+--------------------+
-| Scene       | [ Canvas ]  Viewer        | Properties         |
+| Scene       | [ Editor ]  Viewer        | Properties         |
 | Layers      | ==========                | [Selection] Document|
 | Sounds      |                           |                    |
 |             | existing edit CanvasView  | selected values    |
@@ -710,24 +860,31 @@ refresh are sufficient feedback.
 +--------------------------------------------------------------+
 ```
 
-Activating `Viewer` changes only the center pane:
+### Tablet — Viewer review state
 
 ```text
-| Scene       | Canvas  [ Viewer ]        | Properties         |
-| unchanged   |         ==========        | unchanged          |
-|             | flutter_comics_viewer     |                    |
-|             | + compact controls        |                    |
+| [ Editor ] [ Viewer ]                                        |
+|            ==========                                        |
+|                                                           0  |
+|               flutter_comics_viewer                       |  |
+|               review-only rendered result              42%o  |
+|                                                          |   |
+|                                                        end   |
 ```
 
-No navigation rail or tablet bottom bar is added.
+- Scene, Properties (`Selection / Document`), and editing Timeline are hidden
+  while Viewer is active; Viewer uses the available workspace.
+- Returning to Editor restores the existing narrow three-pane layout and
+  expandable Timeline exactly as it was.
+- No navigation rail or tablet bottom bar is added.
 
-## Screen: Desktop/macOS/Linux/Web — Existing Layout Preserved
+## Screen: Desktop/macOS/Linux/Web — Editor
 
 ```text
 +--------------------------------------------------------------------------------+
 | existing TopBar: document / mode / New / Open / Save / Undo / dynamic language  |
 +------------------+----------------------------------------+----------------------+
-| Scene            | [ Canvas ]  Viewer                    | Properties           |
+| Scene            | [ Editor ]  Viewer                    | Properties           |
 | Layers           | ==========                            | [Selection] Document |
 |                  |                                       |                      |
 | Sounds           | existing editable CanvasView          | selected values      |
@@ -737,17 +894,33 @@ No navigation rail or tablet bottom bar is added.
 +--------------------------------------------------------------------------------+
 ```
 
-Viewer active:
+### Desktop — Viewer review state
 
 ```text
-| Scene unchanged  | Canvas  [ Viewer ]                    | Properties unchanged|
-|                  |         ==========                    |                     |
-|                  | [play][sound][preview]                 |                     |
-|                  | flutter_comics_viewer                  |                     |
++--------------------------------------------------------------------------------+
+| existing TopBar                                                                 |
++--------------------------------------------------------------------------------+
+|                         [ Editor ] [ Viewer ]                                    |
+|                                    ==========                                    |
+| [play/pause] [sound] [preview]                                                   |
+|                                                                             0  |
+|                         flutter_comics_viewer                                |  |
+|                         review-only result                              42%o  |
+|                                                                           |    |
+|                                                                         end    |
++--------------------------------------------------------------------------------+
 ```
 
-- The center tab strip is keyboard reachable and does not alter selection.
-- The existing Scene and Properties widths remain unchanged.
+- The workspace switch is keyboard reachable and does not alter stored
+  selection.
+- Scene, Properties tabs/content, and editing Timeline are hidden in Viewer;
+  there is no empty inspector and no misleading disabled editing form.
+- Viewer expands into the editing panes' space for focused review.
+- The vertical document position selector stays inset along the right edge on
+  desktop too; its compact value remains next to the thumb. It does not move to
+  the bottom when the window becomes wide or landscape-shaped.
+- Returning to Editor restores Scene, Canvas, Properties, Timeline, selection,
+  active Properties tab, and their scroll state.
 - No desktop bottom bar is introduced.
 - On a narrow resized desktop window, the existing responsive breakpoint—not
   OS identity—continues to choose tablet/phone geometry.
@@ -758,7 +931,7 @@ The visual structure is identical to the desktop mockup above. The only
 platform-specific difference is inside the Viewer content rectangle:
 
 ```text
-Flutter TopBar / Scene / Properties / Timeline
+Flutter TopBar / Editor-Viewer workspace switch
                     |
                     +--> Viewer tab
                            |
@@ -766,7 +939,8 @@ Flutter TopBar / Scene / Properties / Timeline
 ```
 
 - WPF does not create a second top-level editor window.
-- Flutter owns tabs, controls, loading/error overlays, sizing, and focus return.
+- Flutter owns the workspace switch, controls, loading/error overlays, sizing,
+  and focus return.
 - WPF owns native rendered content and its internal pointer interaction.
 
 ## Keyboard, Focus, and Assistive Technology
@@ -775,17 +949,18 @@ Flutter TopBar / Scene / Properties / Timeline
 
 ```text
 TopBar
-  -> Scene controls/list
-  -> Canvas / Viewer tabs
-  -> active center content controls
-  -> Properties: Selection / Document tabs
-  -> active Properties fields
-  -> Timeline
+  -> Editor / Viewer workspace switch
+  -> if Editor: Scene -> Canvas -> Selection / Document -> fields -> Timeline
+  -> if Viewer: Viewer controls -> position selector -> native rendered content
 ```
 
 - Arrow keys move between sibling tabs; Enter/Space activates.
+- The position selector exposes the semantic label `Viewer position`, its
+  current value, and increase/decrease actions. On keyboard platforms,
+  Up/Down moves through the vertical document and Home/End reaches document
+  start/end; focus is visibly indicated without widening the visual rail.
 - Tab enters the active tab panel, never hidden tab content.
-- Switching Canvas/Viewer or Selection/Document returns focus to the activated
+- Switching Editor/Viewer or Selection/Document returns focus to the activated
   tab; it does not unexpectedly jump into the PlatformView.
 - Existing Ctrl+Z / Ctrl+Shift+Z behavior remains unchanged.
 
@@ -832,8 +1007,8 @@ not icon-only. Content scrolls; headers and controls do not overlap.
    |-- Viewer -----> [Viewer sheet] ----- close/back ------|--> [Phone Canvas]
    |-- Properties -> [Properties sheet] - close/back ------|
 
-[Tablet/Desktop Canvas tab] <--tab--> [Viewer tab]
-        selection/state preserved in both directions
+[Tablet/Desktop Editor] <--workspace switch--> [Viewer review]
+        editing panes hidden; selection/state preserved in both directions
 
 [Properties Selection] <--tab--> [Properties Document]
         draft/scroll state preserved while document remains open
@@ -856,6 +1031,10 @@ Properties to `Selection`, and puts Viewer into Loading before Loaded/Error.
 - No functional horizontal-scroll engine or landscape viewer support yet;
   those choices are visible but disabled.
 - No coupling between comic-strip scroll direction and device orientation.
+- No bottom-edge Viewer position selector for the current/default
+  `Vertical-scroll comic strip`. That orientation is reserved for the future,
+  disabled horizontal infinity-scroll type.
+- No Properties tabs or layer/property editing while Viewer is active.
 
 ## Approval
 

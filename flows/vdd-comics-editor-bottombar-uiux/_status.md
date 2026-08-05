@@ -55,9 +55,22 @@ REVIEW
   dynamic used-language tabs, Add/Manage states, append-only slot stability,
   and soft deactivate/reactivate behavior.
 - Visual version 1.3 adds the independent content-scroll/device-orientation
-  groups from `tdd-dot-comics-format`: vertical infinity scroll + portrait are
+  groups from `tdd-dot-comics-format`: `Vertical-scroll comic strip` + portrait are
   defaults; horizontal infinity scroll + landscape are visible but disabled;
   Puzzle remains available.
+- Visual version 1.4 uses `design/comics-editor-v3.1.0-maket` as its visual
+  reference and adds slider-first precise numeric editing, a focused read-only
+  Viewer with Properties/editing panes hidden, and cross-platform eye/eye-off
+  layer visibility.
+- Visual version 1.5 keeps exact numbers continuously editable beside sliders
+  on desktop and defines a single-tap inline exact-entry transition on
+  phone/touch-tablet.
+- Visual version 1.6 places the current `Vertical-scroll comic strip` Viewer
+  position selector along the right edge on every platform. The bottom-edge
+  variant is reserved for the future disabled horizontal document type, and
+  device orientation does not choose the selector axis.
+- Visual version 1.7 corrects the canonical default document-type label to
+  `Vertical-scroll comic strip`; no interaction or layout behavior changes.
 
 ## Context Notes
 
@@ -82,6 +95,19 @@ REVIEW
 - Anton requested on 2026-08-05 that the visual artifact restore the previously
   decided vertical/portrait defaults and disabled horizontal/landscape choices;
   Visual 1.3 incorporates them as independent groups.
+- Anton requested on 2026-08-05 that Visual follow the v3.1.0 maket while
+  refining numeric sliders/exact input, Viewer review mode, and layer visibility;
+  Visual 1.4 incorporates these additions.
+- Anton refined numeric interaction on 2026-08-05: desktop inputs are always
+  editable beside sliders; touch exact editing is one tap with immediate focus,
+  selection, and numeric keyboard. Visual 1.5 incorporates it.
+- Anton clarified on 2026-08-05 that the Viewer position selector shown at the
+  bottom represented a future horizontal infinity-scroll comic. The current
+  default `Vertical-scroll comic strip` must use the same control rotated to
+  the right edge. This direct clarification is the source of truth; Visual 1.6
+  incorporates it consistently across platforms.
+- Anton corrected the exact default type wording on 2026-08-05 to
+  `Vertical-scroll comic strip`; Visual 1.7 incorporates the terminology.
 - Proposed usability improvements may be documented as `Should Have`, but any
   material visual/behavioral addition returns to the relevant approval gate.
 - `new` was interpreted as VDD `start` for the safe normalized name
