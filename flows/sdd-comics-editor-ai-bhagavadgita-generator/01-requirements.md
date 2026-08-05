@@ -1,7 +1,7 @@
 # Requirements: comics-editor-ai-bhagavadgita-generator
 
-> Version: 0.1  
-> Status: DRAFT — awaiting approval  
+> Version: 0.1
+> Status: APPROVED
 > Last Updated: 2026-08-05
 
 ## Origin
@@ -107,9 +107,9 @@ contracts where they actually apply.
 
 ### Primary
 
-**As a** comics content producer  
+**As a** comics content producer
 **I want** a resumable generator that turns the Bhagavad Gita dataset into at least one valid
-`.comics` document per logical chapter  
+`.comics` document per logical chapter
 **So that** all 18 chapters can be opened, reviewed, and iterated in Comics Editor from a concrete
 generated baseline rather than remaining disconnected CSV/PSD source material.
 
@@ -219,13 +219,13 @@ These defaults make the acceptance criterion achievable without pretending the m
 
 ## Open Questions
 
-- [ ] Approve the five proposed defaults above, especially Russian-first, full 663-sloka
-      preservation, and text-forward fallback for chapters without artwork.
-- [ ] Should a chapter be one continuous-scroll `.comics` document (recommended, matching the
-      current format), or may the generator emit multiple `.comics` parts per long chapter while
-      still guaranteeing at least one per chapter?
-- [ ] Is AI-generated raster artwork desired in this iteration, or should this flow stop at
-      source-grounded typography, reusable visual material, and chapter-5 PSD enrichment?
+- [x] **Proposed defaults approved (2026-08-05)**: Russian-first, all 663 slokas preserved, and a
+      text-forward fallback for chapters without artwork.
+- [x] **Document granularity resolved by approval of the recommended default (2026-08-05)**: one
+      continuous-scroll `.comics` document per logical chapter.
+- [x] **Raster-art scope resolved by approval of the defaults (2026-08-05)**: net-new AI raster art
+      is optional enrichment, not required in this iteration. Source-grounded typography and
+      chapter-5 PSD enrichment are the scoped visual baseline.
 
 ## References
 
@@ -244,6 +244,5 @@ These defaults make the acceptance criterion achievable without pretending the m
 
 ## Approval
 
-- [ ] Reviewed by user
-- [ ] Requirements approved
-
+- [x] Reviewed by user
+- [x] Requirements approved on 2026-08-05 (`requirements approved`)

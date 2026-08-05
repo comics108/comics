@@ -2,12 +2,11 @@
 
 ## Current Phase
 
-REQUIREMENTS (awaiting review)
+SPECIFICATIONS (awaiting review)
 
 ## Phase Status
 
-DRAFTED — dataset and AI-flow audit completed; awaiting explicit requirements approval before
-Specifications.
+DRAFTED — requirements approved; `02-specifications.md` drafted and awaiting explicit approval.
 
 ## Last Updated
 
@@ -15,9 +14,7 @@ Specifications.
 
 ## Blockers
 
-- User approval of `01-requirements.md` and its proposed defaults.
-- The scope choice between text-forward generation and net-new AI raster artwork materially changes
-  Specifications and must not be silently assumed.
+- User approval of `02-specifications.md`.
 
 ## Progress
 
@@ -26,8 +23,8 @@ Specifications.
 - [x] Existing AI-related SDD/VDD flows audited
 - [x] Cross-flow gaps documented
 - [x] Requirements drafted
-- [ ] Requirements approved
-- [ ] Specifications drafted
+- [x] Requirements approved (2026-08-05)
+- [x] Specifications drafted
 - [ ] Specifications approved
 - [ ] Plan drafted
 - [ ] Plan approved
@@ -45,6 +42,8 @@ Specifications.
 - Three PSD files are the only visual assets and appear to cover chapter 5 only.
 - Existing AI flows form useful stages but no text-to-comics orchestrator/storyboard/asset-generation
   bridge exists.
+- A separate parallel flow, `sdd-comics-editor-ai-bhagavadgita-gpt-image-2`, owns optional external
+  `gpt-image-2` artwork generation so this baseline stays local, deterministic, and cost-independent.
 - `sdd-comics-ai-animations` has internal naming drift: its status/requirements and README call the
   capability “transformations”, while the tracked flow/app directory is named “animations”.
 - Fresh `.comics` creation is technically proven by the multimodal package writer, but every new
@@ -57,8 +56,8 @@ Specifications.
 
 ## Next Action
 
-User reviews `01-requirements.md`, resolves or accepts the proposed defaults, and explicitly says
-`requirements approved`. Then draft `02-specifications.md` without implementing the generator yet.
+User reviews `02-specifications.md` and explicitly says `specs approved`. Then draft
+`03-plan.md` without implementing the generator yet.
 
 ## Fork History
 
