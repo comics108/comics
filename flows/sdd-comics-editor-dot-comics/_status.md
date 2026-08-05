@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-IMPLEMENTATION (in progress)
+COMPLETE
 
 ## Last Updated
 
@@ -21,33 +21,54 @@ IMPLEMENTATION (in progress)
 - [x] Plan drafted
 - [x] Plan approved
 - [x] Implementation started
-- [ ] Implementation complete
+- [x] Implementation complete
+
+## Outcome
+
+- `.comics` inputs now enter one serialized Dart open pipeline from desktop
+  launch arguments and Android/iOS/macOS consume-once native queues.
+- Android, iOS, and macOS advertise only the Comics document type and copy
+  provider-owned inputs to private cache storage before opening.
+- Windows and Linux have reversible per-user association helpers that advertise
+  Comics Editor without forcing a default-app choice.
+- CI covers Dart contracts, native broker tests, platform builds, and safe
+  association metadata checks.
+
+## Verification
+
+- Baseline focused Flutter tests: 5 passed.
+- `flutter analyze`: no issues.
+- Full `flutter test`: 346 passed, 3 expected environment skips.
+- Android JVM tests and debug APK build: passed.
+- iOS Runner tests (2) and no-codesign debug build: passed.
+- macOS Runner tests (2) and debug build: passed.
+- Apple plist lint, workflow YAML parse, Linux shell/XML checks, and temporary
+  XDG install/uninstall round trip: passed.
+- `git diff --check`: clean.
+
+## Deferred Validation
+
+- Windows PowerShell/runtime build and Linux runner/desktop validation execute in
+  their target CI jobs because those toolchains are unavailable on this host.
+- Real-device and operating-system shell cold/warm open smoke tests remain a
+  release QA step for each target platform.
 
 ## Context Notes
 
-- The installed `$sdd` skill was unavailable, so the repository-local `flows/sdd.md` process is the authoritative fallback.
-- The user requested the exact flow identifier `sdd-comics-editor-dot-comics`.
-- Requirements were explicitly approved by the user on 2026-08-05.
-- Specifications were explicitly approved by the user on 2026-08-05.
-- Plan was explicitly approved by the user on 2026-08-05.
-- Baseline `widget_test.dart` + `dart_io_core_test.dart`: 5 tests passed before feature code changes.
-- Supported native Flutter targets are Android, iOS/iPadOS, macOS, Windows, and Linux; this repository currently has no web target.
-- Android and iOS already contain partial `.comics` declarations, but no native-to-Dart incoming-file delivery exists.
-- Windows and Linux runners already forward ordinary launch arguments to the Dart entrypoint, but `main()` currently accepts none and does not open a passed document.
-- The specification uses one Dart `DocumentOpenCoordinator`; Android/iOS/macOS expose consume-once native queues through `net.nativemind.comics_editor/document_open`.
-- Android and Apple external inputs are copied into application-private `.comics` cache files before Dart receives a path.
-- Android registration uses only `application/vnd.nativemind.comics`; a broad `*/*` filter would violate the approved requirement not to claim unrelated files.
-- Windows registration is per-user under HKCU and Linux metadata installs under XDG per-user data directories; neither helper changes the user's explicit default.
-- The plan implements and verifies the shared Dart coordinator before touching platform producers, then treats each platform as an isolated rollback unit.
-- Automated registration tests use PowerShell dry-run and a temporary Linux `XDG_DATA_HOME`; they never modify the user's live file associations.
-- Association means registering Comics Editor as a capable handler while respecting explicit operating-system default-app choices.
-- `.puzzle`, browser/PWA support, Windows/Linux single-instance coordination, release publication, and forced default takeover are explicitly out of scope.
-- No application source code was changed in this phase.
+- The installed `$sdd` skill was unavailable, so the repository-local
+  `flows/sdd.md` process was used as the authoritative fallback.
+- Requirements, specifications, and plan were explicitly approved on 2026-08-05.
+- `.puzzle`, browser/PWA support, Windows/Linux single-instance coordination,
+  release publication, signing/notarization, and forced default takeover remain
+  out of scope.
+- The pre-existing dirty worktree was preserved; see `04-implementation-log.md`
+  for implementation evidence and the one Android build-config deviation.
 
 ## Next Action
 
-Implement Task 1.1: focused `DocumentOpenCoordinator` contract tests, then the shared Dart pipeline.
+Run the target-platform CI jobs, then execute release QA cold/warm `.comics`
+open checks on each supported operating system.
 
 ## Fork History
 
-- None; this is a new flow.
+- None; this flow was completed without a fork.
