@@ -260,12 +260,13 @@ For current/default `vertical` scroll type:
 - interaction width: 44 on touch, at least 32 on desktop;
 - rail is inset inside safe content bounds along the right edge;
 - top label/start = `0`, bottom = `end`;
-- thumb value is shown as a compact percentage adjacent to the thumb;
+- the selected target device's visible interval is shown as a filled band with two boundaries and
+  a compact start–end percentage; it replaces the former point thumb;
 - tap jumps once; drag updates continuously;
 - Up/Down adjusts by the platform accessibility step and Home/End reaches the
   endpoints;
-- semantics label is `Viewer position`, with value and increase/decrease
-  actions;
+- semantics label is `Viewer visible range`, with device, start/end value, and
+  increase/decrease actions;
 - loading/empty/error/unsupported states expose no active selector.
 
 Viewport portrait/landscape geometry never changes its axis. A horizontal
@@ -273,7 +274,7 @@ bottom selector is not instantiated in this iteration.
 
 ## Properties Information Architecture
 
-`PropertiesPanel` becomes a tab host ordered `Selection`, `Document`.
+`PropertiesPanel` becomes a tab host ordered `Selection`, `Document`, `General`.
 
 ### Selection
 
@@ -291,6 +292,13 @@ bottom selector is not instantiated in this iteration.
 - Puzzle adds view Scale with default `0.5`, range `0.125…1.0`, step `0.05`,
   keyboard large step `0.1`.
 - Document remains available when Selection has no object.
+
+### General
+
+- Target viewport is independent of the host editor window and not persisted in `.comics`.
+- Built-in profiles are iPad `768×1024` (default) and iPhone `390×844`.
+- Show exact dimensions, aspect ratio, and calculated visible Vertical-scroll document height.
+- The selected profile controls the right-edge Viewer viewport band.
 
 `ScenePanel.showSettings` defaults to false after migration; the old settings
 card must not appear in any responsive Scene surface.
@@ -377,7 +385,7 @@ Keep `DocType { comics, puzzle }`; do not add a selectable horizontal enum in
 this iteration.
 
 - Content cards: selected `Vertical-scroll comic strip`, disabled
-  `Horizontal infinity scroll comic strip`, selectable `Puzzle`.
+  `Horizontal-scroll comic strip`, selectable `Puzzle`.
 - Orientation group: selected `Portrait`, disabled `Landscape`.
 - Disabled cards have lock icon, text, semantics `disabled`, and no pointer or
   keyboard callback; opacity alone is insufficient.

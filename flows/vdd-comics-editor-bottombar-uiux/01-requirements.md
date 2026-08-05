@@ -90,7 +90,7 @@ removed merely because they did not exist in v2.8.
 ### New document format and device orientation
 
 - The default comics content type is `Vertical-scroll comic strip`.
-- `Horizontal infinity scroll comic strip` is displayed as a separate option
+- `Horizontal-scroll comic strip` is displayed as a separate option
   but remains disabled because no editor/viewer engine supports it yet.
 - The default target device orientation is `Portrait`.
 - `Landscape` is displayed as a separate orientation option but remains
@@ -135,16 +135,24 @@ removed merely because they did not exist in v2.8.
 - Returning from Viewer restores the previous selection, Properties tab,
   scroll positions, and expanded exact-input state where safe.
 
+### General target viewport
+
+- Properties tabs are ordered `Selection`, `Document`, `General`.
+- General contains the target reader device and dimensions formerly misplaced in
+  `vdd-comics-editor-timeline`: iPad `768×1024` and iPhone `390×844`.
+- Target device is app-level authoring state, independent of the host editor window and not part
+  of the `.comics` schema.
+
 ### Viewer position selector
 
 - For the current/default `Vertical-scroll comic strip`, the Viewer
   position selector is vertical and inset along the right edge of the rendered
   content. It must not be drawn along the bottom edge.
 - The selector maps document start to the top and document end to the bottom;
-  its thumb represents the same shared scroll/animation position used by the
-  Viewer.
+  its draggable band represents the selected device's visible document range; the band's start
+  maps to the same shared scroll/animation position used by the Viewer.
 - A bottom-edge horizontal selector belongs only to the future
-  `Horizontal infinity scroll comic strip`. Because that document type remains
+  `Horizontal-scroll comic strip`. Because that document type remains
   disabled, the horizontal selector is documented for consistency but is not
   rendered by the current working Viewer.
 - Selector orientation is derived only from content `scrollType`, including the
@@ -256,7 +264,7 @@ usable; the requirement is that editable values are consolidated under
 
 14. **Given** the New Document dialog is displayed
     **When** the user reviews future format/orientation choices
-    **Then** `Horizontal infinity scroll comic strip` and `Landscape` are
+    **Then** `Horizontal-scroll comic strip` and `Landscape` are
     visible with an explicit unavailable/coming-later explanation and cannot be
     selected by pointer, keyboard, or assistive technology.
 
@@ -399,7 +407,7 @@ The Visual phase must cover:
       content (requested by Anton on 2026-08-05 after approval).
 - [x] New-document defaults clarification: show independent content-scroll and
       device-orientation groups; default to `Vertical-scroll comic strip` + portrait,
-      keep horizontal infinity scroll + landscape visible but disabled, and
+      keep Horizontal-scroll + landscape visible but disabled, and
       retain Puzzle (requested by Anton on 2026-08-05 after approval; sourced
       from `tdd-dot-comics-format` Category B/C decisions).
 - [x] v3.1 visual refinement: use

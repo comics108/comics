@@ -64,8 +64,8 @@ options are informative, not interactive.
 |                                                                          |
 | +----------------------+ +----------------------+ +--------------------+ |
 | | [selected]           | | [disabled]           | |                    | |
-| | Vertical infinity    | | Horizontal infinity  | | Puzzle             | |
-| | scroll comic strip   | | scroll comic strip   | |                    | |
+| | Vertical-scroll      | | Horizontal-scroll    | | Puzzle             | |
+| | comic strip          | | comic strip          | |                    | |
 | |                      | |                      | | Zoomable board of  | |
 | | Continuous vertical  | | Continuous horizontal| | draggable pieces. | |
 | | strip.               | | strip.               | |                    | |
@@ -94,12 +94,12 @@ visible without horizontal scrolling.
 |                                      |
 | CONTENT TYPE                         |
 | +----------------------------------+ |
-| | [selected] Vertical infinity    | |
-| | scroll comic strip · Default    | |
+| | [selected] Vertical-scroll      | |
+| | comic strip · Default           | |
 | +----------------------------------+ |
 | +----------------------------------+ |
-| | [disabled] Horizontal infinity  | |
-| | scroll comic strip · Coming later| |
+| | [disabled] Horizontal-scroll    | |
+| | comic strip · Coming later      | |
 | +----------------------------------+ |
 | +----------------------------------+ |
 | | Puzzle                           | |
@@ -310,7 +310,7 @@ Current, enabled `Vertical-scroll comic strip`:
 +-----------------------------+
 ```
 
-Future horizontal infinity scroll, shown here only to record the mapping:
+Future `Horizontal-scroll comic strip`, shown here only to record the mapping:
 
 ```text
 +-----------------------------+
@@ -321,8 +321,8 @@ Future horizontal infinity scroll, shown here only to record the mapping:
 +-----------------------------+
 ```
 
-- The second layout is not rendered while `Horizontal infinity scroll comic
-  strip` remains disabled.
+- The second layout is not rendered while `Horizontal-scroll comic strip`
+  remains disabled.
 - `scrollType` alone selects the control axis. Portrait/landscape device or
   window geometry never rotates the selector.
 - A missing legacy `scrollType` resolves to vertical, therefore uses the
@@ -1043,7 +1043,7 @@ Properties to `Selection`, and puts Viewer into Loading before Loaded/Error.
 - No coupling between comic-strip scroll direction and device orientation.
 - No bottom-edge Viewer position selector for the current/default
   `Vertical-scroll comic strip`. That orientation is reserved for the future,
-  disabled horizontal infinity-scroll type.
+  disabled `Horizontal-scroll comic strip` type.
 - No Properties tabs or layer/property editing while Viewer is active.
 
 ## Approval

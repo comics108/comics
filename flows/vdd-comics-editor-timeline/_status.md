@@ -15,7 +15,7 @@ before this update), now reactivated at Anton's explicit request to bring it up 
 
 ## Last Updated
 
-2026-08-02 by Claude
+2026-08-05 by Codex
 
 ## Current real-world state (2026-08-02) — read this before anything else here
 
@@ -36,10 +36,11 @@ flow has since gone all the way through Implementation, with real, shipped code 
   untouched, deal with it later. It's still there today, now reading a vestigial, disconnected
   `playhead`/`totalFrames` while the real interpolation engine runs on `currentTime`. **Genuinely
   unresolved — needs a decision**, not something to silently pick a side on.
-- **The device-visibility overlay (`DeviceProfile`, this flow's own Should Have) was never built
-  anywhere.** The sibling flow explicitly excluded it as "not part of legacy's actual behavior" per
-  its own narrower, literal-port mandate. If Anton still wants it, this flow (or a new one) is where
-  that work would need to happen — it's real, wanted, unbuilt scope, not abandoned.
+- **The device-visibility overlay no longer belongs to Timeline.** Anton moved target dimensions
+  into Properties → General and the current-device visibility representation onto the Viewer
+  scroll control on 2026-08-05. It is implemented by `vdd-comics-editor-scroll` as one selected
+  iPad/iPhone viewport band. The older simultaneous guide-row material below is retained only as
+  historical design context and is not an open Timeline task.
 - **What this flow got right that mattered**: the "single source of truth" framing, the discovery
   that sound shares the same scroll value as visual layers, the leg-swing/idle-loop gap (still
   unaddressed anywhere, consistent across both flows), and the mobile-viewer correction (the
@@ -51,9 +52,7 @@ flow has since gone all the way through Implementation, with real, shipped code 
 - **Needs Anton's decision on the Timeline contradiction** (see above): now that `timeline.dart`
   is live-disconnected from `currentTime` (renders newly-authored keyframes off-scale), does this
   flow's original "delete outright" verdict get carried out, or does something else happen to it?
-- **Needs Anton's direction on the device-visibility overlay**: still wanted? If so, this flow could
-  be narrowed to just that remaining scope and taken to Plan/Implementation; if not, this flow can
-  be considered fully closed (its substantive scope having shipped via the sibling flow).
+- Device visibility is no longer a blocker here; ownership moved to `vdd-comics-editor-scroll`.
 
 ## Progress
 

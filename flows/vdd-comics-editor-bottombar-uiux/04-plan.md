@@ -301,7 +301,7 @@ numeric control and transaction API.
 ### 10.2 New Document cards
 
 - Default selected Vertical-scroll comic strip + Portrait.
-- Horizontal infinity scroll + Landscape visible, locked, and non-selectable.
+- Horizontal-scroll comic strip + Landscape visible, locked, and non-selectable.
 - Puzzle remains selectable.
 - Create maps only to existing `DocType.comics`/`puzzle`; no new default fields
   are persisted.

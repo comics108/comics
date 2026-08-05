@@ -1,20 +1,25 @@
-# Status: vdd-comics-editor-vertical-scroll
+# Status: vdd-comics-editor-scroll
 
 ## Current Phase
 
-IMPLEMENTATION
+VISUAL ADDENDUM (awaiting review)
 
 ## Phase Status
 
-SUBSTANTIALLY COMPLETE — all 5 phases (13 tasks) implemented, 240/241 tests pass (the one failure
-is the pre-existing, unrelated dataset-listing issue noted at the very start of Task 1.1). Two
-items are genuinely outstanding and disclosed, not silently treated as done — see Blockers.
+CHANGE REQUEST CAPTURED — the approved/base implementation through General + Viewer target range
+remains complete and verified. Anton clarified that target viewport/range must also bind to Edit
+Canvas scroll. Requirements v0.5 and Visual v1.3 are drafted; no Edit-binding implementation has
+started pending visual review.
 
 ## Last Updated
 
-2026-08-02 by Claude
+2026-08-05 by Codex
 
 ## Blockers
+
+- **Edit-binding addendum awaits visual approval.** Review the Edit desktop/tablet/phone placement,
+  two-way Canvas scroll binding, shared target profile, separate workspace positions, and Puzzle/
+  future-horizontal boundaries in `02-visual.md` v1.3.
 
 - **Task 5.2's real interactive/audio manual verification is outstanding.** Everything automatable
   (unit tests, widget tests, a real-file integration test) passes, but visually confirming the
@@ -44,10 +49,35 @@ items are genuinely outstanding and disclosed, not silently treated as done — 
 - [x] Implementation started (2026-08-02) — Task 1.1
 - [x] Implementation complete (2026-08-02) — 5 phases, 13 tasks, 240/241 tests pass; Task 5.2's real
       interactive/audio manual pass explicitly outstanding (see Blockers)
+- [x] Target viewport extension complete (2026-08-05) — General, iPad/iPhone dimensions,
+      device-aspect Viewer, range rail, 335 pass / 3 expected skips
+- [x] Edit-binding requirements addendum drafted (2026-08-05) — v0.5
+- [x] Edit-binding visual addendum drafted (2026-08-05) — v1.3
+- [ ] Edit-binding visual addendum approved
+- [ ] Edit-binding specifications revised
+- [ ] Edit-binding plan revised
+- [ ] Edit-binding implementation started
 - [ ] Documentation drafted
 - [ ] Documentation approved
 
 ## Context Notes
+
+- **Direction contract verified on 2026-08-05**: current/default is **Vertical-scroll comic strip**
+  (`height` extent, Y-derived progress, right-edge Viewer selector). **Horizontal-scroll comic
+  strip** is a separate future mode (`width` extent, X-derived progress, bottom-edge selector),
+  remains disabled, and was not implemented by this audit. Device orientation is orthogonal to
+  strip direction. Existing files default to vertical until a future explicit persisted scroll
+  type is approved and added.
+- The current production code already matches that vertical contract; the audit found no reason to
+  redesign working adaptation or enable future UI. Its only source change normalizes the disabled
+  future card label to `Horizontal-scroll comic strip`, with the widget test updated accordingly.
+- **Target dimensions moved from Timeline on 2026-08-05**: Properties is now ordered Selection,
+  Document, General. General selects an app-level iPad `768×1024` (default) or iPhone `390×844`;
+  Viewer adopts that aspect ratio and the right rail displays the selected viewport as a range,
+  not a point. The host desktop/phone dimensions never choose or overwrite this target.
+- **Newest clarification**: Edit Canvas, not only Viewer, must use the selected target viewport and
+  show the same range component bound two ways to `canvasViewport/currentTime`. This is captured in
+  Requirements v0.5 and Visual v1.3 only; implementation intentionally waits for the VDD gate.
 
 - **Purpose and relationship to `vdd-comics-editor-timeline`**: that flow investigated the same
   problem space and reached Specifications with Option A1 approved, but included ideas beyond a
@@ -132,11 +162,17 @@ note in `01-requirements.md`).
 
 ## Next Actions
 
-1. **Anton (or a future session) performs Task 5.2's real manual pass**: run the actual desktop
+1. Anton reviews Visual v1.3 and replies `visual approved` or requests corrections.
+2. After approval, revise Specifications/Plan for shared widgets, Edit `currentTime` normalization,
+   two-way rail input, target-aspect Canvas, responsive placement, and tests.
+
+3. **Anton (or a future session) performs Task 5.2's real manual pass**: run the actual desktop
    editor, author a translate/alpha animation and pan through it, open a few real `dataset/` files
    and confirm resting layers place instantly (not a 200px slide-in), and confirm a real sound cue
    plays/loops/stops correctly.
-2. Decide whether to move to the DOCUMENTATION phase now (client-facing README per VDD discipline)
+4. Decide whether to move to the DOCUMENTATION phase now (client-facing README per VDD discipline)
    or treat Implementation as done pending Task 5.2's real pass first — ask rather than assume.
-3. Separately, still open: what to do about `timeline.dart` itself (explicitly deferred, not
+5. Separately, still open: what to do about `timeline.dart` itself (explicitly deferred, not
    decided) now that it's rendering off-scale for any newly-authored keyframe.
+6. Scope Horizontal-scroll comic strip as a separate future flow; do not infer it from landscape
+   orientation or document aspect ratio.

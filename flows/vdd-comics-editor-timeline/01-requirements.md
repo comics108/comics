@@ -6,6 +6,10 @@
 > Status: APPROVED
 > Last Updated: 2026-08-01
 
+> **Relocation note (2026-08-05):** Device dimensions and visibility are no longer Timeline
+> requirements. Anton moved them to Properties → General and the Viewer scroll range in
+> `vdd-comics-editor-scroll`. The older sections remain only as investigation history.
+
 ## Problem Statement
 
 `flows/sdd-comics-editor-questions/01-requirements.md`'s Group C investigation (real code, not

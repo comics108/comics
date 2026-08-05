@@ -1,8 +1,8 @@
-# Requirements: comics-editor-vertical-scroll
+# Requirements: comics-editor-scroll
 
-> Version: 0.2 (v0.1's four Open Questions resolved by Anton — see that section)
-> Status: APPROVED
-> Last Updated: 2026-08-02
+> Version: 0.5 (Edit Canvas target viewport and scroll binding addendum)
+> Status: APPROVED BASE + v0.5 ADDENDUM AWAITING REVIEW
+> Last Updated: 2026-08-05
 
 ## Method note (read this first)
 
@@ -13,14 +13,41 @@ in two unrelated additions: a "Convert" utility in `ComicsViewModel.cs` and lett
 `Layer.cs`, neither touching scroll/animation code). `flows/vdd-comics-editor-timeline`,
 `flows/sdd-comics-editor-questions`, and `flows/sdd-comics-editor-fromat-dot-comics` were consulted
 **only to locate relevant files and functions faster** — their own design ideas (Option A1/A2
-framing, the device-visibility-overlay/`DeviceProfile` concept, the opt-in-toggle rollout
-decision, etc.) are deliberately **not** carried into this flow. Where this flow's conclusions
+framing, the opt-in-toggle rollout decision, etc.) are deliberately **not** carried into this
+flow. The one later exception is the target-device `DeviceProfile`/visible-range concept,
+explicitly moved here by Anton on 2026-08-05 because it describes scroll viewport visibility, not
+Timeline behavior. Where this flow's conclusions
 happen to overlap with those flows' conclusions, it's because both looked at the same real code,
 not because one was copied from the other — this is called out explicitly wherever it applies.
 
 This investigation also surfaced a genuine correction to `vdd-comics-editor-timeline`'s own
 Specifications (its single flagged "biggest risk") — see **Major Correction** below. Fixed there
 as a disclosed correction, not silently.
+
+## Direction Contract — clarified 2026-08-05
+
+The product term is **comic strip** (not “stripe”). The current and default document mode is
+**Vertical-scroll comic strip**. **Horizontal-scroll comic strip** is a separately visible future
+mode; it is not enabled or implemented by this flow.
+
+These are document reading directions, not device orientations:
+
+- Vertical-scroll uses document height as its reading extent, vertical pan (`Y`) as progress, a
+  portrait device preview by default, and a Viewer position control on the right edge.
+- Future horizontal-scroll will use document width as its reading extent, horizontal pan (`X`) as
+  progress, and a Viewer position control on the bottom edge.
+- Portrait/landscape orientation remains an independent property. Landscape must never silently
+  turn a vertical strip into a horizontal strip, and portrait must never imply vertical strip.
+- `Anim.start`/`end`, sound ranges, and logical `currentTime` remain one-dimensional scroll
+  positions. They are axis-neutral data: the selected document scroll type decides whether the
+  value is derived from X or Y viewport movement.
+- Existing `.comics` documents have no persisted scroll-direction discriminator. They must continue
+  to open as Vertical-scroll comic strips. Future horizontal support therefore needs an explicit,
+  backward-compatible persisted scroll type; it must not infer direction from width, height, or
+  device orientation.
+
+This clarification does not expand the approved implementation scope. It records why the current
+code is intentionally vertical and the compatibility boundary a future horizontal flow must use.
 
 ## Problem Statement
 
@@ -176,11 +203,10 @@ Re-checked against current code (2026-08-02):
 
 ## Explicit Scope Boundaries (things this flow deliberately does NOT inherit from sibling flows)
 
-- **No `DeviceProfile`/multi-device visibility overlay.** That was Anton's own idea, layered on top
-  of `vdd-comics-editor-timeline`'s design — not part of legacy's actual behavior. The real,
-  *legacy* fixed-window mechanic is the `ratio = 1.4` viewport sizing (Major Finding, point 2),
-  which is in scope; the later multi-device-guide-marks idea is not, per "don't rely on ideas from
-  there."
+- **Target-device viewport range is now in scope.** The original v0.2 scope excluded
+  `DeviceProfile`, but Anton explicitly moved it from `vdd-comics-editor-timeline` into this flow
+  on 2026-08-05. It remains an authoring visibility aid, not legacy behavior, pagination, reflow,
+  or a `.comics` schema field.
 - **No idle-loop / time-driven-while-in-range animation.** Confirmed absent in legacy too (same
   conclusion `vdd-comics-editor-timeline` already reached independently) — a literal port
   naturally excludes it; no conflict between the two flows here.
@@ -225,6 +251,12 @@ inert keyframe data in existing documents finally does something
 `legacy/comics-editor-v2.8`
 **So that** audio authoring works the same way it always has, without a separate mental model
 
+**As** a corrector editing on any desktop, tablet, or phone
+**I want** to choose a target reader device under Properties → General and see that device's
+visible document interval on the scroll control
+**So that** the editor window size does not masquerade as the reader viewport and I can judge
+where content enters and leaves an iPad or iPhone screen
+
 ## Acceptance Criteria
 
 ### Must Have
@@ -249,6 +281,33 @@ inert keyframe data in existing documents finally does something
 6. **Given** `playhead`/`canvasViewport`, **when** this flow ships, **then** they are no longer two
    unlinked values — pan position is the one value driving both rendering and any future keyframe
    authoring.
+7. **Given** Properties in Editor, **when** it is opened, **then** tabs are ordered `Selection`,
+   `Document`, `General`; General exposes an app-level target device and its dimensions, starting
+   with iPad `768×1024` and iPhone `390×844`, with iPad selected by default.
+8. **Given** a Vertical-scroll comic strip and a selected target device, **when** Viewer displays
+   the right-edge scroll control, **then** it renders the selected device's visible interval rather
+   than a single point. For position `p`, `visibleHeight = document.width × device.height /
+   device.width`, clamped to document height; the interval maps through the document's available
+   travel and remains draggable/tappable as one viewport band. The Viewer content itself is fitted
+   into the same selected-device aspect ratio, letterboxed within the host editor when necessary.
+9. **Given** Comics Editor is running on a desktop or another device, **when** the target profile
+   is changed, **then** the visible interval follows the selected target profile only; it does not
+   follow the editor window's physical dimensions and is not written into `.comics`.
+10. **Given** a Vertical-scroll comic strip in Edit mode, **when** the author pans the Canvas,
+    **then** a right-edge target-device viewport band moves from `canvasViewport/currentTime` and
+    shows the selected device's visible start/end boundaries. The same band is present in Edit,
+    not only in Viewer.
+11. **Given** the Edit range rail, **when** the author taps or drags it, **then** the Canvas scroll
+    position changes in the same action. Canvas pan → band and band → Canvas are one two-way scroll
+    binding; no independent Edit rail position is introduced.
+12. **Given** Edit is hosted on desktop, tablet, or phone, **when** a target profile is selected in
+    General, **then** the editable comic viewport uses that target aspect ratio and is fitted/
+    letterboxed inside the host workspace. The host window dimensions do not define the reader
+    viewport.
+13. **Given** Editor and Viewer workspaces, **when** either workspace is active, **then** both use
+    the same General target profile and range math, while each band reflects its active renderer's
+    own scroll state. Switching workspaces must not silently overwrite the inactive workspace's
+    saved position.
 
 ### Should Have
 
@@ -262,10 +321,13 @@ inert keyframe data in existing documents finally does something
   later decision.
 - **Idle-loop/time-driven-while-in-range animation** — absent in legacy, so naturally excluded from
   a literal port.
-- **Device-visibility overlay / `DeviceProfile`** — not a legacy behavior; explicitly not inherited
-  from the sibling flow.
+- **Multiple simultaneous target-device guide rows or pagination marks.** This iteration selects
+  one target profile and shows its current visible range; it does not reflow or paginate content.
 - **A hardcoded `ratio` constant matching legacy's `1.4`** — deliberately not copied; the viewport
   is responsive instead (see Open Questions).
+- **Horizontal-scroll comic strip rendering or authoring** — shown as a disabled future document
+  type only. No X-axis progress engine, bottom-edge Viewer selector, or persisted scroll-type field
+  is introduced by this flow.
 
 ## Constraints
 
@@ -322,3 +384,9 @@ inert keyframe data in existing documents finally does something
 - [x] Approved on: 2026-08-02
 - [x] Notes: Confirmed "responsive to screen space" for the viewport-windowing Open Question
       (resolves the "responsible"/"responsive" ambiguity flagged in `_status.md`).
+- [x] Direction clarification supplied by Anton on 2026-08-05: Vertical-scroll comic strip is the
+      current/default mode; Horizontal-scroll comic strip is a distinct future mode.
+- [x] Target-device dimensions and viewport-band scope moved from `vdd-comics-editor-timeline` by
+      Anton on 2026-08-05; General + selected-device range implemented as the clarified form.
+- [ ] Edit binding addendum requested by Anton: target viewport and range must bind to Edit Canvas
+      scroll as well as Viewer. Requirements captured on 2026-08-05; awaiting addendum review.

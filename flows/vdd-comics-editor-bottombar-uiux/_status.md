@@ -56,7 +56,7 @@ AWAITING_APPROVAL
   and soft deactivate/reactivate behavior.
 - Visual version 1.3 adds the independent content-scroll/device-orientation
   groups from `tdd-dot-comics-format`: `Vertical-scroll comic strip` + portrait are
-  defaults; horizontal infinity scroll + landscape are visible but disabled;
+  defaults; Horizontal-scroll + landscape are visible but disabled;
   Puzzle remains available.
 - Visual version 1.4 uses `design/comics-editor-v3.1.0-maket` as its visual
   reference and adds slider-first precise numeric editing, a focused read-only
@@ -127,7 +127,7 @@ AWAITING_APPROVAL
   editable beside sliders; touch exact editing is one tap with immediate focus,
   selection, and numeric keyboard. Visual 1.5 incorporates it.
 - Anton clarified on 2026-08-05 that the Viewer position selector shown at the
-  bottom represented a future horizontal infinity-scroll comic. The current
+  bottom represented a future Horizontal-scroll comic strip. The current
   default `Vertical-scroll comic strip` must use the same control rotated to
   the right edge. This direct clarification is the source of truth; Visual 1.6
   incorporates it consistently across platforms.

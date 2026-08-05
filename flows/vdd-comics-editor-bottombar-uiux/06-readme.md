@@ -32,6 +32,6 @@ as tabs; Add opens a searchable list of active unused languages. Deactivating a
 catalog language does not shift its stored slot or hide older content.
 
 Layer visibility uses eye/eye-off controls on every editor layout. New
-documents default to `Vertical-scroll comic strip` and Portrait. `Horizontal
-infinity scroll comic strip` and Landscape are shown but disabled for now;
+documents default to `Vertical-scroll comic strip` and Portrait. `Horizontal-scroll
+comic strip` and Landscape are shown but disabled for now;
 Puzzle remains available.

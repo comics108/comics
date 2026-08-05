@@ -5,6 +5,10 @@
 > Status: DRAFT
 > Last Updated: 2026-08-01
 
+> **Relocation note (2026-08-05):** The device overlay mockups are historical. The approved
+> product location is now Properties → General plus one selected-device viewport band on the
+> Viewer scroll control, specified in `vdd-comics-editor-scroll/02-visual.md`.
+
 ## Overview
 
 Both options below use the **same example scenario** on purpose, so what's being compared is

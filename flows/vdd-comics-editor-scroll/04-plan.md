@@ -1,8 +1,8 @@
-# Implementation Plan: comics-editor-vertical-scroll
+# Implementation Plan: comics-editor-scroll
 
-> Version: 1.0
+> Version: 1.2
 > Status: APPROVED
-> Last Updated: 2026-08-02
+> Last Updated: 2026-08-05
 > Specifications: [03-specifications.md](03-specifications.md)
 
 ## Summary
@@ -15,6 +15,10 @@ a pan value today); (3) change the canvas's fit/scroll behavior, which is the vi
 part and needs empirical `boundaryMargin`/zoom-invariance tuning; (4) add sound, last, since it's
 the one new external dependency (an audio package) with the most platform-specific risk; (5)
 integration-test against real `.comics` files and close out the two Open Design Questions.
+
+The tasks below implement only the current/default Vertical-scroll comic strip. Horizontal-scroll
+is a future mode and is deliberately not introduced by this plan. The implementation remains a
+valid vertical specialization of `03-specifications.md`'s axis contract.
 
 ## Task Breakdown
 
@@ -198,6 +202,46 @@ Task 4.1 ─→ Task 4.2 ─→ Task 4.3 (needs 2.3)
 | `apps/comics-editor/pubspec.yaml` | Modify | `audioplayers` dependency (4.1) |
 | `apps/comics-editor/lib/src/ui/widgets/timeline.dart` | **None** | Explicitly untouched per Requirements |
 
+## Future Horizontal Follow-up — not part of this plan
+
+A separate approved flow must, at minimum:
+
+1. add an explicit persisted scroll type with missing-value → vertical compatibility;
+2. fit the document by height and derive progress from normalized X translation;
+3. move the Viewer selector to the bottom edge while preserving its normalized semantics;
+4. keep device orientation independent from the strip direction;
+5. validate keyframe/sound behavior using the same axis-neutral logical `currentTime` contract.
+
+No task above should be reinterpreted as implementing or enabling Horizontal-scroll now.
+
+## Phase 6: Target viewport range — added 2026-08-05
+
+### Task 6.1: Move fixed device dimensions from timeline ownership
+
+- Add app-level `DeviceProfile` values for iPad `768×1024` and iPhone `390×844`.
+- Keep selection out of `.comics`; default the editor session to iPad.
+- Mark the old timeline ownership as relocated rather than maintaining duplicate implementations.
+
+### Task 6.2: Add Properties → General
+
+- Extend tab order to Selection, Document, General.
+- Show target chooser, exact dimensions/aspect ratio, calculated visible document height, and an
+  explanation that the target is independent of the editor's host device.
+
+### Task 6.3: Replace Viewer point with viewport band
+
+- Calculate the vertical device extent from document width and selected profile ratio.
+- Center/fit the actual Viewer surface to the selected device aspect ratio, independent of host
+  desktop/mobile dimensions.
+- Draw two boundaries plus a filled band on the existing right-edge rail.
+- Preserve tap, drag, keyboard, and semantics control with travel-aware position conversion.
+
+### Task 6.4: Verification
+
+- Unit-test device screenful math.
+- Widget-test tab order/profile switching, visible-range semantics, and one-action rail input.
+- Re-run existing Viewer, vertical interpolation, currentTime, canvas layout, and boundary tests.
+
 ## Risk Assessment
 
 | Risk | Likelihood | Impact | Mitigation |
@@ -238,3 +282,7 @@ After each phase, verify:
 - [x] Reviewed by: Anton Dodonov
 - [x] Approved on: 2026-08-02
 - [x] Notes: Approved as drafted.
+- [x] Direction audit requested by Anton on 2026-08-05; future-horizontal prerequisites recorded,
+      with no change to the approved vertical implementation tasks.
+- [x] Phase 6 requested directly by Anton on 2026-08-05; target dimensions are moved from Timeline
+      to General and the Viewer selector becomes a selected-device range.

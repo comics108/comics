@@ -1,7 +1,7 @@
 # Requirements: Automatic `.comics` File Association
 
 > Version: 1.0  
-> Status: DRAFT — awaiting review  
+> Status: APPROVED  
 > Last Updated: 2026-08-05
 
 ## Problem Statement
@@ -166,3 +166,6 @@ The existing **New**, **Open**, save, editor, properties, Scene, and Viewer beha
 
 None required for the requirements phase. The platform-specific registration and lifecycle mechanisms, including the exact Windows per-user registration location and Linux install destinations, will be selected in specifications.
 
+## Approval
+
+- Approved by the user on 2026-08-05.

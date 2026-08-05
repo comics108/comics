@@ -1,4 +1,4 @@
-# Implementation Log: comics-editor-vertical-scroll
+# Implementation Log: comics-editor-scroll
 
 > Started: 2026-08-02
 > Plan: [04-plan.md](04-plan.md)
@@ -20,8 +20,65 @@
 | 4.3 Wire `SoundPlayer` | Done, unverified path convention | see Discoveries — real playback not automated-tested, per Plan's own manual-verification designation |
 | 5.1 Real-file integration test | Done | found + fixed a real stable-sort bug — see Discoveries |
 | 5.2 Manual verification pass | Partially done | see Discoveries — real UI/audio interaction not performable in this environment |
+| 6.1 Device profiles moved from Timeline | Done | iPad 768×1024, iPhone 390×844; app-level only |
+| 6.2 Properties → General | Done | third tab, target chooser, dimensions, ratio, visible height |
+| 6.3 Viewer target viewport + range band | Done | selected aspect ratio, travel-aware interval, tap/drag/a11y |
+| 6.4 Verification | Done | analyzer clean; 335 pass, 3 expected skips; 4 visual goldens pass |
 
 ## Session Log
+
+### Session 2026-08-05 — General target viewport and scroll range
+
+- Moved device-dimension ownership out of `vdd-comics-editor-timeline` and into this scroll flow.
+  Timeline artifacts retain only a relocation note/history and no longer track the overlay as a
+  blocker or implementation responsibility.
+- Added `DeviceProfile` as non-persisted editor state:
+  - default iPad `768×1024`;
+  - iPhone `390×844`;
+  - vertical screenful is `document.width × height / width`.
+- Extended Properties to `Selection / Document / General`. General shows the selected target,
+  dimensions, aspect ratio, calculated visible strip height/percentage, and explicitly explains
+  that the target is independent of the editor's host device.
+- Fitted the Viewer surface itself to the selected target aspect ratio with neutral host
+  letterboxing. This avoids the desktop window silently determining normalized scroll travel.
+- Replaced the right-edge point slider with a selected-device viewport band:
+  - two visible boundaries plus filled interval;
+  - exact start–end percentage and profile label;
+  - tap and drag update in one action;
+  - Home/End, Up/Down, increase/decrease semantics;
+  - semantics include current, increased, and decreased range values.
+- Added unit/widget coverage for profile math, tab order, General profile switching, target aspect
+  ratio, visible-range semantics, and rail input.
+- Updated and visually inspected four golden references: desktop Editor, Viewer, phone Properties,
+  and a new General target-viewport reference.
+- Final verification:
+  - `flutter analyze`: no issues;
+  - `flutter test`: 335 passed, 3 expected environment/fixture skips;
+  - focused vertical scroll/currentTime/layout regression set: 18 passed;
+  - golden verification: 4 passed.
+
+### Session 2026-08-05 — direction consistency audit
+
+- Rechecked current editor code and the approved bottombar flow against the clarified product
+  contract.
+- Confirmed current/default Vertical-scroll behavior is internally consistent:
+  - comics canvas fits width and retains proportional full height;
+  - `currentTime` uses normalized negative Y translation;
+  - New Document selects `Vertical-scroll comic strip` by default;
+  - `Horizontal-scroll comic strip` and `Landscape` are separate disabled options;
+  - Viewer position uses the right edge and is not rotated by device orientation.
+- Confirmed the persisted editor model still has only `DocType { comics, puzzle }`; therefore
+  existing `.comics` files naturally remain vertical and no accidental aspect-ratio inference is
+  present.
+- Added an explicit axis contract to requirements, visual, specifications, and plan. Future
+  Horizontal-scroll will use width/X/bottom-edge mapping but remains out of current implementation
+  scope and requires an explicit backward-compatible persisted scroll type.
+- No scroll-engine or layout behavior changed during this audit. The disabled future card's label
+  and its widget expectation were normalized from `Horizontal infinity scroll comic strip` to
+  `Horizontal-scroll comic strip`.
+- Focused verification passed: 16 tests covering New Document/Viewer/Properties, vertical
+  interpolation, Y-derived zoom-invariant `currentTime`, fit-width layout, and tall-document pan
+  boundaries. `dart format --set-exit-if-changed` also passed for the two touched Dart files.
 
 ### Session 2026-08-02 - Claude
 

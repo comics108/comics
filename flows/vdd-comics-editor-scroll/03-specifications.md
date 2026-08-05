@@ -1,8 +1,8 @@
-# Specifications: comics-editor-vertical-scroll
+# Specifications: comics-editor-scroll
 
-> Version: 1.0
+> Version: 1.2
 > Status: APPROVED
-> Last Updated: 2026-08-02
+> Last Updated: 2026-08-05
 > Requirements: [01-requirements.md](01-requirements.md)
 > Visual: [02-visual.md](02-visual.md)
 
@@ -19,6 +19,80 @@ package. A fourth, smaller fix corrects a pre-existing JSON round-trip default t
 misinterpret real files' legacy-authored seed keyframes once interpolation goes live (found during
 this Specifications pass — see Data Models).
 
+The shipped implementation is intentionally the Vertical-scroll comic strip specialization. The
+axis contract below documents how it remains compatible with a separately scoped future
+Horizontal-scroll comic strip without prematurely adding that mode.
+
+## Scroll Axis Contract
+
+| Concern | Current/default: Vertical-scroll | Future: Horizontal-scroll |
+|---|---|---|
+| Availability | Enabled and implemented | Visible but disabled; not implemented here |
+| Main document extent | `document.height` | `document.width` |
+| Cross-axis fit | Fit page width to viewport width | Fit page height to viewport height |
+| Viewport translation used | `translation.y` | `translation.x` |
+| Logical progress | `-translation.y / zoom` | `-translation.x / zoom` |
+| Viewer position selector | Right edge, top → bottom | Bottom edge, left → right |
+| Default device preview | Portrait | To be decided independently |
+
+`currentTime` is the logical, non-negative document-scroll position consumed by keyframe and sound
+evaluation. Keyframe data is not duplicated by axis and `TranslateAnim.x/y` remains a full 2D
+render transform in both modes. Only the mapping from viewport movement to logical progress changes.
+
+The future persisted model must use an explicit scroll-type value. Missing values map to vertical
+for backward compatibility. Implementations must not infer a scroll type from document aspect ratio
+or portrait/landscape orientation. Device orientation and comic-strip direction are orthogonal.
+
+Version 1.1 does not add that field or generalize production code: current `DocType.comics`,
+fit-width sizing, Y-derived `currentTime`, and the right-edge Viewer selector remain the correct
+vertical specialization. Horizontal behavior requires its own approved implementation flow.
+
+## Target Device and Visible Range
+
+The device-visibility concept formerly placed in `vdd-comics-editor-timeline` belongs here because
+it maps scroll position to a reader viewport. Version 1.2 uses one selected target instead of the
+timeline proposal's simultaneous guide rows.
+
+```dart
+class DeviceProfile {
+  const DeviceProfile({
+    required this.id,
+    required this.label,
+    required this.width,
+    required this.height,
+  });
+
+  final String id;
+  final String label;
+  final int width;
+  final int height;
+
+  double verticalViewportHeight(double documentWidth) =>
+      documentWidth * height / width;
+
+  static const iPad = DeviceProfile(
+    id: 'ipad', label: 'iPad', width: 768, height: 1024);
+  static const iPhone = DeviceProfile(
+    id: 'iphone', label: 'iPhone', width: 390, height: 844);
+}
+```
+
+- `PropertiesTab` order is `selection`, `document`, `general`.
+- General owns the target-device chooser, dimensions, aspect ratio, and calculated visible strip
+  height. iPad is the app-session default.
+- Selection is editor UI state only: it is not inferred from the host window and not serialized.
+- Viewer centers and fits its renderer inside `device.width / device.height`; excess host space is
+  letterboxed. This makes backend normalized travel and the selected-device band describe the same
+  viewport rather than the desktop window.
+- For vertical documents, `extent = clamp(deviceViewportHeight / document.height, 0, 1)`.
+- Viewer backend `position` remains normalized over available scroll travel. Therefore the band is
+  `start = position × (1 − extent)`, `end = start + extent`.
+- A tap/drag centers the band at the pointer, clamps `start` to `0…1−extent`, and maps back to
+  backend position with `position = start / (1−extent)`.
+- If the device viewport covers the whole document, the band spans `0…100%` and cannot scroll.
+- Semantics expose `Viewer visible range`, target name, current start/end, and next values for
+  increment/decrement actions.
+
 ## Affected Systems
 
 | System | Impact | Notes |
@@ -27,6 +101,9 @@ this Specifications pass — see Data Models).
 | `apps/comics-editor/lib/src/ui/controller.dart` | Modify | `playhead` removed as an independent field; a `currentTime` getter derived from `canvasViewport`'s pan position replaces it; `addAnim`/`addSound` read from it instead |
 | `apps/comics-editor/lib/src/ui/anim/keyframe_interpolator.dart` (new) | Create | Dart port of `Anim.cs`'s `FindNearest<T>`/`Factor`/`Interpolate<T>`, one function per `AnimType` |
 | `apps/comics-editor/lib/src/ui/audio/sound_player.dart` (new) | Create | Wraps a new audio-playback package; ports `SoundAnim.FindCurrent`'s point/range, direction-sensitive gating |
+| `apps/comics-editor/lib/src/ui/device_profile.dart` (new) | Create | App-level iPad/iPhone target dimensions and vertical screenful math |
+| `apps/comics-editor/lib/src/ui/widgets/properties_panel.dart` | Modify | Add General after Selection/Document and expose the target viewport |
+| `apps/comics-editor/lib/src/ui/widgets/viewer_workspace.dart` | Modify | Fit the renderer to the selected target ratio and replace point thumb with its viewport band |
 | `apps/comics-editor/lib/src/ui/models.dart` | Modify | `Anim`'s constructor default `end: 200` → `end: 0` (only affects the one bare-default call site, see Data Models) |
 | `apps/comics-editor/lib/src/bridge/models_mapping.dart` | Modify | `_animFromJson`'s absent-`end` fallback and `_animToJson`'s omit-comparison both move from `200` to `0`, kept in sync (see Data Models — this is the more consequential half of the fix) |
 | `apps/comics-editor/pubspec.yaml` | Modify | New audio-playback dependency (see Dependencies) |
@@ -309,6 +386,9 @@ render as instant placement instead of a spurious 200px slide-in (a latent bug f
 Models). Both ship live, no opt-in toggle -- consistent with Requirements' framing that the
 underlying uncertainty motivating a toggle in the sibling flow no longer applies here.
 
+Existing `.comics` documents also remain Vertical-scroll comic strips by default. No direction
+migration is performed in this flow because no scroll-type discriminator is written yet.
+
 ## Open Design Questions
 
 - [ ] Exact `currentTime` derivation from `canvasViewport.value`'s `Matrix4` (sign, and confirming
@@ -328,3 +408,7 @@ underlying uncertainty motivating a toggle in the sibling flow no longer applies
 - [x] Approved on: 2026-08-02
 - [x] Notes: Approved as drafted, including the `models_mapping.dart` finding and both Open Design
       Questions deferred to empirical verification during Plan/Implementation.
+- [x] Axis-contract addendum requested by Anton on 2026-08-05; it documents current/default
+      vertical behavior and defers horizontal implementation without altering approved code scope.
+- [x] Target-device/visible-range addendum explicitly requested by Anton on 2026-08-05 and moved
+      from the timeline flow into this scroll specification.

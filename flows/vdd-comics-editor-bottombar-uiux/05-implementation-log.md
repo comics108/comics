@@ -37,8 +37,8 @@ and plan.
   deactivate/reactivate, and preservation of inactive languages used by older
   documents.
 - Visual draft expanded with the previously decided New Document defaults:
-  `Vertical-scroll comic strip` + Portrait selected; Horizontal
-  infinity scroll + Landscape shown independently but disabled; Puzzle retained.
+  `Vertical-scroll comic strip` + Portrait selected; `Horizontal-scroll comic
+  strip` + Landscape shown independently but disabled; Puzzle retained.
 - Visual draft aligned to `design/comics-editor-v3.1.0-maket` and amended with
   slider-first/collapsible exact numeric input, review-only Viewer with editing
   panes hidden, and eye/eye-off layer visibility on every platform.
@@ -48,10 +48,13 @@ and plan.
 - Viewer position control corrected from a bottom horizontal rail to a vertical
   rail along the right edge for the default/legacy-fallback
   `Vertical-scroll comic strip`. The bottom rail is reserved for the future disabled
-  horizontal infinity-scroll type; device orientation does not affect the
+  `Horizontal-scroll comic strip` type; device orientation does not affect the
   control axis.
 - Canonical default document-type wording corrected to
   `Vertical-scroll comic strip`; the position-axis behavior is unchanged.
+- Properties now includes `General` after Selection/Document. Target reader dimensions moved from
+  the Timeline design into General (iPad 768×1024 default, iPhone 390×844), and the Viewer point
+  thumb became a target-aspect viewport band with accessible start/end values.
 - `design/comics-editor-v3.1.0-maket/Comics Editor Bottombar Devices v2.dc.html`
   recorded as the primary cross-device visual reference. Its source-defined
   desktop, iPad, and iPhone states align with Visual 1.7; the artboard sizes are

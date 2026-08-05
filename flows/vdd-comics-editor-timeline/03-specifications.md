@@ -6,6 +6,10 @@
 > Requirements: [01-requirements.md](01-requirements.md)
 > Visual: [02-visual.md](02-visual.md)
 
+> **Relocation note (2026-08-05):** `DeviceProfile` and viewport visibility are superseded here.
+> Their implementation owner is `vdd-comics-editor-scroll`; General contains target dimensions and
+> Viewer renders one selected-device range. Timeline must not implement a second copy.
+
 ## Investigation note before Specifications (read this first)
 
 **RESOLVED (2026-08-02), correction added while this flow was superseded/parked — see the
