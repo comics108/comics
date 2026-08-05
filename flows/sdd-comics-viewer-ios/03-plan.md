@@ -15,6 +15,7 @@ No release, tag, push, consumer local-path override, or native-app Xcode project
 
 - Use `ZIPFoundation` from `https://github.com/weichsel/ZIPFoundation.git` with `.upToNextMinor(from: "0.9.20")`. The initial resolved version is `0.9.20`; the dependency stays internal to `ComicsViewer`.
 - Keep Swift tools `5.9`, iOS `13`, and macOS `10.15` unchanged.
+- Default `ImageScrollView.showPreview` to `true`, matching the legacy renderer that displayed all decoded layers until a consumer explicitly hides preview layers.
 - Reject archives with more than 10,000 entries, any single declared uncompressed entry over 256 MiB, or more than 1 GiB total declared/extracted bytes. Enforce both metadata and bytes-written limits.
 - Reject absolute paths, `..` traversal, paths escaping the session root after standardization, and symbolic-link entries. Require a regular root-level `data.json`.
 - Perform file validation/extraction/JSON decoding off the main thread. Perform UIKit mutations and every public completion/callback on the main thread.

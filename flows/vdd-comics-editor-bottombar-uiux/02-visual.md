@@ -1,6 +1,6 @@
 # Visual Mockups: comics-editor-bottombar-uiux
 
-> Version: 1.7
+> Version: 1.8
 > Status: REVIEW  
 > Last Updated: 2026-08-05  
 > Requirements: [01-requirements.md](01-requirements.md)
@@ -13,8 +13,18 @@ tablet panes while Editor is active. Viewer intentionally hides editing panes
 to become a focused review surface.
 
 Visual styling, density, panel proportions, typography, and color hierarchy use
-`design/comics-editor-v3.1.0-maket` as the reference. The additions below amend
-that reference where explicitly requested.
+`design/comics-editor-v3.1.0-maket/Comics Editor Bottombar Devices v2.dc.html`
+as the primary cross-device visual reference. In particular, its Desktop
+Editor/Viewer, iPad Editor/Viewer, iPhone Canvas/Viewer/Properties/Scene, New
+Document, Viewer-state, slider-first numeric, and eye/eye-off examples define
+the intended density and placement. The behavior documented in this VDD and
+the user's direct clarifications remain authoritative if a reference detail is
+ambiguous.
+
+The reference artboards (`1440×920` desktop, `1240×864` iPad frame, and
+`400×844` phone frame) are representative verification sizes, not new layout
+breakpoints. The existing responsive thresholds and shell behavior remain
+unchanged.
 
 The shared information model is:
 

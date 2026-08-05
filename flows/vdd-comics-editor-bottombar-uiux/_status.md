@@ -71,6 +71,9 @@ REVIEW
   device orientation does not choose the selector axis.
 - Visual version 1.7 corrects the canonical default document-type label to
   `Vertical-scroll comic strip`; no interaction or layout behavior changes.
+- Visual version 1.8 records `Comics Editor Bottombar Devices v2.dc.html` as the
+  primary cross-device visual reference while preserving existing responsive
+  breakpoints.
 
 ## Context Notes
 
@@ -108,6 +111,11 @@ REVIEW
   incorporates it consistently across platforms.
 - Anton corrected the exact default type wording on 2026-08-05 to
   `Vertical-scroll comic strip`; Visual 1.7 incorporates the terminology.
+- Anton supplied `Comics Editor Bottombar Devices v2.dc.html` on 2026-08-05 as
+  a visual reference. Source inspection confirms its desktop, iPad, iPhone,
+  New Document, Viewer-state, numeric, and layer-visibility compositions align
+  with the approved requirements and Visual 1.7. Visual 1.8 records it as the
+  primary device reference; no new breakpoint or behavior is inferred.
 - Proposed usability improvements may be documented as `Should Have`, but any
   material visual/behavioral addition returns to the relevant approval gate.
 - `new` was interpreted as VDD `start` for the safe normalized name

@@ -52,6 +52,10 @@ and plan.
   control axis.
 - Canonical default document-type wording corrected to
   `Vertical-scroll comic strip`; the position-axis behavior is unchanged.
+- `design/comics-editor-v3.1.0-maket/Comics Editor Bottombar Devices v2.dc.html`
+  recorded as the primary cross-device visual reference. Its source-defined
+  desktop, iPad, and iPhone states align with Visual 1.7; the artboard sizes are
+  verification examples rather than replacement responsive breakpoints.
 
 ## Completion Checklist
 

@@ -446,6 +446,7 @@ The Visual phase must cover:
 - `flows/vdd-comics-editor-uiux-lettering/`
 - `flows/vdd-comics-editor-vertical-scroll/`
 - `design/comics-editor-v3.1.0-maket/`
+- `design/comics-editor-v3.1.0-maket/Comics Editor Bottombar Devices v2.dc.html`
 
 ## Approval
 

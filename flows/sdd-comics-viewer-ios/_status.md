@@ -45,11 +45,11 @@ REVIEW
 - Requirements v1.1 explicitly approved by the user on 2026-08-05.
 - Specifications place archive extraction in an owned session layer and presentation controls in `ImageScrollView`; the persistent models remain unchanged.
 - Controller-driven resource resolution is session-scoped so multiple viewers/puzzle pieces cannot corrupt each other through `ArchiveManager.shared`.
-- The concrete ZIP package/version is intentionally deferred to the implementation plan after compatibility verification; it will not leak into public API.
+- The specifications deferred the concrete ZIP package/version to planning; plan v1.0 selects ZIPFoundation without leaking it into public API.
 - Specifications v1.0 were explicitly approved by the user on 2026-08-05.
 - Plan v1.0 selects ZIPFoundation 0.9.20 with a patch-compatible range, defines archive safety limits, and separates local package validation from the post-landing remote Flutter gate.
 - Local planning toolchain observed: Swift 6.3.3 and Xcode 26.6; CI remains aligned to its supported macOS 15/Xcode 16 image unless execution disproves availability.
-- No implementation, specification design, commits, pushes, tags, or releases have been performed.
+- No implementation, commits, pushes, tags, or releases have been performed.
 
 ## Fork History
 
