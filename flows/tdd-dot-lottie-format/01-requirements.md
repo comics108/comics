@@ -153,9 +153,20 @@ fixed AE preset instead of a fixed cubic formula. Concretely:
   layer, mask, gradient, trim path, or text layer has no `.comics` equivalent at all and would need
   lossy rasterization (baking a vector layer down to a PNG per relevant keyframe) — a real content
   decision with real quality/asset-count tradeoffs, not a formula.
-- **Not yet checked**: whether the *other* 6 real produced chapters (only `ASHES.json` was
-  inspected this closely) also stay within the image-layer-only subset, or whether some use richer
-  Lottie features — this conclusion is confirmed for one file, not asserted for all seven.
+- **CORRECTED (2026-08-07): checked, and the answer is no, this does NOT generalize.** Direct
+  inspection of all 7 real produced chapters found: vector masks in 1/7 (`THE CHASE`, 6 masked
+  layers), null/organizational layers (`ty:3`) in 1/7 (`SVAYAMWARA`), solid color layers (`ty:1`)
+  in 1/7 (`THE BROKEN TUSK`), and — the most consequential finding — **layer parenting (`parent`
+  field, one layer's transform relative to another's) in 5 of 7 files, up to 64% of all layers in
+  `THE BROKEN TUSK` (190/295)**. `.comics` has zero parent-relative transform concept — every
+  `Anim` is an absolute value. **The "conditionally simple" framing above was only ever validated
+  against `ASHES.json`; for most real chapters, `.lottie → .comics` conversion additionally
+  requires resolving arbitrary parent chains into baked absolute keyframes, a real, larger task
+  than "flat image-layer mapping."** See `flows/tdd-dot-comics-format/01-requirements.md`'s
+  animation-inventory section for the full per-file table, and
+  `flows/comics-editor/tdd-dot-lottie-import-export` for the direct consequence to that flow's
+  Precomp Handling design (needs to generalize from "precomp-children only" to "any parented
+  layer").
 
 ## User Stories
 
@@ -213,7 +224,11 @@ doesn't accidentally assume the classic `.comics` scroll-driven model applies un
 - [ ] If Lottie is the real direction, how does frame/time-based addressing (`ip`/`op` at a fixed
       `fr`) reconcile with "scroll position is time," the model every classic-lineage
       implementation shares? Does a future player map scroll onto Lottie's frame-seek API, or does
-      reading move to an autoplay/wall-clock model for this content specifically?
+      reading move to an autoplay/wall-clock model for this content specifically? **Partially
+      informed (2026-08-07)** by `flows/tdd-dot-comics-format`'s new decision that `.comics` v2026
+      gains an independent, optional time-basis dimension alongside scroll — a real precedent for
+      "scroll and time as two separate inputs" now exists on the `.comics` side, though it doesn't
+      by itself answer how a Lottie-native frame timeline maps onto either dimension.
 - [ ] Where is `mahabharata-mobile-swift-v2026`'s vendored Lottie engine meant to be wired in? Is
       integration in progress elsewhere (a branch, a different checkout), or genuinely not started?
 - [ ] Should the 5-language translation set (bn/en/hi/ru/uk) become the new standard for the

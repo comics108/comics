@@ -62,6 +62,39 @@ was a separate, unrelated file being briefly misread as if it were part of this 
   content-policy question. Grounded in a real, confirmed gap in `comics-ai-baloons` (computes
   precise masks twice, discards both, never persists any non-rectangular geometry). Also not yet
   reflected in this flow's own format facts.
+- **Third schema addition, this time directly in this flow (2026-08-07)**: scroll position and
+  time become **two independent animation-driving dimensions** in v2026. `.comics` v2012
+  animations were, and remain, always scroll-position-based (historical fact, unchanged). v2026
+  animations are scroll-position-based **by default** (absent time-basis → today's exact behavior,
+  full backward compat), but **may additionally be time-based if explicitly specified** — directly
+  targets the "leg-swing" gap `vdd-comics-editor-timeline`/`vdd-comics-editor-vertical-scroll` both
+  found and left unresolved (nothing lets a character keep animating, e.g. a swinging leg, while
+  scroll is stationary). Added to `02-tests.md` as Test Case D4 + a Part 2 background-fact
+  correction. Core decision settled; 5 real implementation-detail sub-questions remain open (exact
+  field shape, time units, start/loop semantics, cross-dimension composition rule, which reader
+  implements it first) — see `02-tests.md`'s Open Design Questions.
+- **Escalated to `01-requirements.md`/`03-specifications.md` (2026-08-07)**: per Anton's explicit
+  request, both this time-dimension decision AND a full animation-type inventory now live in the
+  main Requirements/Specifications docs, not only Tests. The inventory work surfaced a **major,
+  real correction**: direct inspection of all 7 real produced Lottie chapters (not just the one
+  `ASHES.json` sample earlier research used) found masks (1/7), null layers (1/7), solid layers
+  (1/7), and — most consequentially — **layer parenting in 5/7 files, up to 64% of layers in one
+  chapter (`THE BROKEN TUSK`)**. This negatively resolves `tdd-dot-lottie-format`'s L6/L7 open
+  question (does `ASHES.json`'s simple structure generalize? — **no**) and means
+  `tdd-dot-lottie-import-export`'s Precomp Handling design needs to generalize from
+  "precomp-children only" to "arbitrary parent chains" — flagged back to both flows.
+- **Fourth schema addition (2026-08-07, per Anton's explicit follow-up — "мы же говорили про
+  organizational layers и layer parenting, сохрани их в reqs и specs")**: `.comics` v2026 gains a
+  real `Layer.ParentId` mechanism (hierarchical, editor-side live-relative positioning) plus a new
+  `Layer.Id` (stable identity, a real prerequisite this surfaces) and a new organizational/
+  non-content `Kind` value (Lottie `ty:3` null-layer equivalent). Backward compat via the same
+  "always persist fully-resolved absolute `Anim` values" pattern as `GroupId` — old readers never
+  need to understand `ParentId` to render correctly. This **supersedes** the earlier "just bake and
+  discard the parent chain" recommendation for `tdd-dot-lottie-import-export` with a real,
+  persisted mapping target. Full design in `03-specifications.md`'s new "`Layer.ParentId` &
+  Organizational Layers" section. Genuinely open: `Layer.Id` generation scheme, the exact
+  organizational `Kind` string, orphan policy on parent deletion, and whether `ParentId` subsumes
+  or coexists with `GroupId`.
 - **Decided (2026-08-02), three related questions now closed**: (1) UI — New Document dialog gets a
   visible-but-disabled "century-old comic strip (horizontal infinity scroll)" option (Test Case B3).
   (2) Schema — yes, an explicit `scrollType` field (proposed name/values, not yet confirmed by
@@ -79,10 +112,14 @@ was a separate, unrelated file being briefly misread as if it were part of this 
       `vdd-comics-editor-timeline` and `sdd-comics-ai-positioning`
 - [x] Requirements revised (2026-08-02) — v0.2, promoted to TDD scope, both prior Open Questions
       resolved (unit-mismatch risk closed by a sibling flow; flow sweep now done)
+- [x] Requirements revised (2026-08-07) — v0.3, added the scroll-vs-time dimension decision + the
+      full animation-type/Lottie-coverage inventory (with the real parenting/mask/null/solid finding)
 - [ ] Requirements approved
-- [x] Tests drafted (2026-08-02) — v1.0, see `02-tests.md`
+- [x] Tests drafted (2026-08-02) — v1.0, see `02-tests.md` (Test D4 added 2026-08-07)
 - [ ] Tests approved
-- [ ] Specifications drafted
+- [x] Specifications drafted (2026-08-07) — v0.1, EARLY/PARTIAL: scoped only to the two additions
+      above, not this flow's full Specifications phase (Tests aren't formally approved yet)
+- [ ] Specifications approved
 - [ ] Plan drafted
 - [ ] Implementation started
 

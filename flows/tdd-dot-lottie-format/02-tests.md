@@ -62,27 +62,35 @@ now is schema-validity and content-inventory cases — real, checkable today, wi
   Lottie file-open path exists anywhere, so a future integration doesn't accidentally feed Lottie
   JSON into the classic parser and get a confusing silent-wrong-result instead of a clear rejection
 
-**L6 (new, 2026-08-07) — A real Lottie content file's layers are all image type (`ty:2`), with no shapes/masks/text, for every produced chapter — not just the one already checked**
+**L6 (2026-08-07) — RESOLVED, NEGATIVELY (2026-08-07): a real Lottie content file's layers are all image type (`ty:2`), with no shapes/masks/text, for every produced chapter — not just the one already checked**
 - Given: each of the 7 real produced chapters' `<codename>.json`
-- When: every layer (including inside nested composition assets) is checked for `ty`
-- Then: `ASHES.json` confirmed 100% `ty:2` (101/101 layers, 0 masks) — **not yet confirmed for the
-  other 6 chapters**. This is the load-bearing assumption behind Requirements' "conversion is
-  simple" conclusion — if even one other chapter uses shape layers/masks/text, that conclusion
-  narrows to "true for at least one file," not "true for this content pipeline in general"
-- Design implication: this is the single highest-value next check for this flow — a generic script
-  (count layer `ty` values across all `assets[].layers` and root `layers`) answers it directly, no
-  player needed
+- When: every layer (including inside nested composition assets) is checked for `ty`, plus masks,
+  null layers (`ty:3`), solid layers (`ty:1`), and the `parent` field (not originally part of this
+  case, but found while running it — see below)
+- Then: **`ASHES.json` alone confirmed 100% `ty:2`, but this does NOT generalize.** Checked all 7
+  real chapters directly: `THE CHASE` has 6 masked layers (`masksProperties`); `SVAYAMWARA` has 1
+  null layer (`ty:3`); `THE BROKEN TUSK` has 1 solid layer (`ty:1`) **and** 190 of its 295 layers
+  (64%) use the `parent` field (one layer's transform relative to another's — a feature this case
+  didn't originally think to check, but turned out to be the most consequential finding). 5 of 7
+  files use `parent` at all (counts: 2, 0, 2, 20, 16, 20, 190). **Requirements' "conversion is
+  simple" conclusion was true for `ASHES.json` alone and does not hold for this content pipeline in
+  general** — most real chapters need real parent-chain resolution, not just a flat image-layer
+  mapping, and one chapter needs mask handling this flow's original scope excluded. See
+  `flows/tdd-dot-comics-format/01-requirements.md`'s animation-inventory section for the full table
+  and the consequence for `tdd-dot-lottie-import-export`'s Precomp Handling design.
+- Design implication (originally stated, now executed): the generic layer-`ty` census script was
+  run for real, directly, against all 7 files — no player needed, confirmed.
 
-**L7 (new, 2026-08-07) — Position/scale keyframes across a real file consistently use the same bezier easing handles (Easy Ease), not arbitrary per-keyframe curves**
-- Given: every keyframe in `ASHES.json`'s `p`/`s`/`r`/`o` properties across all layers
+**L7 (2026-08-07) — Position/scale keyframes across a real file consistently use the same bezier easing handles (Easy Ease), not arbitrary per-keyframe curves — CONFIRMED for the properties checked, not contradicted by the L6 re-investigation**
+- Given: every sampled keyframe in `ASHES.json`'s `p`/`s`/`r`/`o` properties
 - When: each keyframe's `i`/`o` bezier handle values are collected
 - Then: confirmed for the keyframes sampled (`i:{x:0.833,y:0.833}, o:{x:0.167,y:0.167}` — After
-  Effects' "Easy Ease" default) — **not yet confirmed exhaustively for every keyframe in the file,
-  nor for the other 6 chapters**. A file using a mix of Easy Ease and custom/linear/hold curves
-  would need per-keyframe curve-matching logic for `.lottie → .comics` conversion, not one fixed
-  approximation — a real complexity increase Requirements' current answer doesn't yet account for
-- Design implication: same script as L6 can also tally distinct `(i,o)` handle pairs seen; a single
-  dominant pair across the whole file supports the "simple" conclusion, a wide spread would not
+  Effects' "Easy Ease" default). **Not re-verified exhaustively across all 7 files during the L6
+  re-investigation** (that pass focused on layer/feature census, not per-keyframe easing-handle
+  tallies) — still an open sub-question, narrower in scope now that L6 already establishes the
+  bigger structural gap (parenting/masks) as the dominant complexity source, not easing curves.
+- Design implication: same script as L6, extended to also tally `(i,o)` handle pairs — not yet run
+  across all 7 files for this specific question.
 
 ## Completeness Check
 
@@ -109,9 +117,18 @@ even mean for this flow:
       `01-requirements.md`'s correction.)
 - [ ] L4's `ip`/`op` bounds question — needs a real Lottie-authoring-knowledgeable answer, not a
       guess.
-- [ ] L6/L7 — do the other 6 real produced chapters stay within the same simple (image-layer-only,
-      uniform-Easy-Ease) subset as `ASHES.json`? Directly gates whether the conversion-feasibility
-      conclusion in `01-requirements.md` generalizes or was only ever true for one sampled file.
+- [x] **L6 — RESOLVED, NEGATIVELY (2026-08-07)**: no, the other 6 chapters do NOT stay within
+      `ASHES.json`'s simple subset. Masks (1/7), null layers (1/7), solid layers (1/7), and —most
+      consequentially— layer parenting (5/7, up to 64% of one file's layers) are all real,
+      confirmed complications. The conversion-feasibility conclusion in `01-requirements.md` was
+      only ever true for `ASHES.json` specifically; it does not generalize to this content pipeline
+      as a whole. See `flows/tdd-dot-comics-format/01-requirements.md`'s animation-inventory
+      section for the full table, and `flows/comics-editor/tdd-dot-lottie-import-export` for the
+      consequence (Precomp Handling needs to generalize to arbitrary parent chains).
+- [ ] **L7**: still open, narrower now — easing-handle consistency wasn't re-checked across all 7
+      files during the L6 re-investigation (which focused on structural/layer-type census). Lower
+      priority than L6's finding, since parenting/masks are the dominant complexity source now
+      confirmed, not easing curves.
 
 ---
 

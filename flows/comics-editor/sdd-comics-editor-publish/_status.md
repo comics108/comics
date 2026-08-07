@@ -14,19 +14,45 @@ reach (see Blockers) — not something this flow can close by itself.
 
 ## Last Updated
 
-2026-08-04 by Codex
+2026-08-07 by Claude
 
 ## Blockers
 
-- **Local publishing preflight (2026-08-04)**: user asked to publish all store builds directly
-  from the local Mac. The repository metadata/assets and global fastlane `2.237.0` are present,
-  but no store credentials are available to the process: none of the required `ASC_*`, signing,
-  or `PLAY_STORE_JSON_KEY` environment variables are set; Keychain reports `0 valid identities`;
-  no `.p12`, Android release keystore, or Play service-account JSON was found. The only local
-  `.mobileprovision` file cannot be decoded by `security cms` and is unusable. Therefore none of
-  the three upload lanes can safely start until credentials/signing files are supplied locally.
-  User explicitly asked to skip the live privacy/support URL check, so it is not treated as a
-  blocker for this attempt.
+- **Real milestone (2026-08-01 → 2026-08-07, mostly outside logged agent activity)**: after
+  Codex's 2026-08-04 preflight found local credentials still missing, the user separately worked
+  through the local Xcode path (this agent helped unblock two real issues in the process: no Apple
+  ID signed into Xcode, and the iOS 26.5 platform/SDK not installed — fixed via `xcodebuild
+  -downloadPlatform iOS`; confirmed an unsigned Release build succeeds end-to-end for a real device
+  destination). The user then completed signing + archive + upload themselves via Xcode's own
+  Organizer GUI (not fastlane/CI, not fully visible to any agent) and **successfully uploaded
+  Comics Editor's first real build to App Store Connect** — Version 3.2.1, Build 1, App Apple ID
+  6798479000. This is the first genuine end-to-end success this whole flow has produced.
+- **Real Apple review feedback received (2026-08-07)** on that build — 2 required fixes, 1
+  advisory:
+  - `ITMS-90683`: missing `NSPhotoLibraryUsageDescription` and `NSCameraUsageDescription` in
+    `ios/Runner/Info.plist` — required. Root cause: the `file_picker` plugin's iOS implementation
+    pulls in `DKImagePickerController`/`DKCamera` (confirmed present in the resolved Swift Package
+    dependencies during local builds this session), which link Photo Library/Camera APIs even
+    though Comics Editor only ever calls the plain file-picker flow — Apple's static analysis
+    flags the linked API regardless of whether the app's own code path invokes it.
+  - `ITMS-90683`: missing `NSLocationWhenInUseUsageDescription` — flagged as advisory (not required
+    yet), same underlying cause (a bundled dependency references location APIs; Comics Editor has
+    no location feature anywhere in its own code).
+  - `ITMS-90068`: `MinimumOSVersion` 13.0 — advisory only, becomes a hard requirement (≥15.0)
+    "Spring 2027." Not touched this session — real scope decision (could affect device support),
+    deliberately left for the user to decide, not silently bumped.
+  - **Fixed**: added all 3 usage-description keys to `ios/Runner/Info.plist`, honestly scoped to
+    what the app actually does (image import for layer/balloon artwork) for Photo/Camera; Location's
+    string states plainly that it isn't used and exists only because a bundled component references
+    the API — considered but rejected fabricating a plausible-sounding-but-false justification.
+  - Bumped `pubspec.yaml` to `3.2.1+2` (Apple rejects re-uploads with a duplicate build number) —
+    the fix above is otherwise inert until a new build is actually re-uploaded.
+  - Checked whether `macos/Runner/Info.plist` needs the same fix: **inconclusive, left alone** — no
+    `macos/Podfile.lock` exists yet (macOS build has never resolved CocoaPods dependencies in this
+    checkout), so there's no evidence macOS's `file_picker` implementation links the same
+    UIKit-only pods iOS does (macOS almost certainly uses a plain `NSOpenPanel`, not
+    `DKImagePickerController`) — worth rechecking once a real macOS submission is attempted, not
+    guessed at now.
 - **First real `release-ios` run happened (2026-07-31)** — failed at `app_store_connect_api_key`
   with `string contains null byte` in `OpenSSL::PKey::EC.new(key)`. Diagnosed: `ASC_KEY_CONTENT`
   almost certainly holds the raw `.p8` PEM text instead of its base64 encoding (`app_store_connect_

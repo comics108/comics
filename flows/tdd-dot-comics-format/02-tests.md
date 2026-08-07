@@ -157,11 +157,22 @@ available on request, kept out of this doc to stay readable)
   addition**: `Layer.Kind`/`Style`/`Translations` (`vdd-comics-editor-uiux-lettering`, additive
   strings/dict, no schema migration needed since Newtonsoft's `MissingMemberHandling` defaults to
   Ignore). This is the **only** model-layer schema change in the project's entire history.
-- **No looping or wall-clock-time-driven animation concept exists anywhere, in any generation.**
-  `Anim.Factor(scroll)`/`interpolate(scrollOffset:)` is a one-shot cubic ease-out
-  `(fraction-1)^3+1` between two scroll-position bounds, in Java, Swift, and C#, unchanged since
-  2012. Sound's "looping" is real-time playback state gated by scroll-range membership, not a stored
-  keyframe/format concept, on every platform.
+- **No looping or wall-clock-time-driven animation concept exists anywhere, in any generation, in
+  code shipped to date.** `Anim.Factor(scroll)`/`interpolate(scrollOffset:)` is a one-shot cubic
+  ease-out `(fraction-1)^3+1` between two scroll-position bounds, in Java, Swift, and C#, unchanged
+  since 2012. Sound's "looping" is real-time playback state gated by scroll-range membership, not a
+  stored keyframe/format concept, on every platform. **Forward decision, 2026-08-07 (Anton), not a
+  fact about existing code**: `.comics` v2012 animations were **always** scroll-position-based —
+  that historical fact is unchanged and stays true forever for existing files. **`.comics` v2026
+  animations are scroll-position-based by default (if not specified otherwise)**, preserving
+  backward compatibility with every v2012-through-2026 file exactly as today, **but may additionally
+  be time-based if explicitly specified** — i.e. scroll position and wall-clock time become **two
+  independent driving dimensions**, not one. This directly targets the "leg-swing" gap identified in
+  `vdd-comics-editor-timeline`/`vdd-comics-editor-vertical-scroll` (nothing supports a character
+  continuing to move, e.g. a swinging leg, while scroll is stationary) — see Category D4 below for
+  the cases-first shape of this addition. **Not implemented anywhere yet** — this is a schema/
+  engine decision now on record, the same status as `scrollType`/`GroupId`/`TextRegion` before their
+  own implementation work.
 - **Both 2012 reader apps lock the comic-reading screen to portrait**: Android
   `AndroidManifest.xml` (`ComicsActivity android:screenOrientation="portrait"`), iOS `Info.plist`
   (`UISupportedInterfaceOrientations` = portrait only, portrait-upside-down added for iPad). Neither
@@ -478,6 +489,37 @@ by every platform's numeric comparison-based `FindCurrent`/gating logic**
   test confirming this rather than assuming it, since a strict decoder configuration would silently
   break on real files if ever introduced by mistake
 
+**D4 (new, 2026-08-07) — Scroll position and time become two independent driving dimensions in v2026; absent time-basis defaults to scroll-position-based, preserving every v2012-through-2026 file unchanged**
+- Given: any real `.comics` file from any generation (2012 through today), none of which specify
+  any time-basis field at all
+- When: opened by a hypothetical v2026-aware reader that understands the new dimension
+- Then: every existing anim resolves as scroll-position-based, byte-for-byte the same behavior as
+  before this addition existed — this is the same non-breaking-by-construction pattern already
+  used for `scrollType`/`GroupId`/`TextRegion` (an old/absent field always means "behave exactly as
+  today")
+- Given: a `.comics` file where one anim is explicitly marked time-based (exact field/marker TBD —
+  see Open Design Questions)
+- When: opened
+- Then: that anim's value is driven by wall-clock time (or a `Ticker`-equivalent), independent of
+  scroll position — a character can keep animating (e.g. a swinging leg) while the reader has
+  stopped scrolling, closing the "leg-swing" gap `vdd-comics-editor-timeline`
+  (`01-requirements.md`, Discoveries #3) and `vdd-comics-editor-vertical-scroll` both identified and
+  left unresolved as out-of-scope for those flows
+- Edge case: a single layer with **both** a scroll-position-based anim and a time-based anim on
+  different properties simultaneously (e.g. translate driven by scroll, rotate driven by time) —
+  the two dimensions must compose independently, neither blocking nor resetting the other; this is
+  the literal meaning of "independent dimensions," not just "an alternative to scroll," and needs
+  an explicit case rather than being assumed to fall out for free
+- Edge case: a time-based anim needs a defined start condition (does it start playing the instant
+  the document loads, the instant its layer first becomes scroll-visible, or something else?) and a
+  defined loop/repeat semantic (play once, loop forever, loop N times?) — neither is specified by
+  this decision yet, both are real design gaps a future flow must resolve, not assumed here
+- Design implication: this needs real engine work in every reader that wants to honor it (the
+  existing `KeyframeInterpolator`/`Anim.FindNearest` family is purely a function of one scalar
+  input — scroll position — today; a time-based anim needs its own evaluation path, likely a
+  `Ticker`/`Handler`/`CADisplayLink`-driven clock per the platform, composed alongside the existing
+  scroll-driven one, not replacing it)
+
 ### Category E — The confirmed bugs, as explicit test cases
 
 **E1 (covers B1)** — Given a `ScaleAnim` JSON entry with no `scaleX`/`scaleY` keys, when parsed by
@@ -541,9 +583,28 @@ known limitation, not correctness.
       wide/short document behavior (B2, explicitly left open rather than invented).
 - [x] Design implications extracted — B2 and C2 both surface real, unresolved design questions
       rather than papering over them with an assumed answer.
+- [x] D4 added (2026-08-07) — scroll-position vs. time as two independent driving dimensions.
 
 ## Open Design Questions (surfaced by this cases-first pass, need Anton's direction)
 
+- [x] **D4 (core decision)**: **decided (2026-08-07, Anton)** — v2026 gains an additional,
+      independent time-based animation dimension, defaulting to scroll-position-based (today's only
+      behavior) when unspecified, for full v2012-through-2026 backward compatibility. **Sub-
+      questions still open, not decided**:
+      - Exact field/marker shape — a new `Anim.basis: "scroll"|"time"` key (mirrors `scrollType`'s
+        own naming pattern), a separate `TimeAnim` type alongside the existing 5, or something
+        else?
+      - Units for time-based `start`/`end` — milliseconds, frames-at-an-assumed-rate, or seconds?
+        (`scrollType`/`GroupId`/`TextRegion` all reused existing int/string shapes; time genuinely
+        needs a new unit decision the others didn't.)
+      - Start condition (document load vs. first-scroll-visible vs. explicit trigger) and loop
+        semantics (once/forever/N times) — both real gaps, explicitly unresolved by this decision,
+        flagged in Category D4 above.
+      - Composition rule when a layer has both scroll- and time-based anims on different properties
+        simultaneously — needs a precise, testable rule, not just "they're independent."
+      - Which reader(s) actually implement this first — `apps/comics-editor` (authoring/preview) is
+        the obvious starting point, matching how `GroupId`/`TextRegion` are being introduced via the
+        editor first, before any mobile-viewer work.
 - [x] **B2 (UI half)**: **decided (2026-08-02)** — New Document dialog gets a third, visible-but-
       disabled "century-old comic strip (horizontal infinity scroll)" option (Test Case B3). Signals
       intent without committing to engine work.

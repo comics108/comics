@@ -27,15 +27,17 @@ other — grounded in real keyframe inspection, not general knowledge).
   `02-tests.md` are worth turning into real, maintained automated tests) and how frame/time
   addressing reconciles with scroll-driven reading (which gates any rendering-behavior test case at
   all, not just implementation of one).
-- New, narrower blocker: L6/L7 (whether the other 6 real produced chapters stay within the same
-  simple, image-layer-only subset `ASHES.json` does) directly determines whether the
-  conversion-feasibility conclusion generalizes — a quick script, not a big investigation, but not
-  yet run.
 - **Resolved, 2026-08-07 (in a sibling flow)**: the precomp-nesting question this flow raised (does
   `.comics` need a grouping concept to represent Lottie's nested compositions) has been answered —
   see `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md`'s Precomp Handling
   decision and `flows/comics-editor/vdd-comics-editor-systematization-uiux`'s new Layer Grouping
   section/`02-visual.md`. Not re-litigated here; this flow's own scope stays research-only.
+- **L6 RESOLVED, NEGATIVELY (2026-08-07)**: ran the real check across all 7 chapters (per
+  `flows/tdd-dot-comics-format`'s animation-inventory investigation, cross-referenced back here).
+  `ASHES.json`'s simple structure does NOT generalize — masks (1/7), null layers (1/7), solid
+  layers (1/7), and layer parenting (5/7, up to 64% of one file's layers) are all real. The
+  conversion-feasibility conclusion in `01-requirements.md` is corrected accordingly. L7 (easing
+  handle consistency across all 7 files) remains open but is now lower priority.
 
 ## Progress
 
@@ -47,6 +49,9 @@ other — grounded in real keyframe inspection, not general knowledge).
 - [x] Tests drafted (2026-08-07) — v0.1, 5 schema/inventory-level cases (L1-L5)
 - [x] Tests revised (2026-08-07) — added L6/L7 (do the other 6 chapters generalize the
       "simple content" finding), rendering-behavior cases still explicitly not yet possible
+- [x] Tests revised again (2026-08-07) — L6 resolved negatively (masks/null/solid/parenting
+      confirmed real, across 5-7 of 7 files); `01-requirements.md`'s conversion-feasibility
+      conclusion corrected to match
 - [ ] Tests approved
 - [ ] Specifications drafted
 - [ ] Plan drafted
@@ -63,15 +68,21 @@ other — grounded in real keyframe inspection, not general knowledge).
 3. **Android has never had Lottie, in any generation** — re-confirmed directly against
    `legacy/mahabharata-mobile-java-v2012` (zero source/Gradle references), matching the
    already-established v2026 Android finding.
-4. **Conversion feasibility, grounded in real data**: `ASHES.json`'s 101 layers are 100% Lottie
-   image type (`ty:2`) — zero shapes/masks/text — and position/scale keyframes consistently use
-   After Effects' default "Easy Ease" bezier handles (`{0.833,0.833}`/`{0.167,0.167}`), not
-   arbitrary curves. This makes `.comics → .lottie` straightforwardly mechanical (map layers 1:1,
-   re-express the fixed cubic ease-out as an equivalent bezier), and makes `.lottie → .comics`
-   conditionally simple — simple if content stays in this subset, genuinely hard (lossy
-   rasterization needed) if it uses native Lottie shapes/masks/text. **Not yet confirmed whether
-   the other 6 real chapters share this same simple structure** — the encouraging conclusion is
-   verified for one file, not yet generalized.
+4. **Conversion feasibility, grounded in real data — for `ASHES.json` specifically.**
+   `ASHES.json`'s 101 layers are 100% Lottie image type (`ty:2`) — zero shapes/masks/text — and
+   position/scale keyframes consistently use After Effects' default "Easy Ease" bezier handles
+   (`{0.833,0.833}`/`{0.167,0.167}`), not arbitrary curves. This makes `.comics → .lottie`
+   straightforwardly mechanical for this file, and would make `.lottie → .comics` conditionally
+   simple if all content matched.
+5. **CORRECTION (2026-08-07): does NOT generalize.** Checked all 7 real chapters directly: `THE
+   CHASE` has 6 masked layers; `SVAYAMWARA` has a null layer; `THE BROKEN TUSK` has a solid layer
+   **and** 190/295 layers (64%) using Lottie's `parent` field (transform-relative-to-another-layer)
+   — a real character rig (named parts like "голова"/head, "руки сложен"/folded arms parented
+   together), not a flat image stack. 5 of 7 files use `parent` at all. `.comics` has zero
+   parent-relative-transform concept. The already-decided "bake absolute values at import time"
+   mechanism (for precomp children) needs to generalize to arbitrary parent chains — a real,
+   larger task than originally scoped. Full table in
+   `flows/tdd-dot-comics-format/01-requirements.md`.
 
 ## Context Notes
 

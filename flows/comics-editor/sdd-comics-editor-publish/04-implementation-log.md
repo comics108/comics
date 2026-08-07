@@ -377,3 +377,72 @@ promoting Android/iOS to production remains a separate deliberate action after p
 
 **Ended at**: local toolchain and publication content are ready; external signing/API credentials
 are the sole hard blocker to starting the real store uploads.
+
+---
+
+### Session 2026-08-07 — Claude (real Apple review feedback fix)
+
+**Started at**: user reported that, sometime after Codex's 2026-08-04 preflight, they had unblocked
+the local Xcode signing/upload path themselves (with this agent's help earlier in the same broader
+session, unblocking two real issues: Apple ID not signed into Xcode, and the iOS 26.5 platform/SDK
+missing — fixed via `xcodebuild -downloadPlatform iOS`) and completed a real archive + upload
+directly through Xcode's Organizer GUI, bypassing fastlane/CI entirely. This produced Comics
+Editor's **first genuine App Store Connect submission** — Version 3.2.1, Build 1, App Apple ID
+6798479000 — which is real, independently-verifiable progress this flow has been blocked on since
+its inception. The user then received real Apple review feedback on that build and asked for it to
+be corrected.
+
+#### Completed
+
+- Reconciled the timeline: Codex's 2026-08-04 log entry shows zero usable local credentials at that
+  time, so the real upload must have happened afterward, entirely through the Xcode GUI path, not
+  through fastlane — explaining why no agent-visible log recorded the upload itself, only its
+  aftermath (Apple's review email).
+- Read Apple's real rejection feedback in full:
+  - `ITMS-90683` (required): missing `NSPhotoLibraryUsageDescription`.
+  - `ITMS-90683` (required): missing `NSCameraUsageDescription`.
+  - `ITMS-90068` (advisory): `MinimumOSVersion` 13.0, must be ≥15.0 by Spring 2027.
+  - `ITMS-90683` (advisory): missing `NSLocationWhenInUseUsageDescription`.
+- Confirmed root cause by cross-referencing earlier session findings: `file_picker`'s iOS
+  implementation transitively pulls in `DKImagePickerController`/`DKCamera` pods (seen in resolved
+  Swift Package dependencies during this broader session's local build work), which link Photo
+  Library/Camera/Location APIs even though Comics Editor's own code only calls
+  `FilePicker.pickFiles(type: FileType.image, withData: true)` — Apple's static analysis flags the
+  linked API regardless of whether the app's own code path invokes it.
+- Edited `apps/comics-editor/ios/Runner/Info.plist`: added `NSPhotoLibraryUsageDescription` and
+  `NSCameraUsageDescription` (both required, user-facing strings honestly scoped to the app's real
+  behavior — choosing layer/balloon artwork), and `NSLocationWhenInUseUsageDescription` (not yet
+  required, but same root cause — string honestly states the app doesn't use location and the key
+  exists only because of a bundled dependency, rather than fabricating a plausible-sounding but
+  false justification). Validated with `plutil -lint` → `OK`.
+- Deliberately did **not** touch `macos/Runner/Info.plist` despite the same keys being absent there:
+  no `macos/Podfile.lock` exists yet in this checkout (macOS has never resolved CocoaPods
+  dependencies), so there is no evidence macOS's `file_picker` implementation links the same
+  UIKit-only pods (macOS almost certainly uses `NSOpenPanel`, not `DKImagePickerController`) — an
+  unverified guess would risk adding meaningless boilerplate or, worse, missing the real macOS-side
+  requirement if one actually exists. Flagged to the user as worth rechecking when a real macOS
+  submission is attempted.
+- Left `MinimumOSVersion` (13.0) untouched — Apple marked it advisory only, deadline is Spring 2027,
+  and raising it would drop support for older devices, a real product decision outside this fix's
+  scope; not silently bumped.
+- Confirmed Apple's feedback (Version 3.2.1, Build 1) matched `apps/comics-editor/pubspec.yaml`'s
+  pre-edit value (`3.2.1+1`) exactly. Bumped it to `3.2.1+2` — App Store Connect rejects re-uploads
+  that reuse a build number, so this is required before any next archive/upload attempt, independent
+  of whether the Info.plist fix itself is correct.
+- Ran `flutter analyze` from `apps/comics-editor/` after each edit — 0 issues both times.
+- Discovered mid-session that `flows/` had been reorganized into per-app subdirectories
+  (`flows/comics-editor/sdd-comics-editor-publish/`) outside any logged session; adapted by using
+  the new path for this and all subsequent reads/writes.
+
+#### Deviations from plan
+
+None — this is a corrective fix to real reviewer feedback on the first real submission, not new
+scope. No fastlane/CI files were touched (the actual successful upload bypassed fastlane entirely
+via the local Xcode path), so the still-unverified match-free `Fastfile` rework from the prior
+session remains exactly as unverified as before — this session doesn't change that status either
+way.
+
+**Ended at**: `Info.plist` fix and version bump complete, `flutter analyze` clean. Ready for the
+user's next Xcode archive + upload attempt (same local GUI path that produced the first successful
+submission). No further agent action possible until the user re-submits and either passes review or
+receives new feedback.
