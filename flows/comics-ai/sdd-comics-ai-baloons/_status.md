@@ -10,14 +10,18 @@ REVIEW
 
 ## Last Updated
 
-2026-07-30 by Claude
+2026-08-07 by Claude (added a real follow-on task, see below — original implementation/review
+status below this point is otherwise unchanged from 2026-07-30)
 
 ## Blockers
 
-- Waiting on user's final review of the implementation before marking complete. Two findings need
-  explicit acknowledgement (already surfaced during implementation, not new): the CSV covers ~90%+
-  within its actual content range but 5/27 files at 0% (different production era), and 10/20
-  target languages have zero rows in the CSV at all.
+- Waiting on user's final review of the original implementation before marking complete. Two
+  findings need explicit acknowledgement (already surfaced during implementation, not new): the
+  CSV covers ~90%+ within its actual content range but 5/27 files at 0% (different production
+  era), and 10/20 target languages have zero rows in the CSV at all.
+- **Separately** (2026-08-07): the new "Follow-on Task: persist `TextRegion` geometry" below is
+  real, scoped, proposed work — not blocking the original implementation's own review/closeout, but
+  not yet started either.
 
 ## Progress
 
@@ -79,6 +83,69 @@ This means several previously-open Specifications questions are now resolved wit
 ## Fork History
 
 N/A — new flow.
+
+## Follow-on Task: persist `TextRegion` geometry (added 2026-08-07, real scoped work, not just a note)
+
+**Status: proposed, not yet started.** Discovered while designing a new `Layer.TextRegion` schema
+concept in `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md` (that flow needs
+real text-region data to exist somewhere; this pipeline is the only place it's ever computed).
+Anton's explicit instruction (2026-08-07): update this flow directly with a real, actionable task,
+not just a cross-reference note.
+
+### The confirmed gap
+
+Direct re-investigation of `layout.py`, `erase.py`, `classify.py`, `package.py`: this pipeline
+**already computes real, pixel-precise, non-rectangular masks, twice** —
+`layout.find_safe_interior_mask` (the balloon's true interior shape, via `cv2.distanceTransform`
+against the balloon's alpha + outline ink) and `erase.py`'s `text_mask` (real connected-component
+glyph shapes of the text actually being erased) — **but both are discarded the instant they're
+used**. `layout.find_interior_rect` (`layout.py:71-75`) collapses the first mask into a plain
+`(x, y, w, h)` tuple via `largest_inscribed_rectangle` and returns only that; `erase.py`'s
+`text_mask` never leaves `erase_text_single_image`'s local scope. `package.py`'s balloon image-slot
+writer (`package.py:194`, `images_list[lang_index] = {"file": ..., "width": w, "height": h}`)
+persists none of it — confirmed by an exhaustive grep of `scripts/`/`tests/` finding zero `polygon`
+usage anywhere. The pipeline's own actual balloon-rendering output is correct and unaffected by
+this — this task is purely about *also* persisting geometry that's already being computed anyway.
+
+### What would need to change
+
+1. **`layout.py`**: add a variant of `find_interior_rect` (or a second return value) that also
+   returns the mask `find_safe_interior_mask` already computes — e.g. `find_interior_region(...) ->
+   tuple[tuple[int,int,int,int], np.ndarray]` (rect + mask), without changing the existing
+   rect-only call sites (`render_latin.py:43`, `render_shaped.py:125` keep working unmodified).
+2. **A new conversion step**: mask → polygon, via `cv2.findContours` + `cv2.approxPolyDP` (contour
+   simplification) on the returned mask — polygon is the recommended default representation per
+   `tdd-dot-lottie-import-export`'s own reasoning (compact, and maps directly onto Lottie's own
+   vector-mask model for future export compatibility), with the raw mask kept available as a
+   fallback for organic hand-lettered shapes a polygon would under-approximate.
+3. **`package.py`**: when writing a balloon's image slot (`package.py:194`), also write the new
+   `TextRegion` field (`{"shape": "polygon", "points": [...]}` or `{"shape": "mask", "maskFile":
+   ...}`) alongside the existing `{"file","width","height"}` — additive, matches this format's
+   established backward-compat pattern (old readers ignore the new key entirely).
+4. **`erase.py`'s `text_mask`** is a secondary, lower-priority source (describes the *old* text's
+   shape, not necessarily where *new* text should go) — `tdd-dot-lottie-import-export` explicitly
+   recommends `layout.py`'s interior mask as the primary source, not this one; only worth revisiting
+   if the interior-mask-derived polygon proves insufficient for some real balloon shape.
+
+### Acceptance criteria (draft, for whoever picks this up)
+
+- A re-run of this pipeline on the existing 27-file dataset produces `TextRegion` data for every
+  balloon slot it already renders, with zero change to the rendered pixel output itself (this is
+  additive metadata, not a rendering change).
+- The persisted polygon/mask, when rasterized back, reproduces the same interior region
+  `find_interior_rect`'s rectangle already selects (a correctness check: the rectangle should be
+  containable within the persisted polygon/mask, not contradict it).
+- Existing tests (`test_layout.py`, `test_package.py`) continue passing unmodified; new tests cover
+  the new mask→polygon conversion and the new `package.py` output field.
+
+### Not yet decided
+
+- Polygon vs. mask as the *default* choice (this flow's own note above leans polygon-first,
+  mask-as-fallback, but that's a recommendation carried over from the sibling flow, not confirmed
+  by whoever would actually implement this).
+- Whether this becomes its own small SDD flow (cleaner phase discipline, given this flow is
+  otherwise complete/in Documentation) or lands as a direct addendum to this one before
+  Documentation closes it out — not decided; flagged rather than assumed.
 
 ## Next Actions
 

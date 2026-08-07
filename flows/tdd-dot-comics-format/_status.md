@@ -48,6 +48,20 @@ was a separate, unrelated file being briefly misread as if it were part of this 
   (B1/E1/E2) now or later, and whether this flow should proceed to a formal Specifications/Plan/
   Implementation phase (writing the actual new test files) or stop at cataloging + cases-first
   analysis.
+- **Pending schema addition, not yet reflected in `02-tests.md`'s format facts**: a new
+  `Layer.GroupId` field (purely organizational, zero rendering effect, backward-compatible with
+  v2012 by construction) has been decided in
+  `flows/comics-editor/vdd-comics-editor-systematization-uiux/01-requirements.md` (Layer Grouping
+  section, 2026-08-07), motivated by `flows/comics-editor/tdd-dot-lottie-import-export`'s precomp-
+  handling question. Once that design is approved/implemented, this flow's own consolidated format
+  facts should get a new entry for it — not done yet, flagged here so it isn't lost.
+- **Second pending schema addition (2026-08-07)**: a new `Layer.TextRegion` field (`shape:
+  "rect"|"polygon"|"mask"`, not gated by `Kind=="balloon"` — applies to any layer, per Anton's
+  explicit "text isn't only inside a balloon" clarification), decided in the same
+  `tdd-dot-lottie-import-export/01-requirements.md` while resolving that flow's unsupported-
+  content-policy question. Grounded in a real, confirmed gap in `comics-ai-baloons` (computes
+  precise masks twice, discards both, never persists any non-rectangular geometry). Also not yet
+  reflected in this flow's own format facts.
 - **Decided (2026-08-02), three related questions now closed**: (1) UI — New Document dialog gets a
   visible-but-disabled "century-old comic strip (horizontal infinity scroll)" option (Test Case B3).
   (2) Schema — yes, an explicit `scrollType` field (proposed name/values, not yet confirmed by

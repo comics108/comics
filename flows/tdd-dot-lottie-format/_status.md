@@ -31,6 +31,11 @@ other — grounded in real keyframe inspection, not general knowledge).
   simple, image-layer-only subset `ASHES.json` does) directly determines whether the
   conversion-feasibility conclusion generalizes — a quick script, not a big investigation, but not
   yet run.
+- **Resolved, 2026-08-07 (in a sibling flow)**: the precomp-nesting question this flow raised (does
+  `.comics` need a grouping concept to represent Lottie's nested compositions) has been answered —
+  see `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md`'s Precomp Handling
+  decision and `flows/comics-editor/vdd-comics-editor-systematization-uiux`'s new Layer Grouping
+  section/`02-visual.md`. Not re-litigated here; this flow's own scope stays research-only.
 
 ## Progress
 

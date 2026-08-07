@@ -1,8 +1,96 @@
 # Requirements: comics-editor-systematization-uiux
 
-> Version: 0.1 (extraction — not yet a validated requirements doc)
+> Version: 0.2 (added a second, distinct topic 2026-08-07 — see "Layer Grouping" below; the
+> original character-variant-tagging content is unchanged and still blocked on a Джанава session)
 > Status: DRAFT
-> Last Updated: 2026-08-01
+> Last Updated: 2026-08-07
+
+## Scope note (2026-08-07) — this flow now covers TWO unrelated topics, not one
+
+Everything from "Origin" through the end of the original "References"/"Approval" sections below is
+the **original** scope: character variant/pose/emotion tagging in the material library
+(`work/library/characters/`), blocked on a real Джанава session. **Layer Grouping** (new section
+below, and `02-visual.md`) is a **second, unrelated topic** added per Anton's direct request while
+answering an Open Question in `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md`
+— it's about grouping *layers within a single `.comics` document's canvas*, not about the character
+library at all. The two share this flow's name only because "systematization" is broad enough to
+cover both "organizing a character library" and "organizing a document's layers" — they don't share
+data, code, or a stakeholder session. Flagging this explicitly rather than silently blending two
+unrelated features into one narrative.
+
+## Layer Grouping (added 2026-08-07 — unblocked, not waiting on Джанава)
+
+### Origin
+
+While drafting `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md` (a real
+feature build: import/export `.lottie` files in `apps/comics-editor`), one Open Question was how to
+handle Lottie's precomp nesting (one composition embedded inside another) given `.comics`'s layer
+model has no grouping concept at all. Anton's direct answer: **add real layer-grouping to the
+`.comics` v2026 format**, kept backward compatible with v2012 ("достаточно правильного
+отображения" — correct display is enough), and add the UI/UX visual for it here.
+
+### Problem Statement
+
+`apps/comics-editor`'s layers panel (`scene_panel.dart`'s `_LayersSection`/`_LayerRow`) is a flat,
+unnested `ListView` — no way to select multiple layers and treat them as one unit (move together,
+collapse in the list, hide/show together). This has two real drivers: (1) Lottie import needs
+*somewhere* to put the fact that several imported image layers came from one precomp, without
+losing that relationship; (2) independent of Lottie, grouping is a plain, common authoring
+convenience (e.g. a character built from several separately-animated parts that should still move
+together as a unit) that the flat layer list has never supported.
+
+### The backward-compatibility mechanism (already decided, not open)
+
+`Layer.GroupId` (new, optional, nullable string — same additive shape as the existing `Kind`/
+`Style`/`Translations` fields, `apps/comics-editor/lib/src/ui/models.dart:129-138`). **Purely
+organizational — zero effect on rendering.** Every layer's own `Anim` keyframes remain the
+complete, final, absolute values they already are today; `GroupId` only groups rows in the
+*editor's* layers panel and drives group-select/move-together *authoring* behavior. A v2012 reader
+that has never heard of `GroupId` renders every file exactly as it does today — nothing about how a
+layer's position/rotation/scale/alpha is computed changes. (For Lottie import specifically: a
+precomp's own transform gets baked into each child layer's individual keyframes at import time,
+before `GroupId` tagging — the same "compile to flat absolute values" step the format already
+requires universally.)
+
+### User Stories
+
+**As** an editor user with several layers that make up one logical unit (e.g. a character's parts)
+**I want** to group them, collapse the group in the layers panel, and drag any member to move the
+whole group together on canvas
+**So that** I don't have to select and drag N layers individually every time I reposition that unit
+
+### Acceptance Criteria
+
+**Must Have**:
+1. Select 2+ layers → "Group" action → they collapse into one expandable row in the layers panel.
+2. Dragging any grouped layer on canvas moves every member of that group by the same delta.
+3. A `.comics` file saved with groups, opened by a v2012 (or any group-unaware) reader, renders
+   identically to the same file with groups removed — group membership has zero rendering effect.
+
+**Should Have**: nested groups (a group inside a group) — see Open Questions, not decided.
+
+**Won't Have (this iteration)**: any *shared* group-level transform stored/animated separately from
+its members (e.g. a single "group scale" keyframe applied on top of children at render time) — that
+would break the zero-rendering-effect backward-compat guarantee and needs its own decision if ever
+wanted; for now, moving/scaling a group in the editor immediately bakes the delta into each member's
+own keyframes, exactly like ungrouped multi-select drag already does.
+
+### Open Questions
+
+- [ ] Nested groups (group-of-groups) — supported now, or single-level only for v1?
+- [ ] Can a layer belong to more than one group, or is membership exclusive (one `GroupId` per
+      layer, matching the simplest possible schema)? Leaning exclusive/single, not decided.
+- [ ] Group naming — auto-generated ("Group 1"), inherited from a Lottie precomp's `nm` when
+      imported, or always user-named?
+- [ ] Does `Group` deserve to be its own top-level `data.json` entity (a list of `{id, name}`
+      records) for storing a display name, or is `GroupId` alone (with names existing only in the
+      editor's session state) enough for v1? The former is a second, tiny additive schema piece
+      beyond just `Layer.GroupId`.
+
+See `02-visual.md` for the layers-panel mockups (collapsed/expanded states, group-select, the
+Lottie-import-produces-a-group case).
+
+---
 
 ## Origin
 
