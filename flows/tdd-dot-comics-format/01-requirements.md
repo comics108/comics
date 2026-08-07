@@ -1,8 +1,10 @@
 # Requirements: dot-comics-format (TDD)
 
-> Version: 0.7 (escalated the `scrollType`-vs-device-orientation two-dimension decision from
-> `02-tests.md` into this document proper, 2026-08-07, per Anton's explicit request)
-> Status: DRAFT
+> Version: 0.8 (CORRECTION 2026-08-07: device orientation is now a `.comics`-format/content
+> property too — `preferredOrientation`, a new per-document field, supersedes the earlier "never in
+> data.json" framing. `scrollType` and `preferredOrientation` remain two separate, independent
+> fields — the independence principle is refined, not dropped.)
+> Status: APPROVED
 > Last Updated: 2026-08-07
 
 ## Promotion note (2026-08-02, read this first)
@@ -88,25 +90,42 @@ Document dialog (`apps/comics-editor/lib/src/ui/widgets/dialogs.dart:17-50`) get
 "century-old comic strip (horizontal infinity scroll)," **visible but disabled** — signaling intent
 without committing to the engine work.
 
-**Axis 2 — device screen orientation (a reader-app/platform property, `portrait`/`landscape`)**:
-which way the user holds their device. Confirmed absent from the `.comics` format entirely, on
-every platform, in every generation checked — this has always lived in platform config
+**Axis 2 — device screen orientation (`portrait`/`landscape`)**: which way the user holds their
+device. **Historical fact, unchanged**: confirmed absent from the `.comics` format entirely, on
+every platform, in every generation checked — has always lived purely in platform config
 (`AndroidManifest.xml`'s `screenOrientation`, iOS `Info.plist`'s
 `UISupportedInterfaceOrientations`, Flutter's `SystemChrome.setPreferredOrientations`), never in
-`data.json`. Both 2012 reader apps lock the comic-reading screen to portrait; no v2026 viewer
+`data.json`, and always as a static, app-wide setting (one manifest value for the whole app, not
+per-document). Both 2012 reader apps lock the comic-reading screen to portrait; no v2026 viewer
 implements landscape reading either (see "Layer & animation model" citations and `02-tests.md`
 Category C).
 
-**The independence principle — explicitly stated by Anton (2026-08-02)**: these two axes must
-never be coupled or inferred from one another. No implementation may hardcode "`scrollType ==
-horizontal` implies landscape" or the reverse, even though every real file/app today happens to
-pair vertical-content with portrait-devices — that pairing is today's *only exercised case*, not a
-rule the format or any reader should encode. A reader's rendering decision must consult
-`scrollType` alone for "which axis does content scroll" and the device/OS orientation lock alone
-for "which way can the user hold the device" — two independent lookups, never one derived from the
-other. This was corrected from an earlier draft that mistakenly reused the word "orientation" for
-both concepts — `scrollType` was deliberately renamed away from an initial `orientation` field name
-specifically to avoid that ambiguity.
+**CORRECTION/DECISION (2026-08-07, Anton): device orientation becomes a `.comics`-format/content
+property too — supersedes the "never in `data.json`" framing above.** Anton decided this axis
+should move from being purely a static, app-wide platform setting to being a **per-document
+`.comics` field**, alongside `scrollType`. Proposed name (not yet confirmed verbatim, following
+the same naming discipline that already renamed `scrollType` away from the ambiguous bare
+"orientation"): **`preferredOrientation`** — **three values**, per Anton's follow-up:
+`"portrait" | "landscape" | "auto"` (`"auto"` meaning the document has no fixed preference — a
+reader may rotate freely with the device). Absent → defaults to `"portrait"`, matching every
+existing file's implicit, only-ever-exercised behavior — the same additive/backward-compatible
+pattern as every other schema change in this document. This is a genuine upgrade in what the axis
+*is*: no longer just "whatever the whole app's manifest says," but "what this specific document
+declares it wants," which a reader *may* then use to decide its own platform-level orientation lock
+dynamically (an implementation detail for Plan — the field is a declared preference on the content,
+not a guarantee any given reader honors it, especially since no reader supports landscape or
+auto-rotating rendering at all today).
+
+**The independence principle still holds, refined**: `scrollType` and `preferredOrientation` are
+now **both** `.comics`-format fields, but remain two **separate, independently-set** fields that
+must never be coupled or inferred from one another. No implementation may hardcode
+"`scrollType == horizontal` implies `preferredOrientation == landscape`" or the reverse — a
+document could in principle declare any combination of the two, even an unusual one (e.g.
+`scrollType:"horizontal", preferredOrientation:"portrait"`), and a reader must honor whatever each
+field independently says, never derive one from the other. This mirrors the exact reasoning that
+already renamed `scrollType` away from the ambiguous bare "orientation" name — keeping the two
+fields distinctly named and independently read is what makes the principle enforceable in code,
+not just in prose.
 
 ### Layer & animation model
 
@@ -415,7 +434,10 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
 
 ## Approval
 
-- [ ] Reviewed by: [name]
-- [ ] Approved on: [date]
-- [ ] Notes: Not seeking approval — reference consolidation, same status as
-      `sdd-comics-editor-questions`.
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-07
+- [x] Notes: Approved as drafted, including all schema decisions (time-basis, `ParentId`/
+      organizational layers, `Mask`/`SolidColor`, `scrollType`/`preferredOrientation`) and the
+      Lottie-coverage gap analysis. This supersedes the original "not seeking approval" framing —
+      this document has grown well beyond a passive reference consolidation into a real set of
+      approved schema decisions.

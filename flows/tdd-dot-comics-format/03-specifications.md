@@ -1,8 +1,8 @@
 # Specifications: dot-comics-format (TDD)
 
-> Version: 0.4 (escalated the `scrollType`-vs-device-orientation two-dimension decision from
-> `02-tests.md` into this document, 2026-08-07, per Anton's explicit request)
-> Status: DRAFT
+> Version: 0.5 (CORRECTED 2026-08-07: device orientation is now a real `.comics` field —
+> `preferredOrientation`, 3 values including "auto" — not platform-config-only as v0.4 said)
+> Status: APPROVED
 > Last Updated: 2026-08-07
 > Requirements: [01-requirements.md](01-requirements.md)
 > Tests: [02-tests.md](02-tests.md) (Test Cases B2-B5, D4, and the animation-inventory background
@@ -325,11 +325,13 @@ ever open new v2026-authored content that uses it.
 
 ---
 
-## `scrollType` vs. Device Orientation — Specification (DECIDED 2026-08-02, escalated 2026-08-07)
+## `scrollType` vs. Device Orientation — Specification (DECIDED 2026-08-02, escalated 2026-08-07, CORRECTED 2026-08-07)
 
 Escalated from `02-tests.md`'s Test Cases B2-B5 into Specifications proper, per Anton's explicit
-request. Two genuinely independent concepts, specified separately below — see `01-requirements.md`
-for the full narrative/rationale; this section states interfaces/data models/behavior.
+request. **Corrected same day**: device orientation is no longer platform-config-only — it becomes
+a real `.comics` field too (`preferredOrientation`), per Anton's direct instruction. Two genuinely
+independent *fields*, specified separately below — see `01-requirements.md` for the full
+narrative/rationale; this section states interfaces/data models/behavior.
 
 ### Interfaces (New Types)
 
@@ -337,40 +339,52 @@ for the full narrative/rationale; this section states interfaces/data models/beh
 // lib/src/ui/models.dart -- ComicsDoc, modified (additive)
 enum ScrollType { vertical, horizontal } // default: vertical, for every existing/unmarked doc
 
+// CORRECTED 2026-08-07: device orientation is now also a real field, not platform-config-only.
+// Three values per Anton's follow-up -- "auto" means no fixed preference, reader may free-rotate.
+enum PreferredOrientation { portrait, landscape, auto } // default: portrait, backward compat
+
 class ComicsDoc {
   // ...existing fields unchanged...
   ScrollType scrollType = ScrollType.vertical; // NEW -- document-root, content-scroll-axis only.
                                                  // Deliberately NOT named `orientation` -- that
                                                  // word is reserved for device screen orientation,
-                                                 // a completely separate, platform-level concept
-                                                 // this field must never be confused with or
-                                                 // derived from.
+                                                 // a completely separate field this one must never
+                                                 // be confused with or derived from.
+  PreferredOrientation preferredOrientation = PreferredOrientation.portrait; // NEW, 2026-08-07 --
+      // the document's OWN declared preference for device orientation. Independent of
+      // scrollType -- neither field may be inferred from the other, even though most real
+      // content will likely pair scrollType=vertical with preferredOrientation=portrait.
 }
 ```
 
-**No corresponding Dart/platform type is introduced for device orientation** — it deliberately
-does not live in this model at all. Device orientation stays exactly where every platform already
-puts it: `AndroidManifest.xml`'s `android:screenOrientation`, iOS `Info.plist`'s
-`UISupportedInterfaceOrientations`, Flutter's `SystemChrome.setPreferredOrientations`. No new
-interface is specified for it here because introducing one would risk exactly the coupling this
-decision explicitly forbids.
+Device orientation's *enforcement* (actually locking the device) still lives entirely in platform
+config (`AndroidManifest.xml`'s `android:screenOrientation`, iOS `Info.plist`'s
+`UISupportedInterfaceOrientations`, Flutter's `SystemChrome.setPreferredOrientations`) — what's new
+is that `.comics` now has a field a reader *may* consult to decide what to tell the platform,
+per-document, instead of the platform lock being one static, app-wide, content-blind setting.
+`preferredOrientation` is a declared preference on the content; it does not itself change how any
+platform API is called — that mapping is Plan/Implementation work, not specified here.
 
 ### Data Models — Schema Changes
 
-One new optional root-level `data.json` key: `scrollType` (string, `"vertical"` or `"horizontal"`).
-Omitted → `"vertical"`, matching every real file's current, unchanged behavior — the same additive/
-ignorable-by-old-readers pattern as every other schema change in this document.
+Two new optional root-level `data.json` keys: `scrollType` (string, `"vertical"`/`"horizontal"`)
+and `preferredOrientation` (string, `"portrait"`/`"landscape"`/`"auto"`). Both omitted → their
+respective defaults (`"vertical"`, `"portrait"`) — matching every real file's current, unchanged
+behavior, the same additive/ignorable-by-old-readers pattern as every other schema change here.
 
 ### Behavior Specifications
 
 **Happy path**: every existing file (all 27 dataset files, `samples/sample_v2012.comics`, every
-2012-through-2026-authored document) has no `scrollType` key and resolves to `"vertical"` — the
-exact behavior every reader already has today, verified by Test Case B4.
+2012-through-2026-authored document) has neither key and resolves to `scrollType="vertical"`,
+`preferredOrientation="portrait"` — the exact behavior every reader already has today, verified by
+Test Case B4 (and its `preferredOrientation` equivalent, not yet its own test ID — see Testing
+Strategy).
 
 **The independence invariant (must be tested directly, not assumed)**: a reader's decision logic
 for "which axis does content scroll" must read `scrollType` and nothing else; its decision logic
-for "what device orientation is the app locked to" must read platform config and nothing else.
-Neither code path may branch on the other's value.
+for "what orientation should this document request" must read `preferredOrientation` and nothing
+else. Neither field's code path may branch on the other's value, even now that both live in the
+same file.
 
 ### Edge Cases
 
@@ -378,24 +392,33 @@ Neither code path may branch on the other's value.
 |------|---------|-------------------|
 | `scrollType="horizontal"` on a device locked to portrait | A hypothetical future horizontal document, opened on today's portrait-only apps | Must still render as a horizontal-scrolling document *within* a portrait-shaped viewport — cramped, but correct; the reader must NOT force landscape just because content is horizontal (Test B5) |
 | `scrollType` absent, but `width > height` | Any real file with unusual proportions (not yet seen in real data, per `02-tests.md` Category B2) | Resolves to `"vertical"` regardless of `width`/`height`'s relative magnitude — `scrollType` is authoritative, not inferred from document proportions |
-| Unknown `scrollType` value (neither `"vertical"` nor `"horizontal"`) | Malformed/future file | Should default to `"vertical"` (safest), matching this format's established unknown-value-tolerant convention (Test D3's JSON-unknown-key tolerance, applied here to an unknown *value* instead) |
+| Unknown `scrollType`/`preferredOrientation` value (neither of the recognized strings) | Malformed/future file | Should default to `"vertical"`/`"portrait"` respectively (safest), matching this format's established unknown-value-tolerant convention (Test D3's JSON-unknown-key tolerance, applied here to an unknown *value* instead) |
+| `preferredOrientation="auto"` combined with any `scrollType` | Real, valid combination | No coupling — a reader honoring `auto` lets the device rotate freely regardless of whether content scrolls vertically or horizontally; still two independent lookups |
+| `scrollType="horizontal", preferredOrientation="portrait"` (or any other "unusual" pairing) | Real, valid combination — must not be rejected | The independence principle means this is a legal, if unusual, combination — no validation should reject it just because it doesn't match today's only-exercised pairing |
 
 ### Testing Strategy
 
-- [ ] Unit: absent `scrollType` resolves to `vertical` (Test B4)
-- [ ] Unit: a reader's orientation-lock decision never reads `scrollType`, and its scroll-axis
-      decision never reads platform orientation config — a real, direct test of the independence
-      invariant (e.g. a mock reader configured with all 4 `scrollType` × orientation combinations,
+- [ ] Unit: absent `scrollType`/`preferredOrientation` resolve to `vertical`/`portrait` (Test B4 +
+      new equivalent)
+- [ ] Unit: a reader's orientation-preference decision never reads `scrollType`, and its scroll-axis
+      decision never reads `preferredOrientation` — a real, direct test of the independence
+      invariant (e.g. a mock reader configured with all combinations of the two fields' values,
       asserting neither setting leaks into the other's decision)
 - [ ] Integration: every one of the 27 real dataset files + `samples/sample_v2012.comics` has zero
-      `scrollType` keys — confirms this addition doesn't alter parsing of any existing real file
+      `scrollType`/`preferredOrientation` keys — confirms this addition doesn't alter parsing of any
+      existing real file
 
 ### UI Component (New Document dialog)
 
-Per the already-decided UI treatment: `apps/comics-editor/lib/src/ui/widgets/dialogs.dart:17-50`
-(currently a 2-option chooser, Comics/Puzzle) gains a third, **visible-but-disabled** option,
-"century-old comic strip (horizontal infinity scroll)" — does not appear in `DocType`
-(`models.dart:8`), tapping it is a no-op, purely signals intent without engine commitment.
+Per the already-decided UI treatment, **and confirmed already implemented in real code**
+(`apps/comics-editor/lib/src/ui/widgets/dialogs.dart:39-114` — see `04-visual.md`'s Screen 1 for
+exact citations): a "DOCUMENT TYPE" section with a third, visible-but-disabled "Horizontal-scroll
+comic strip" card, and a separate "DEVICE ORIENTATION" section with Portrait (enabled, selected)
+and Landscape (visible-but-disabled) tiles. **Still missing, now with a real target**: neither
+section is wired to `scrollType`/`preferredOrientation` — both fields need adding to `ComicsDoc`
+and the dialog's `choice`/orientation-tile state needs to actually write them on `newDoc()`. The
+"Auto" third value for `preferredOrientation` has **no UI representation yet at all** — the real
+dialog only shows Portrait/Landscape tiles, two options, not three — a real gap for Plan to size.
 
 ---
 
@@ -468,7 +491,11 @@ representing it for real via `ParentId`.
 
 ## Approval
 
-- [ ] Reviewed by:
-- [ ] Approved on:
-- [ ] Notes: Partial/early draft, scoped to two specific additions per Anton's direct request — not
-      a claim that this flow's full Specifications phase is complete.
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-07
+- [x] Notes: Approved as drafted (v0.5), including the `preferredOrientation` correction. Still
+      partial/early — scoped to the five items above, not a claim that this flow's full
+      Specifications phase is complete — and the Open Design Questions above (`Anim.basis` field
+      shape, `Layer.Id` generation scheme, exact organizational `Kind` string, orphan policy,
+      `ParentId`/`GroupId` relationship, `solidColor`/`Images[]` precedence) remain genuinely open,
+      carried forward to Plan to resolve rather than blocking approval of what's already decided.
