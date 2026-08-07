@@ -16,6 +16,31 @@ and cases-first behavioral analysis across 6 categories (Part 5).
 
 2026-08-02 by Claude
 
+## Correction (2026-08-07): the "MAJOR DISCOVERY" originally logged here was a different format, now split out
+
+A comparison of `samples/sample_v2012.comics_unzip` vs. what was then `samples/
+sample_v2026.comics_unzip` surfaced content that turned out to be genuine **Lottie/Bodymovin JSON**
+(Adobe After Effects' animation export format), not an extension of this flow's classic
+`Comics.Editor.Models` schema — the file was mislabeled as a `.comics` version. Anton confirmed
+this and renamed the fixtures (`samples/sample.lottie`, `dataset/mahabharata/boranko/
+mahabharata-dot-lottie`) so they stop implying it's a `.comics` version, and asked for the whole
+investigation to move to its own flow: **`flows/tdd-dot-lottie-format/`**. Everything about Lottie's
+schema, the vendored-but-unused Lottie engine found in `apps/mahabharata-mobile-swift-v2026`, and
+the 7-of-43-produced episode comparison now lives there. Nothing else in this flow's own research
+(Parts 1-3, `02-tests.md`) was affected — that was always scoped to the classic lineage only and
+remains accurate.
+
+**Re-verified after the split (2026-08-07), per Anton's explicit request**: `.comics` v2012 is
+confirmed the legacy format used by the real v2012 apps (`legacy/mahabharata-mobile-java-v2012`,
+`legacy/mahabharata-mobile-swift-v2012}` — this was already established in the original 2026-08-02
+research, Discoveries 1-2 below), and the current v2026 `.comics`-consuming stack
+(`apps/comics-editor`, `apps/mahabharata-mobile-java-v2026` via `libs/comics_viewer/
+comics-viewer-android`) remains backward compatible with it — confirmed by `diff -rq` showing the
+model files byte-identical since 2012/v2.8 (only the additive `Kind`/`Style`/`Translations` fields
+differ), and by `apps/comics-editor/test/dataset_backward_compat_test.dart` actually opening every
+real classic-format file without error. This conclusion was never in doubt — the Lottie confusion
+was a separate, unrelated file being briefly misread as if it were part of this same lineage.
+
 ## Blockers
 
 - Waiting on Anton's direction on `02-tests.md`'s remaining Open Design Questions — most

@@ -1,8 +1,12 @@
 # Specifications: comics-editor-ai-bhagavadgita-generator
 
-> Version: 0.1
-> Status: DRAFT — awaiting approval
-> Last Updated: 2026-08-05
+> Version: 0.2 (Claude, 2026-08-06): corrected a real image-slot/language-index bug found by
+> checking `.comics` Packaging Contract against the actual `Cultures` enum and a real dataset
+> file — Russian moved from slot 0 to slot 1 (see that section for the full verified finding).
+> Everything else independently spot-checked (root JSON keys, tile filename convention, layer
+> JSON shape) matched Codex's original draft exactly against real code/data.
+> Status: APPROVED (2026-08-06, Anton — "specs approved")
+> Last Updated: 2026-08-06
 > Requirements: [01-requirements.md](./01-requirements.md)
 
 ## Overview
@@ -278,8 +282,8 @@ The corresponding `data.json` layer uses:
 ```json
 {
   "images": [
-    {"file": "asset_{0}_{1}_{2}.png", "width": 936, "height": 640},
     {},
+    {"file": "asset_{0}_{1}_{2}.png", "width": 936, "height": 640},
     {}
   ],
   "animations": [
@@ -297,8 +301,25 @@ Format rules:
 
 - `data.json` root contains integer `width`, integer `height`, `layers`, and empty `sounds`;
 - image template paths are relative to `layers/` in the archive and contain no traversal segments;
-- image slots 1 and 2 remain empty for backward compatibility; Russian is the rendered primary
-  image in slot 0, not a claim that slot 0 semantically changes language;
+- **Correction (2026-08-06, verified against real code and a real dataset file, not previously
+  checked)**: the original draft put the rendered Russian card in image slot **0** and left 1/2
+  empty. That is backwards. `apps/comics-editor/native/Comics.Editor/Models/Cultures.cs`'s real
+  enum is `{En=0, Ru=1, Hi=2}`, and `Layer.GetImage` (`Layer.cs:55-59`) looks up
+  `Images[CulturesHelper.All.IndexOf(culture)]` — pure positional lookup, no content inspection.
+  A real dataset file's own balloon layer confirms this in practice: slot 0 is literally
+  `"Text eng..."`, slot 1 is `"Text ru..."`, slot 2 is `{}` (spot-checked directly, not assumed).
+  Putting Russian in slot 0 would make every current viewer/editor label it "English" while
+  displaying Russian text — a silent semantic-labeling bug, not a crash, so it would have passed
+  every structural/pixel validation check in this document without being caught. **Fixed here**:
+  Russian goes in slot **1** (matching `Ru`'s real index); slot 0 (`En`) stays empty, same
+  precedent as this dataset's existing files leaving `Hi` (slot 2) empty when no Hindi content
+  exists yet — an empty slot for a missing language is already a normal, supported state, not a
+  new pattern. Verified `GetImage`'s fallback (`Images[index]` if populated, else literally
+  `Images.FirstOrDefault()` — the list's first element unconditionally, **not** "first populated
+  slot") against this exact layout by simulating it directly: `GetImage(En)` → empty slot 0 (no
+  English content, correctly renders nothing); `GetImage(Ru)` → slot 1, the real Russian card;
+  `GetImage(Hi)` → falls back to `FirstOrDefault()` = slot 0 = empty (correctly renders nothing,
+  not a stray Russian fallback). All three cases behave correctly with no residual risk;
 - every layer has an explicit static `TranslateAnim` with integer `x`/`y`;
 - no scale/alpha animation is required for baseline validity. An optional enrichment pass may add
   the proven balloon fade/grow-in pattern only after round-trip tests show no compatibility drift;
@@ -383,7 +404,11 @@ For every chapter:
 - no undeclared/missing tile, unsafe path, duplicate ZIP member, or case-collision exists;
 - every layer's translated resting rectangle fits the canvas horizontally and vertically;
 - `sounds` is empty and no absent audio path leaks into the archive;
-- rendered text images are non-empty and have non-transparent pixels.
+- rendered text images are non-empty and have non-transparent pixels;
+- **every layer's `images[]` has its Russian content at index 1 (`Ru`), not index 0 (`En`)** —
+  added 2026-08-06 per the real slot-index correction above; a regression test should assert this
+  directly on real generated output, not just on the packager's internal data model, since a future
+  refactor could silently reintroduce the original index-0 mistake.
 
 ### Source fidelity validation
 
@@ -487,4 +512,4 @@ baseline without changing source ingestion or chapter cardinality.
 - [x] AI summaries are optional, labeled, cited, and never replace source verses.
 - [x] PSD and audio fallback behavior is explicit.
 - [x] Output, manifest, packaging, validation, and resumability contracts are defined.
-- [ ] Specifications reviewed and approved by user.
+- [x] Specifications reviewed and approved by user (2026-08-06, "specs approved").

@@ -199,6 +199,56 @@ impractical.
 - **Verification**: this section itself, reviewed by the user as part of Plan approval
 - **Complexity**: N/A (decision task)
 
+#### Revision, 2026-08-06 (post-COMPLETE, reopened at Anton's explicit request): Option B reconsidered as YOLO11-seg, trained from scratch
+
+This flow shipped Option C (U-Net baseline) as production (`infer_segmenter.py`), with Option A
+(Mask R-CNN) evaluated but never adopted as the default (stale/unequal-budget comparison per
+`_status.md`). A real, concrete gap in the shipped path, found 2026-08-06 while auditing for a
+sibling flow: `infer_segmenter.py::infer_regions` computes a real per-pixel connected-component mask
+for every predicted instance, then **discards it** — only the derived bounding box is kept in
+`CutRegion`/`regions.jsonl`. Every downstream consumer (`comics-ai-positioning`,
+`comics-ai-animations`, `unmatched_candidates.py`) therefore only ever sees rectangles, even for
+non-rectangular real content (a character's silhouette, an irregular background patch) — a real,
+disclosed precision loss the original three-option comparison didn't score on, since none of Options
+A/B/C's writeup evaluated mask fidelity as a decision axis.
+
+**Anton asked to reconsider Option B directly, prioritizing YOLO11m-seg (mobile) with
+YOLO11l-seg/YOLO11x-seg (server/desktop) as size-tiered variants** — Ultralytics' YOLO11 segmentation
+family natively outputs both a box and a per-instance mask (no discard step needed by construction),
+and ships three size tiers already matching the mobile/server split this repo's other
+apps (`mahabharata-mobile-java-v2026`, `mahabharata-mobile-swift-v2026` vs. the desktop/server
+`comics-editor`/`comics-ai-*` pipelines) already draw elsewhere.
+
+**The original rejection reason (pretrained-only, conflicts with "trained from scratch") does not
+hold as an absolute blocker**: Ultralytics' own documented training pattern supports initializing a
+YOLO model from an architecture-only `.yaml` config (random weights) rather than a pretrained `.pt`
+checkpoint, i.e. genuinely training from scratch on this repo's own synthetic degraded-crop dataset
+(`augment.py`'s Task 3.2 output), same as Option C's from-scratch path. This resolves the
+"pretrained" half of the original objection. **Not independently verified in this environment** (no
+network access to pip-install/confirm `ultralytics`'s current CLI behavior during this pass) — treat
+as a documented-API claim to confirm for real at implementation time, not a proven fact yet.
+
+**The license half of the original objection is real and still unresolved — Anton's call, not
+decided here**: Ultralytics YOLO (the `ultralytics` package/repo) is AGPL-3.0-licensed. AGPL's
+network-copyleft obligation is triggered by distributing or offering the software (or a derivative)
+to others, including as a network service — it does not attach to the *output* of a properly-used
+tool (a generated `.comics` file isn't AGPL-encumbered merely because a YOLO-based tool helped
+produce it). A relevant, verified real fact narrowing the actual risk surface: the segmentation model
+runs **only as an offline batch tool inside `apps/comics-ai/comics-multimodal`'s own Python
+pipeline** — checked directly, none of the distributed end-user applications
+(`apps/comics-editor`, `apps/mahabharata-mobile-java-v2026`, `apps/mahabharata-mobile-swift-v2026`)
+execute any Python/torch/ultralytics code; they only ever consume already-produced `.comics` output.
+This makes the AGPL exposure narrower than "shipping YOLO inside a distributed app" — but whether
+that residual internal-tooling use is acceptable, or whether Ultralytics' commercial/Enterprise
+license (their own standard offering for exactly this AGPL-avoidance case) should be purchased
+instead, is a real business/legal judgment call for Anton, not something resolved by this document.
+
+**Status**: reopened for evaluation, not yet decided which model ships. If pursued, this becomes a
+new Task 4.4 (YOLO11-seg from-scratch training + Checkpoint D-style comparison against the shipped
+U-Net baseline and the evaluated-but-unadopted Mask R-CNN, now scored on mask fidelity as a fourth
+axis alongside the original three) — not started this pass; this revision is the decision record
+only, mirroring how Task 4.1 itself was originally just a decision record reviewed at Plan approval.
+
 #### Task 4.2: Baseline semantic-segmentation model (Option C)
 - **Description**: Small U-Net (ResNet-18 pretrained encoder optional per Task 4.1) predicting a
   per-pixel `Kind` label; instances derived via connected-components on same-kind regions; balloon

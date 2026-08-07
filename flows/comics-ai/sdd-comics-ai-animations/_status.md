@@ -26,6 +26,18 @@ page; all 5 criteria now done)
   on his read-through before any of these candidates can be confirmed/rejected and fed back into a
   `sdd-comics-ai-multimodal`/`sdd-comics-ai-positioning`/`sdd-comics-ai-transformations` cascade
   regeneration. Nothing else in this flow's original scope is blocked or unstarted.
+- **Possibly superseded by a better source, found 2026-08-06 (Claude)**: Anton added
+  `dataset/mahabharata/boranko/Mahabharata-Book01-all.pdf` (143 real pages, print-production
+  quality) mid-session. Two real, cheap spot-checks (not a full batch run) against the existing
+  balloon OCR corpus scored **100.0** and **91.9-98.8** on two sampled pages, matching already-known
+  episodes with far higher confidence than the phone-photo source ever achieved. Full evidence in
+  `sdd-comics-ai-multimodal/_status.md`'s "New Source Asset Investigation" section. **This may make
+  the human-review step above partially moot**: if a full 143-page match run recovers most of the
+  remaining unmatched content directly (unmodified matcher, no threshold tuning), the
+  `unmatched_candidates.jsonl` adjacency/weak-text hypotheses would only be needed for whatever this
+  new source still doesn't cover — worth checking before Джанава spends time on candidates a better
+  source might resolve outright. Not verified at scale this pass; a real recommendation, not a
+  promise.
 
 ## Criterion 1 — Implemented, Real Calibrated Baseline (2026-08-02)
 

@@ -19,6 +19,21 @@ contradicted an existing code comment (see Bugs, B1).
 **Everything below is cited to real file:line locations, not inferred.** Where a claim could not be
 verified, that's stated explicitly rather than assumed.
 
+---
+
+**Note (2026-08-07): a suspected "v2026 format change" here was actually a different, unrelated
+format (Lottie), now split out.** While comparing samples, a file then-named `sample_v2026.comics`
+turned out to be genuine Lottie/Bodymovin JSON, not an extension of this flow's classic
+`Comics.Editor.Models` schema. Anton confirmed this and renamed the fixtures (`sample.lottie`,
+`mahabharata-dot-lottie`) to stop implying it was a `.comics` version. That entire investigation —
+container shape, the Lottie schema details, the vendored-but-unused iOS Lottie engine found in
+`apps/mahabharata-mobile-swift-v2026`, and the 7-of-43-produced episode comparison — now lives in
+its own flow: **`flows/tdd-dot-lottie-format/`**. Nothing in Parts 1-3 below was affected by this
+confusion — they were always scoped to the classic lineage only, and remain accurate as originally
+researched. See that flow if Lottie/`.lottie` content is what you're looking for.
+
+---
+
 **A real v2012-shaped sample exists**: `samples/sample_v2012.comics` (Anton pointed to this directly
 — none of the research agents knew it existed, since no 2012 test fixtures were found anywhere in
 the repo proper). Inspected directly for this document: standard zip (`data.json` + `layers/*.png`,
@@ -545,6 +560,11 @@ known limitation, not correctness.
 - [x] **B5**: **decided (2026-08-02)** — `scrollType` (content) and device orientation
       (portrait/landscape) are independent parameters, never coupled or inferred from one another,
       even though vertical+portrait is the only pairing any real implementation exercises today.
+- [x] **(2026-08-07) The Lottie/"ASHES.json" discovery is not this flow's concern anymore** —
+      confirmed a genuinely separate format, extracted to `flows/tdd-dot-lottie-format/` per
+      Anton's request. Its own open questions (is it a committed direction, how frame/time
+      addressing reconciles with scroll-driven reading, where the vendored-but-unused
+      `mahabharata-mobile-swift-v2026` Lottie engine fits) live there now, not here.
 - [ ] **C2**: is landscape comic-viewing a real, wanted v2026 feature anywhere, or was that premise
       from the original request aspirational/mistaken? Nothing in this codebase implements it today.
 - [ ] **B1 (bug)**: fix `scaleX`/`scaleY`/`alpha`'s JSON-absence defaults now (a small, isolated

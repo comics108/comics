@@ -66,6 +66,19 @@ The 18 Russian chapter titles, in dataset order, are:
 | `vdd-comics-editor-systematization-uiux` | Requirements seed for variant taxonomy | Future character/action taxonomy | Not approved or implemented; net-new in-style character generation is explicitly absent |
 | `sdd-comics-editor-questions` | Cross-flow AI research and unresolved questions | Prior evidence and traceability | Research index, not an executable generator |
 
+**Cross-flow sync note, added 2026-08-06 (Claude, per Anton's request)**: `sdd-comics-ai-multimodal`'s
+cutting/segmentation model choice (Task 4.1) was reopened the same day — the shipped baseline
+computes a real per-instance mask internally but discards it before writing `regions.jsonl` (bbox
+only), and a from-scratch-trained YOLO11-seg family (YOLO11m-seg mobile / YOLO11l-seg,
+YOLO11x-seg server-desktop) is under evaluation as a mask-preserving replacement, with an
+Ultralytics AGPL licensing question left open for Anton. See `sdd-comics-ai-multimodal/03-plan.md`'s
+"Revision, 2026-08-06" note and `_status.md`'s Blockers. **Relevance here is indirect and
+non-blocking**: this flow's Must-Have path (deterministic text-forward rendering) never invokes
+segmentation at all — there is no photographed source page to cut for 17 of 18 chapters. It would
+only matter if a future enrichment pass tried to extract discrete figure/character regions from the
+chapter-5 PSD composite (not in this flow's current Should-Have scope) or from the Bhagavad Gita
+`vaishnav/drawing/` art more broadly if more PSD/photo source material is added later.
+
 The `.comics` format is also covered by `tdd-dot-comics-format` and current editor code. This is not
 an AI flow, but it is a hard compatibility dependency. The multimodal package writer proves that a
 fresh archive can be built from scratch (`data.json` plus tiled `layers/`), while the format TDD
