@@ -12,7 +12,7 @@ Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05
 
 ## Last Updated
 
-2026-08-05 by Codex
+2026-08-07 by Claude
 
 ## Related Flows
 
@@ -25,6 +25,32 @@ Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05
 ## Blockers
 
 - **Windows and Linux platform verification**: a second 2026-08-05 Windows run proved that `dotnet publish` also strips `-p:PublishDir` into a bare positional token. Round 9 now bypasses that parser with `dotnet msbuild -restore -target:Publish`; Windows must confirm it populates `runner/Release/dotnet`. Linux must still confirm `gstreamer-app-1.0` discovery after installing `libgstreamer-plugins-base1.0-dev`.
+- **Real `build.yml` CI run (2026-08-07) surfaced 4 failing jobs** (see `04-implementation-log.md`'s
+  2026-08-07 session for full detail):
+  - `flutter analyze` — **fixed, verified locally**: `_TypeCard.enabled` was dead (never passed at
+    any call site); removed it and its lock-icon/disabled branch.
+  - Linux `desktop-file-validate` — **fixed**: was validating the `.desktop.in` template directly;
+    newer `desktop-file-utils` on `ubuntu-24.04` rejects non-`.desktop`-suffixed filenames.
+    Reordered to validate the real rendered file `install-user.sh` already produces.
+  - Android Gradle `:comics-viewer-android` project not found — **root-caused, not fixed**:
+    `flutter_comics_viewer` is now a pub.dev package (`^1.0.0`, per `pubspec.lock`), but its
+    published `android/build.gradle.kts` still hard-depends on a sibling Gradle *project*
+    `:comics-viewer-android` that only exists as a local path in this monorepo. User is fixing this
+    at the `flutter_comics_viewer` publish source themselves (proper AAR dependency) — no change
+    made here.
+  - macOS `flutter build macos --release` — no "Apple Development" signing identity — **fixed,
+    unverified**: added a "Configure signing" step to `build-macos` reusing the same
+    `MACOS_CERT_APP_P12_BASE64`/`MACOS_CERT_APP_PASSWORD`/`MACOS_PROVISIONING_PROFILE_BASE64`/
+    `SIGNING_KEYCHAIN_PASSWORD`/`APPLE_TEAM_ID` secrets `sdd-comics-editor-publish`'s `release-macos`
+    already uses (per user's explicit direction — reuse existing publish keys, don't disable
+    signing). Overrides are appended to a CI-only *working copy* of `Release.xcconfig`, never
+    committed — `project.pbxproj` and the repo's actual xcconfig are untouched, so the local Xcode
+    Archive path that produced the real App Store upload (in `sdd-comics-editor-publish`) is
+    unaffected. **Not confirmed by a real run** — genuine uncertainty whether `CODE_SIGN_STYLE=Manual`
+    + a "3rd Party Mac Developer Application" identity is accepted by a plain `xcodebuild build`
+    action (vs. archive/export). Also flagged: this same root cause likely blocks
+    `sdd-comics-editor-publish`'s untested `release-macos` fastlane lane too, since its own Step 1
+    is the identical bare `flutter build macos --release` call.
 
 ## Progress
 

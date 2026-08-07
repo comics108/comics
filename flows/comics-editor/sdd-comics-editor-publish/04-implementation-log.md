@@ -446,3 +446,10 @@ way.
 user's next Xcode archive + upload attempt (same local GUI path that produced the first successful
 submission). No further agent action possible until the user re-submits and either passes review or
 receives new feedback.
+
+**Note**: a subsequent same-day session mistakenly logged real `build.yml` (Native Build) CI-failure
+fixes here. That work — `flutter analyze`/`dialogs.dart`, Linux `desktop-file-validate` ordering,
+Android Gradle diagnosis, macOS `build-macos` signing — is `.github/workflows/build.yml` scope,
+which belongs to `sdd-comics-editor-build`, not this flow (this flow owns `release.yml`/fastlane
+only, per Context Notes above). Moved to
+`flows/comics-editor/sdd-comics-editor-build/04-implementation-log.md` (2026-08-07 correction).

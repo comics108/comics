@@ -366,3 +366,82 @@ to Flutter tests and artifact upload.
 #### Deviations from Plan
 
 - Continuation of the approved Native Build repair thread; no architecture or requirements change.
+
+---
+
+### Session 2026-08-07 — Claude (real build.yml CI failures across 4 jobs)
+
+**Started at**: user pasted a real, full `build.yml` (Native Build) CI run showing 4 failing jobs
+(Analyze & fast tests, macOS, Android, Linux) on the standalone `comics108/comics-editor` repo. This
+work was initially mis-logged in `sdd-comics-editor-publish` (that flow owns `release.yml`/fastlane
+only, not `build.yml`) and was moved here on the user's correction the same day.
+
+#### Completed
+
+- **`Analyze & fast tests` (Ubuntu) — `flutter analyze` failing on a new warning**
+  (`lib/src/ui/widgets/dialogs.dart:491:10`, `unused_element_parameter`): confirmed `_TypeCard`'s
+  `enabled` optional parameter is never passed at any of its 3 call sites (all 3 "New document"
+  type cards are always selectable — no locked/disabled state is ever needed there). Removed the
+  parameter and the disabled/lock-icon branch it gated, per the lint's own suggested fix. Verified
+  with `dart format` (parses cleanly) and `flutter analyze` (0 issues).
+- **`Linux` job — `desktop-file-validate` rejecting `net.nativemind.comics.editor.desktop.in`**:
+  root cause is a newer `desktop-file-utils` on the `ubuntu-24.04` runner image now refusing to
+  validate any file whose name doesn't literally end in `.desktop` (the `.in` template obviously
+  doesn't). The same CI step already renders a real `.desktop` file via `install-user.sh` moments
+  later (`$test_root/data/applications/net.nativemind.comics.editor.desktop`) — reordered the step
+  in `.github/workflows/build.yml` to validate that rendered file instead of the template.
+- **`Android` job — Gradle `Configuring project ':comics-viewer-android' without an existing
+  directory`**: traced to `pubspec.lock` confirming `flutter_comics_viewer` is now resolved from
+  pub.dev (`^1.0.0`), not the local `libs/` path dependency it used to be. The *published* package's
+  own `android/build.gradle.kts` still has `implementation(project(":comics-viewer-android"))` — a
+  hard Gradle **project** dependency (not an AAR) — which our app's `android/settings.gradle.kts`
+  satisfies via a hardcoded `../../../libs/comics_viewer/comics-viewer-android` path that only
+  exists in this monorepo, not in the standalone `comics108/comics-editor` CI checkout. Presented
+  three options to the user (skip/report, vendor a local copy into this repo, or fix it at the
+  `flutter_comics_viewer` publish source) — **user chose to fix it on the package/pub.dev side
+  themselves**; no change made to this app's Gradle config or settings.gradle.kts.
+- **`macOS` job — `flutter build macos --release` failing on `No signing certificate "Mac
+  Development" found ... team ID "6XT4R7V83F"`**: `macos/fastlane/Fastfile` (from
+  `sdd-comics-editor-publish`)'s own header comment (written 2026-07-31) explicitly claims this exact
+  bare `flutter build macos --release` call was "already verified in build.yml's build-macos job" at
+  the time — meaning it used to succeed unsigned. The most likely explanation: Flutter's own
+  project-format auto-migration (visible in the CI log right before the failure — "Updating project
+  for Xcode compatibility... Upgrading project.pbxproj") re-applied/refreshed `CODE_SIGN_STYLE =
+  Automatic` / `CODE_SIGN_IDENTITY = "Apple Development"` / a real `DEVELOPMENT_TEAM` in the Runner
+  target's Release config, likely as a side effect of local Xcode signing setup done elsewhere
+  (`sdd-comics-editor-publish`) for the real App Store submission. Did **not** touch
+  `project.pbxproj` or the checked-in `Release.xcconfig` directly — that's the same config the
+  user's local Xcode Archive path (which just produced the first real successful App Store upload)
+  depends on, too much risk to edit blindly. Also noted: this same root cause almost certainly
+  affects the **not-yet-run** `release-macos` fastlane lane too (its own "Шаг 1" is the identical
+  bare `flutter build macos --release` call with no signing override) — this session's fix likely
+  doubles as a preview of that lane's first real blocker. User's explicit direction: reuse the same
+  GitHub secrets already used for the Mac App Store publish lane rather than disabling signing.
+  Added a new "Configure signing" step to `build.yml`'s `build-macos` job, reusing
+  `MACOS_CERT_APP_P12_BASE64`/`MACOS_CERT_APP_PASSWORD`/`MACOS_PROVISIONING_PROFILE_BASE64`/
+  `SIGNING_KEYCHAIN_PASSWORD`/`APPLE_TEAM_ID` (all secrets already required by `release-macos` in
+  `sdd-comics-editor-publish`, no new ones introduced): imports the same "3rd Party Mac Developer
+  Application" distribution cert into a temporary CI-only keychain (same `security
+  import`/`find-identity` pattern already proven in `macos/fastlane/Fastfile`), embeds the
+  provisioning profile in `~/Library/MobileDevice/Provisioning Profiles/`, then **appends** (does not
+  overwrite) `CODE_SIGN_STYLE = Manual` / `CODE_SIGN_IDENTITY = <found identity>` / `DEVELOPMENT_TEAM`
+  / `PROVISIONING_PROFILE_SPECIFIER` overrides to the runner's *working copy* of
+  `macos/Runner/Configs/Release.xcconfig` — never committed, so the repo's actual checked-in
+  xcconfig and pbxproj are untouched. **This is unverified by a real CI run** — I could not confirm
+  locally whether `CODE_SIGN_STYLE=Manual` + a Mac-App-Store-only "3rd Party Mac Developer
+  Application" identity (rather than "Apple Distribution") is actually accepted for a plain
+  `xcodebuild build` (as opposed to an archive/export action) without a live run against real certs.
+
+#### Deviations from plan
+
+None — all four are corrective fixes to real, pasted CI failures, not new scope. Two required an
+explicit decision from the user (Android package-source question, macOS signing-reuse-vs-disable
+question) via `AskUserQuestion` rather than being guessed, given the risk of silently breaking
+either a published package's consumers or the just-recovered real App Store publishing path.
+
+**Ended at**: `flutter analyze` clean (0 issues), Linux validation step reordered and logically
+sound, macOS signing step added but **not yet confirmed by a real CI run** — the next real
+`build-macos` job run is the true test. Android left untouched at the user's explicit request (they
+are fixing `flutter_comics_viewer`'s own packaging separately). Cross-flow note: the macOS signing
+fix and its uncertainty are relevant to `sdd-comics-editor-publish`'s untested `release-macos` lane
+too — worth checking there if/when that lane is finally run for real.
