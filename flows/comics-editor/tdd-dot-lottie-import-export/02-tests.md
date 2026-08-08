@@ -1,8 +1,10 @@
 # Test Cases: dot-lottie-import-export
 
-> Version: 1.0
-> Status: APPROVED
-> Last Updated: 2026-08-07
+> Version: 1.1 (2026-08-08: NEW Category G added to already-approved v1.0 — Export/Import Modes,
+> per `01-requirements.md` v0.3's addition. Disclosed addition, not a silent rewrite.)
+> Status: APPROVED (v1.0 baseline; Category G approved 2026-08-08 via `03-specifications.md`'s
+> approval, which derives from and confirms it)
+> Last Updated: 2026-08-08
 > Requirements: [01-requirements.md](01-requirements.md)
 
 ## Overview
@@ -162,15 +164,98 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
   this case too — "unsupported"/"broken" are both review-screen flag states, not different code
   paths), other layers still import cleanly
 
+## Category G — Export/Import Modes: Full Canvas vs. Playback Viewport (NEW, 2026-08-08)
+
+Anchored on two real fixtures, per Anton's direct instruction: `samples/sample_v2012.comics_unzip`
+(real 1080×41500 `.comics`, ground truth for Full Canvas) and `samples/sample_playback_viewport
+.lottie_unzip` (real 720×1600 Lottie with confirmed root-level scene-sweep precomps, ground truth
+for Playback Viewport). See `01-requirements.md`'s new Export/Import Modes section for the byte-
+level findings these cases build on.
+
+**G1 — Full Canvas export produces a canvas-sized composition, identity time-basis, no scroll-speed dialog**
+- Given: a `.comics` document shaped like `sample_v2012.comics_unzip` (a tall canvas, layers at
+  fixed absolute Y positions)
+- When: exported in Full Canvas mode
+- Then: the output Lottie composition's `w`/`h` equal the `.comics` canvas size (not a viewport);
+  every keyframe's frame number equals the source `Anim.start`/`end` directly (identity, no ratio
+  applied); no scroll-speed prompt appears at all — Full Canvas mode has no such concept
+
+**G2 — Full Canvas import assumes fixed, non-moving scene placement, no root-sweep structure expected**
+- Given: a Lottie file with flat image/precomp layers at static (non-swept) positions — the shape
+  `sample_v2012.comics_unzip` would have if it were Lottie instead of `.comics`
+- When: imported in Full Canvas mode
+- Then: each layer's frame numbers become `.comics` scroll-pixel `start`/`end` directly (identity);
+  resulting `EditorLayer`s sit at fixed absolute positions on a (now-tall) canvas — no "scene sweeps
+  past a viewport" interpretation is applied, even if the source happened to contain one (Full
+  Canvas mode doesn't look for it)
+
+**G3 — Full Canvas round-trip using the real v2012 sample as ground truth (CORRECTED 2026-08-08, Anton: "из .lottie в .comics затем в .lottie")**
+- **Fixture prep** (one-time, not part of the round-trip itself): `samples/sample_v2012.comics_unzip`
+  (real, trusted `.comics` content) is exported to `.lottie` (Full Canvas mode) once, to produce a
+  real Full-Canvas-shaped `.lottie` file — no such file exists in `samples/` directly, since this
+  fixture is a `.comics` sample, not a `.lottie` one. That derived file becomes the actual
+  round-trip anchor from here on.
+- Given: the derived Full-Canvas-shaped `.lottie` file from fixture prep
+- When: imported into `.comics` (Full Canvas mode), then re-exported to `.lottie` (Full Canvas mode)
+- Then: rendered layer transforms at sampled scroll positions match the original within tolerance —
+  **the round-trip direction is `.lottie → .comics → .lottie`, matching G6's own direction exactly**
+  (both modes' round-trips start and end in Lottie, for consistency — this corrects an earlier draft
+  of this case that had Full Canvas round-tripping the opposite way, `.comics → .lottie → .comics`,
+  which Anton explicitly flagged as wrong)
+
+**G4 — Playback Viewport export produces a viewport-sized composition with a root-level scene sweep, requires a real scroll-speed value**
+- Given: a `.comics` document open for export, `scrollType == vertical` (today's only real value)
+- When: the user picks Playback Viewport mode and supplies (or accepts a default) constant
+  scroll-speed value
+- Then: the output composition's `w`/`h` equal the *viewport* size (not the full canvas); the canvas
+  is partitioned into scenes as sequential `ComicsDoc.preferredViewportHeight`-tall bands (DECIDED
+  2026-08-08 — `.comics` has no scene concept of its own, confirmed by direct inspection); each band
+  becomes its own precomp with exactly one root-level position keyframe pair sweeping that scene
+  past the fixed viewport, timed per the supplied speed — matching `ASHES.json`'s real "All
+  Objects1"/"All Objects2" structure exactly
+
+**G5 — Playback Viewport import: scroll/time classification defaults to all-scroll-basis (Requirements' heuristic (a), the safe first-ship default)**
+- Given: `samples/sample_playback_viewport.lottie_unzip` (real content — confirmed real per-layer
+  local `p`-keyframe wiggles distinct from the root sweep, per Requirements' byte-level findings)
+- When: imported in Playback Viewport mode
+- Then: every child layer's own local keyframes import as ordinary scroll-basis `Anim`s (today's
+  exact existing behavior) — this import path does **not** yet produce any real `Anim.basis ==
+  time` anims, even though `apps/comics-editor` already supports them (`tdd-dot-comics-format`'s
+  Plan Phase 5, shipped). This case exists specifically to pin down heuristic (a)'s actual behavior
+  so a future heuristic (b)/(c) change has a clear "before" to diff against, not an assumed one.
+
+**G6 — Playback Viewport round-trip using the real ASHES-based sample as ground truth**
+- Given: `samples/sample_playback_viewport.lottie_unzip`
+- When: imported (Playback Viewport mode; scroll speed auto-derived from the file's own root sweeps
+  — DECIDED 2026-08-08, computed to 149.49/150.00 px/sec for its two real scenes, 0.34% apart) then
+  exported back (Playback Viewport mode, same speed)
+- Then: rendered layer transforms at sampled scroll positions match the original within tolerance —
+  the second of the two real, concrete round-trip fixtures Anton named directly
+
+**G7 — Wrong-mode import produces a visibly wrong, not silently-broken, result**
+- Given: `samples/sample_playback_viewport.lottie_unzip` (a real viewport-shaped file)
+- When: imported in Full Canvas mode (the wrong mode for this file's real shape)
+- Then: no crash — but the 2 root-level precomp layers ("All Objects1"/"All Objects2") become 2
+  giant top-level `EditorLayer`-groups whose own position keyframes (the ~24000px sweep) are now
+  uninterpreted absolute motion across the *whole* document, not a per-scene viewport sweep,
+  producing a document that scrolls in a way that clearly doesn't match the original intent
+- Design implication / Open Design Question: should the review screen actively detect this
+  mismatch (the auto-detect option from `01-requirements.md`'s new Open Questions) and warn before
+  commit, or is choosing the right mode entirely on the user, with wrong-mode import treated as
+  ordinary "garbage in, garbage out"? Not decided.
+
 ## Completeness Check
 
 - [x] All requirements have behaviors — every Acceptance Criterion and every resolved Open Question
-      in `01-requirements.md` has at least one case above.
+      in `01-requirements.md` has at least one case above, including the new v0.3 Export/Import
+      Modes addition (Category G, 2026-08-08).
 - [x] Edge cases identified — all-unsupported-content (A2), cancel-leaves-no-trace (A4), the
-      mask-vs-polygon source distinction (C2), TextRegion-mask-has-no-Lottie-equivalent (D3).
+      mask-vs-polygon source distinction (C2), TextRegion-mask-has-no-Lottie-equivalent (D3),
+      wrong-mode import (G7).
 - [x] Error scenarios defined — F1/F2, plus A2's per-layer (not whole-file) flagging.
 - [x] Design implications extracted — most cases include one; the review screen's data-model
-      requirement (grouping must survive parse→review→commit) is the most structurally significant.
+      requirement (grouping must survive parse→review→commit) is the most structurally significant;
+      Category G's scroll/time classification heuristic (G5) is the most significant new one.
 
 ## Open Design Questions
 
@@ -182,12 +267,26 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
       they don't block writing the cases themselves.
 - [ ] Whether A1's "review screen" and B1-B3's "choice dialogs" are one combined screen or separate
       sequential steps — a UI-layout decision for Specifications, not resolved here.
+- [x] **(new, 2026-08-08) DECIDED**: G1-G7's "scene boundary" convention for Playback Viewport
+      export is sequential `ComicsDoc.preferredViewportHeight`-tall bands (the new
+      `tdd-dot-comics-format` field) — `.comics` has no scene concept of its own (confirmed by
+      direct inspection of `sample_v2012.comics_unzip/data.json`'s real keys). Affects G4 directly.
+- [ ] **(new, 2026-08-08)** G5's scroll/time classification heuristic — still just "(a), the safe
+      default," per Requirements. (b)/(c) remain real, undesigned improvements.
+- [x] **(new, 2026-08-08) DECIDED**: G7's wrong-mode-import question — auto-detect-with-override,
+      not silent trust. Detection: viewport-shaped `w`/`h` + the confirmed real root-sweep
+      keyframe shape suggests Playback Viewport; canvas-shaped with no sweep suggests Full Canvas;
+      either way the review screen shows the detection and lets the user override it.
 
 ---
 
 ## Approval
 
 - [x] Reviewed by: Anton Dodonov
-- [x] Approved on: 2026-08-07
-- [x] Notes: Approved as drafted, including the 3 Open Design Questions carried forward
-      unresolved into Specifications.
+- [x] Approved on: 2026-08-07 (v1.0 baseline, Categories A-F)
+- [x] Notes: v1.0 approved as drafted, including the 3 original Open Design Questions carried
+      forward unresolved into Specifications.
+- [x] **v1.1 addition (2026-08-08, Category G) — approved 2026-08-08.** G6/G4's scene-boundary and
+      scroll-speed questions resolved same-day with real evidence (see `03-specifications.md`'s
+      Open Design Questions). G5's scroll/time classification heuristic remains genuinely open,
+      carried forward to Plan.

@@ -33,9 +33,33 @@ Final state: 419 tests passing (up from 293 at the start of this flow's implemen
 images regenerated for intentional layout changes, zero regressions to any pre-existing real
 `.comics`/`.puzzle` sample file's backward compatibility.
 
+**NEW addition (2026-08-08), Requirements/Specifications only, not yet implemented**: a third
+independent document field, `preferredViewportWidth`/`preferredViewportHeight` (default 720×1600),
+added alongside `scrollType`/`preferredOrientation` per Anton's direct instruction (naming chosen
+by Claude, as delegated). Motivated by `flows/comics-editor/tdd-dot-lottie-import-export`'s
+Playback Viewport export/import mode — `01-requirements.md` v0.9, `03-specifications.md` v0.6, both
+approved same-session (narrow, directly-dictated addition, same treatment as the earlier masks/
+scrollType/orientation decisions). **Scope of this addition was explicitly Requirements+
+Specifications only** — no changes made to `apps/comics-editor`'s real `ComicsDoc`/`models_mapping
+.dart` (unlike `scrollType`/`preferredOrientation`, which are already implemented per Phase 2
+above) — this is a forward-looking schema decision awaiting its own Plan/Implementation pass,
+same pattern this format has used for every prior addition before it was actually built.
+
+**Second NEW addition (2026-08-08), also Requirements/Specifications only, not yet implemented**:
+`Layer.ZDepth`, a new optional per-layer numeric field for a parallax effect, per Anton's explicit
+instruction ("добавь в .comics v2026 в reqs и specs глубину z-depth для создания эффекта паралакс.
+По дефолту 0 или если не указано то 0 для совместимости с v2012"). Default `0`, with absent-key and
+explicit-`0` treated identically — matches every v2012-through-2026 file's current 1:1-with-scroll
+behavior exactly. `01-requirements.md` v0.10, `03-specifications.md` v0.7, both approved same-session
+(same narrow, directly-dictated treatment as every prior addition in this list). The exact parallax
+math (sign convention, scroll-response formula, whether it's baked at save time like `ParentId` or
+applied at render time, and whether it composes through `ParentId` chains) is explicitly left open,
+carried to Plan — **command scope was explicitly Requirements+Specifications only**, no code changes
+to `apps/comics-editor`.
+
 ## Last Updated
 
-2026-08-02 by Claude
+2026-08-08 by Claude (added `Layer.ZDepth` parallax-depth field to Requirements/Specifications)
 
 ## Correction (2026-08-07): the "MAJOR DISCOVERY" originally logged here was a different format, now split out
 

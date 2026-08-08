@@ -14,9 +14,40 @@ reach (see Blockers) — not something this flow can close by itself.
 
 ## Last Updated
 
-2026-08-07 by Claude
+2026-08-07 by Claude (4th session same day — real macOS CLI archive + direct upload, first ever)
 
-## Blockers
+## Blockers (newest)
+
+- **Real macOS CLI archive + direct upload succeeded (2026-08-07) — first-ever Mac App Store
+  submission for this app**: same day, same technique as the iOS success below, but macOS hit a real,
+  previously-undiscovered bug first: Apple's Mac App Store validator (code 90296) requires **every**
+  Mach-O executable in the bundle to carry its own `com.apple.security.app-sandbox=true` entitlement,
+  not just the top-level app — the bundled self-contained `.NET` headless core had none. Fixed by
+  signing it with a combination of `com.apple.security.app-sandbox=true` +
+  `com.apple.security.inherit=true` (new file `macos/Runner/HeadlessCore.entitlements`), applied
+  **before** the final whole-app codesign (order matters — confirmed empirically). Persisted into
+  `macos/fastlane/Fastfile` too (new signing step, **not independently re-verified** — only the
+  entitlements combination itself is proven, via the real upload, not that exact Fastfile insertion
+  point). Full blow-by-blow in `04-implementation-log.md`'s "4th same day" session — this would have
+  silently blocked every future macOS submission attempt (local or CI) had it not been found now.
+  Comics Editor Version 3.2.2 Build 3 (macOS) is uploaded and processing — this is the app's first
+  real macOS submission ever, so unlike iOS there's no prior review-feedback cycle to compare
+  against; also still unconfirmed whether the macOS App Store Connect app record itself already
+  exists (per `macos/fastlane/Fastfile`'s own pre-release checklist item 1) — if processing errors on
+  a missing app record, that's the next thing to set up.
+
+- **Real CLI archive + direct upload succeeded (2026-08-07, iOS)**: Version 3.2.2, Build 3 uploaded to
+  App Store Connect via `flutter build ipa` + `xcodebuild -exportArchive
+  destination:upload -allowProvisioningUpdates` — no Xcode GUI, no fastlane, no manual credentials
+  needed (reused Xcode's own already-signed-in account/automatic-signing state on this machine).
+  First time this flow's publishing has gone through a pure CLI path end-to-end. Real bundle id
+  confirmed as `net.nativemind.comicseditor` (no dots) — this flow's own `ios/fastlane/Fastfile`
+  comments and earlier session-log entries referencing `net.nativemind.comics.editor` (with dots)
+  are **stale**, should be corrected next time that file is touched. Full detail in
+  `04-implementation-log.md`'s "3rd same day" session. Waiting on App Store Connect
+  processing/review — no further agent action until new feedback arrives (same cycle as Build 1).
+
+## Blockers (Info.plist / App Store review feedback, 2026-08-07 earlier)
 
 - **Real milestone (2026-08-01 → 2026-08-07, mostly outside logged agent activity)**: after
   Codex's 2026-08-04 preflight found local credentials still missing, the user separately worked

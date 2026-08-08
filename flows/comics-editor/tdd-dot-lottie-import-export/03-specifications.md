@@ -1,10 +1,10 @@
 # Specifications: dot-lottie-import-export
 
-> Version: 1.2 (2026-08-07: superseding update — `.comics` v2026 now has a real `Layer.ParentId`
-> mechanism; the correction below's "bake and discard" plan is upgraded to "map directly onto
-> ParentId." Not yet approved, so amended directly.)
-> Status: DRAFT
-> Last Updated: 2026-08-07
+> Version: 1.3 (2026-08-08: NEW — Export/Import Modes, Full Canvas vs. Playback Viewport, per
+> `01-requirements.md` v0.3/`02-tests.md` v1.1's addition. Still DRAFT throughout, so amended
+> directly rather than as a disclosed-correction callout like the v1.2 note below.)
+> Status: APPROVED
+> Last Updated: 2026-08-08
 > Requirements: [01-requirements.md](01-requirements.md)
 > Tests: [02-tests.md](02-tests.md)
 
@@ -53,6 +53,17 @@ general-parenting-derived, per the correction above) and lettering-region data t
 directions. Every interface/data model below traces to a specific Test Case in `02-tests.md` — see
 the Traceability Matrix at the end.
 
+**NEW (2026-08-08)**: both directions now take an explicit `ExportImportMode` — **Full Canvas**
+(the whole tall canvas, identity time-basis, today's existing assumptions, just named) or
+**Playback Viewport** (a viewport-sized composition, scenes take turns sweeping past it at an
+assumed constant scroll speed, per-layer motion composed as scroll-basis + time-basis `Anim`s).
+See `01-requirements.md`'s Export/Import Modes section for the real byte-level grounding
+(`samples/sample_v2012.comics_unzip` for Full Canvas, `samples/sample_playback_viewport
+.lottie_unzip` for Playback Viewport) and `02-tests.md`'s Category G for the behavioral cases.
+Playback Viewport mode's scroll+time composition is not a new mechanism this flow invents — it
+directly reuses `apps/comics-editor`'s already-shipped `Anim.basis`/`ComicsDoc.scrollType`
+(`flows/tdd-dot-comics-format`'s Plan, Phases 2 and 5).
+
 ## Affected Systems
 
 | System | Impact | Notes |
@@ -72,12 +83,14 @@ the Traceability Matrix at the end.
 
 ```
 Import direction:
-  .lottie file --> LottieDocument (lottie_mapping.dart, pure parse)
+  .lottie file --> [mode: fullCanvas | playbackViewport, chosen or detected] --> LottieDocument
+                    (lottie_mapping.dart, pure parse)
                         |
                         v
                   ImportPreview (lottie_import.dart)
-                  -- per-layer: clean | flagged(reason) | grouped(with N members)
-                  -- pending choices: timeBaseRatio, easingPrecision
+                  -- per-layer: clean | flagged(reason) | grouped(with N members) | scened(index)
+                  -- pending choices: easingPrecision (both modes); scrollSpeed (playbackViewport
+                     only -- fullCanvas mode skips this choice entirely, per Test G1)
                         |
                         v
               [Review screen UI -- user adjusts choices, sees flags]
@@ -98,20 +111,52 @@ Export direction:
 
 ```
 Import: file picked -> lottie_mapping.parse(bytes) -> LottieDocument
-     -> lottie_import.buildPreview(LottieDocument) -> ImportPreview
+     -> user (or auto-detect, per Open Design Question) picks ExportImportMode
+     -> lottie_import.buildPreview(LottieDocument, mode) -> ImportPreview
+
+     [mode == fullCanvas]
         (walks LottieDocument.layers; ty:2 => clean; ty:4/5/mask-bearing => flagged;
-         ty:0 precomp => resolve nested comp asset's layers, tag with one new groupId)
-     -> user sets ImportPreview.timeBaseRatio, .easingPrecision (or accepts defaults)
+         ty:0 precomp => resolve nested comp asset's layers, tag with one new groupId;
+         frame numbers used AS-IS as .comics scroll-pixel start/end -- identity, no ratio,
+         no scroll-speed prompt at all, per Test G1/G2)
+
+     [mode == playbackViewport]
+        (walks LottieDocument.layers looking for the real root-sweep shape confirmed in
+         samples/sample_playback_viewport.lottie_unzip: root-level ty:0 layers, each with
+         exactly one position keyframe pair spanning most of that layer's own ip/op range --
+         each such root layer becomes one "scene"; the sweep's total pixel distance / duration,
+         combined with the user-supplied or file-derived scroll speed, produces that scene's
+         .comics scroll-position range; each scene's own child layers' local keyframes import as
+         scroll-basis Anims by default (heuristic (a), Test G5) -- NOT YET split into a real
+         time-basis overlay; that split is Requirements' still-open heuristic (b)/(c))
+
+     -> user sets ImportPreview.easingPrecision (or accepts default); timeBaseRatio only applies/
+        appears at all in playbackViewport mode (fullCanvas mode has no such dialog, per G1)
      -> user commits -> lottie_import.commit(preview, doc)
-        (for each clean/grouped layer: create EditorLayer; for each animated property (p/r/s/o):
-         create Anim entries, frame numbers divided by timeBaseRatio -> start/end;
+        (for each clean/grouped/scened layer: create EditorLayer; for each animated property
+         (p/r/s/o): create Anim entries per the mode-specific frame->scroll-pixel mapping above;
          easing handles -> either matched via curve-fit (exact) or passed through as Easy-Ease
          equivalent (approximation) -- both currently produce .comics's one fixed cubic ease-out
          per Test B3's finding, so this choice is real but not yet observably different in output)
 
-Export: doc -> lottie_export.build(doc, timeBaseRatio, easingPrecision)
-     -> for each EditorLayer: one Lottie ty:2 layer; each Anim range -> one keyframe pair,
-        frame numbers = start/end * timeBaseRatio; groupId-sharing layers -> one shared precomp
+Export: doc -> lottie_export.build(doc, mode, timeBaseRatio, easingPrecision)
+
+     [mode == fullCanvas]
+        (composition w/h = doc.width/doc.height; frame numbers = start/end directly, no ratio,
+         per Test G1)
+
+     [mode == playbackViewport]
+        (composition w/h = the supplied viewport size; DECIDED 2026-08-08 -- the canvas is
+         partitioned into scenes as sequential ComicsDoc.preferredViewportHeight-tall bands (the
+         new tdd-dot-comics-format field, default 1600), since .comics has no scene concept of its
+         own at all -- confirmed by direct inspection of samples/sample_v2012.comics_unzip/data.json,
+         whose only top-level keys are width/height/layers/sounds, no scene marker of any kind; each
+         band becomes one precomp with one root-level position keyframe pair sweeping it past the
+         viewport at the supplied/detected constant scroll speed; each layer's scroll-basis Anim
+         contributes to that sweep's baseline, any time-basis Anim composes on top per
+         KeyframeInterpolator's already-shipped composition rule, unchanged, just consumed here)
+
+     -> for each EditorLayer: one Lottie ty:2 layer; groupId-sharing layers -> one shared precomp
         asset instead of N independent root layers; TextRegion (shape:polygon) -> masksProperties
      -> JSON encode + zip alongside referenced image assets -> .lottie file
 ```
@@ -171,48 +216,90 @@ Uint8List writeLottieDocument(LottieDocument doc, {required List<AssetFile> asse
 ```
 
 ```dart
-// lib/src/ui/lottie/lottie_import.dart
+// lib/src/ui/lottie/lottie_import.dart (NEW enum 2026-08-08, per 01-requirements.md's
+// Export/Import Modes section -- grounded in samples/sample_v2012.comics_unzip (fullCanvas) and
+// samples/sample_playback_viewport.lottie_unzip (playbackViewport))
+enum ExportImportMode { fullCanvas, playbackViewport }
+
 enum LayerPreviewStatus { clean, flagged, missingAsset }
 
 class LayerPreview {
-  LayerPreview(this.sourceLayer, this.status, {this.reason, this.groupId, this.groupName});
+  LayerPreview(this.sourceLayer, this.status,
+      {this.reason, this.groupId, this.groupName, this.sceneIndex});
   final LottieLayer sourceLayer;
   final LayerPreviewStatus status;
   final String? reason;       // populated when flagged/missingAsset (Test A2, F2)
   final String? groupId;      // shared across a precomp's resolved member layers (Test A3)
   final String? groupName;    // the precomp's own `nm`, shown as "(from precomp '<name>')"
+  final int? sceneIndex;      // NEW: which recovered scene (root-sweep precomp) this layer
+                               // belongs to -- only set when mode == playbackViewport (Test G4/G5);
+                               // null in fullCanvas mode, where there's no scene concept at all
 }
 
-enum TimeBaseChoice { identity, custom }
 enum EasingChoice { exactCubicFit, easyEaseApproximation }
 
-/// The review screen's whole data model (Category A + B). Built once per
-/// picked file; mutated only by the two choice setters until commit()/cancel().
+/// The review screen's whole data model (Category A + B + G). [mode] is
+/// chosen before the preview is built, not after -- it changes how layers
+/// are classified in the first place (Test G1 vs G4/G5), not just how the
+/// resulting Anims get scaled.
 class ImportPreview {
-  ImportPreview(this.document, this.layers);
+  ImportPreview(this.document, this.mode, this.layers);
   final LottieDocument document;
+  final ExportImportMode mode;
   final List<LayerPreview> layers;
-  TimeBaseChoice timeBase = TimeBaseChoice.identity; // Requirements' recommended default (Test B1)
-  double? customRatio; // required when timeBase == custom (Test B2)
-  EasingChoice easing = EasingChoice.easyEaseApproximation; // matches real-content convention
+
+  /// Pixels-per-frame. Only meaningful, and only ever shown in the review
+  /// screen, when [mode] == playbackViewport (Test G4/G6) -- Full Canvas
+  /// mode is always identity and has no such dialog at all (Test G1/G2).
+  /// DECIDED 2026-08-08, grounded in exact computation on real data:
+  /// [ImportPreview.build] auto-derives this from the detected root-sweep
+  /// keyframes' own position-delta/frame-delta (confirmed real content
+  /// authors close to one consistent speed across scenes -- ASHES.json's
+  /// two real sweeps compute to 149.49 and 150.00 px/sec, 0.34% apart) and
+  /// pre-fills it here, still user-editable, never silently un-overridable.
+  /// A file with no detectable sweep shape leaves this null, requiring a
+  /// plain user-entered value instead.
+  double? scrollSpeed;
+
+  EasingChoice easing = EasingChoice.easyEaseApproximation; // matches real-content convention,
+                                                             // applies in both modes equally
 
   int get cleanCount => layers.where((l) => l.status == LayerPreviewStatus.clean).length;
   int get flaggedCount => layers.length - cleanCount;
 
   /// Builds the preview from a parsed document -- pure, no side effects,
-  /// callable independently of any UI (Tests A1-A3, F2).
-  static ImportPreview build(LottieDocument document);
+  /// callable independently of any UI (Tests A1-A3, F2, G1-G2). In
+  /// playbackViewport mode, looks for the real root-sweep shape confirmed in
+  /// `samples/sample_playback_viewport.lottie_unzip` (root-level ty:0 layers
+  /// each with one position keyframe pair spanning most of their own ip/op
+  /// range) to assign `sceneIndex` AND to auto-populate [scrollSpeed] (per
+  /// its own doc comment); a file with no such structure produces zero
+  /// scenes, which the review screen should treat as its own flagged state
+  /// (Open Design Question, not yet specified precisely).
+  static ImportPreview build(LottieDocument document, ExportImportMode mode);
 }
 
 /// Applies [preview]'s current choices, mutating [doc]. No-op-safe to never
-/// call (Test A4 -- cancel just discards the ImportPreview object).
+/// call (Test A4 -- cancel just discards the ImportPreview object). In
+/// playbackViewport mode, every child layer's own local keyframes import as
+/// scroll-basis Anims by default (heuristic (a), Test G5) -- this function
+/// does not yet produce any Anim.basis == time output, even though
+/// ComicsDoc/EditorLayer already support it.
 void commitImport(ImportPreview preview, ComicsDoc doc);
 ```
 
 ```dart
 // lib/src/ui/lottie/lottie_export.dart
-LottieDocument buildLottieExport(ComicsDoc doc,
-    {required TimeBaseChoice timeBase, double? customRatio, required EasingChoice easing});
+LottieDocument buildLottieExport(
+  ComicsDoc doc,
+  ExportImportMode mode, {
+  // Required when mode == playbackViewport (Test G4); ignored for fullCanvas
+  // (Test G1, which has no scroll-speed/viewport-size concept at all).
+  double? scrollSpeed,
+  int? viewportWidth,
+  int? viewportHeight,
+  required EasingChoice easing,
+});
 ```
 
 ### Modified Interfaces
@@ -269,6 +356,8 @@ defaults) → one `.lottie` file written, valid per a generic Lottie schema chec
 | Cancel | A4 | Zero document mutation |
 | Missing asset file | F2 | Per-layer flag (`LayerPreviewStatus.missingAsset`), not a fatal whole-file error |
 | Raster `TextRegion` on export | D3 | **Unresolved** — no Lottie raster-mask equivalent exists; Open Design Question, not guessed |
+| Wrong mode for the file's real shape | G7 | No crash; produces a visibly-wrong-but-not-broken document (e.g. a viewport-shaped file imported as fullCanvas turns its 2 scene-sweep precomps into 2 giant document-wide-motion layers) — whether to detect and warn is an Open Design Question |
+| Zero recovered scenes in playbackViewport mode | (new, not yet a Test Case) | A Lottie file with no root-sweep-shaped layers at all, imported in playbackViewport mode — should probably be its own flagged/warning state (mirrors A2's all-unsupported case), not specified precisely yet |
 
 ### Error Handling
 
@@ -282,7 +371,8 @@ defaults) → one `.lottie` file written, valid per a generic Lottie schema chec
 
 ### Requires
 
-- Approved `01-requirements.md` (v0.2) and `02-tests.md` (v1.0) — done.
+- Approved `01-requirements.md` (v0.2 baseline; v0.3's Export/Import Modes addition pending
+  re-review) and `02-tests.md` (v1.0 baseline; v1.1's Category G addition pending re-review).
 - The `Layer.GroupId` design from `flows/comics-editor/vdd-comics-editor-systematization-uiux`
   (Layer Grouping section) — this flow's `groupId` field is that same design, not a second,
   independent one.
@@ -314,17 +404,34 @@ Lottie, only converts to/from `.comics`).
 - [ ] `parseLottieDocument`: valid file parses (A1); missing top-level keys throws (F1); each
       `LottieLayer.type` maps to the right supported/unsupported classification (A2)
 - [ ] `ImportPreview.build`: precomp resolution produces correctly-grouped `LayerPreview`s (A3);
-      all-unsupported input produces 0 clean (A2 edge case)
+      all-unsupported input produces 0 clean (A2 edge case); **fullCanvas mode** uses frame numbers
+      directly, no ratio, no scroll-speed field populated (G1/G2); **playbackViewport mode**
+      correctly detects the real root-sweep shape and assigns `sceneIndex` (G4/G5)
 - [ ] `commitImport`: identity ratio (B1) and custom ratio (B2) produce correctly-scaled `Anim`
-      start/end, consistently across every property type on every layer (B2's specific concern)
+      start/end, consistently across every property type on every layer (B2's specific concern);
+      **playbackViewport mode**'s per-layer local keyframes import as scroll-basis (not time-basis)
+      Anims per heuristic (a) (G5)
 - [ ] `buildLottieExport`: `groupId`-sharing layers produce one precomp, not N roots (D2);
-      `TextRegion.shape=="polygon"` produces a real `masksProperties` entry (D3)
+      `TextRegion.shape=="polygon"` produces a real `masksProperties` entry (D3); **fullCanvas
+      mode** produces a canvas-sized composition with no scroll-speed dependency (G1);
+      **playbackViewport mode** produces a viewport-sized composition with one root-sweep precomp
+      per scene (G4)
 
 ### Integration Tests
 
 - [ ] Real-file round-trip (E1): import `samples/sample.lottie` → export → re-import → compare
       rendered transforms at sampled scroll positions within tolerance
 - [ ] F2 against a deliberately-broken copy of a real sample (one asset file removed)
+- [ ] **Full Canvas round-trip (G3, CORRECTED 2026-08-08)**: fixture prep — export
+      `samples/sample_v2012.comics_unzip` to `.lottie` (fullCanvas) once to produce a real
+      Full-Canvas-shaped `.lottie` file; the round-trip test itself then runs
+      `.lottie` → import (fullCanvas) → export (fullCanvas) → `.lottie`, comparing rendered
+      transforms — same direction as G6, not the reverse (an earlier draft had this round-tripping
+      `.comics → .lottie → .comics`, which Anton corrected)
+- [ ] **Playback Viewport round-trip (G6)**: `samples/sample_playback_viewport.lottie_unzip` →
+      import (playbackViewport) → export (playbackViewport) → compare
+- [ ] **Wrong-mode import (G7)**: `samples/sample_playback_viewport.lottie_unzip` imported in
+      fullCanvas mode — confirm no crash, document the actually-produced (wrong but defined) shape
 
 ### Manual Verification
 
@@ -343,13 +450,17 @@ risk.
 |---|---|
 | `LottieDocument`/`parseLottieDocument` | A1, A2, F1 |
 | `LayerPreviewStatus`/`LayerPreview` | A1, A2, A3, F2 |
-| `ImportPreview` + `TimeBaseChoice`/`EasingChoice` | A1, B1, B2, B3 |
+| `ImportPreview` + `EasingChoice` | A1, B1, B2, B3 |
 | `commitImport` | A1, A3, A4, B1, B2 |
 | `EditorLayer.groupId` | A3, D2 |
 | `EditorLayer.textRegion` / `TextRegion` | C1, C2, D3 |
 | `buildLottieExport` | D1, D2, D3 |
 | Round-trip behavioral equivalence | E1 |
 | New menu entries (not the existing Export button) | (Requirements' UI-entry-point decision; no dedicated Test Case beyond A1's "picked via Import from .lottie" premise) |
+| `ExportImportMode` (NEW 2026-08-08) | G1, G2, G4, G7 |
+| `ImportPreview.scrollSpeed`/`LayerPreview.sceneIndex` (NEW) | G4, G5, G6 |
+| Full Canvas round-trip (real fixture) | G3 |
+| Playback Viewport round-trip (real fixture) | G6 |
 
 ## Open Design Questions
 
@@ -375,11 +486,47 @@ risk.
       layer chain (e.g. `THE BROKEN TUSK`'s up-to-64%-parented rig)? A3's mockup-equivalent assumed
       one shallow precomp-to-group mapping — a multi-level parent chain may need a different
       visualization (nested tree rows?) not yet designed.
+- [x] **(new, 2026-08-08) DECIDED (2026-08-08)** Exact scene-boundary convention for Playback
+      Viewport export: **sequential `ComicsDoc.preferredViewportHeight`-tall bands** (the new
+      `tdd-dot-comics-format` field, default 1600) — `.comics` has no scene concept of its own to use
+      instead, confirmed by direct inspection of `samples/sample_v2012.comics_unzip/data.json`'s real
+      top-level keys (`width`/`height`/`layers`/`sounds` only, no scene marker of any kind). This is
+      the same reasoning that motivated adding `preferredViewportHeight` to the format in the first
+      place — the two additions were designed to fit together, not independently.
+- [ ] **(new, 2026-08-08)** `ImportPreview.build`'s scroll/time classification heuristic for
+      playbackViewport mode — ships as heuristic (a) (everything scroll-basis, per
+      `01-requirements.md`) for now; (b)/(c) are real, undesigned improvements, not silently
+      abandoned.
+- [x] **(new, 2026-08-08) DECIDED (2026-08-08)**, grounded in exact computation: `ImportPreview
+      .scrollSpeed` **is auto-derived when the root-sweep shape is detected**, shown pre-filled and
+      editable, never silently applied. `ASHES.json`'s two real root sweeps compute to 149.49 and
+      150.00 px/sec respectively — within 0.34% of each other, real evidence the file was authored
+      against one consistent speed. A file with no such sweep structure (or opened in the wrong
+      mode) has nothing to derive from and falls back to a plain user-entered value. See
+      `01-requirements.md`'s equivalent entry for the full computation.
+- [x] **(new, 2026-08-08) DECIDED (2026-08-08)** Mode selection UI: **auto-detect with override**,
+      not a cold blank choice. Detection heuristic: a composition whose `w`/`h` are phone-viewport-
+      shaped (roughly device-screen-sized, not `sample_v2012.comics_unzip`'s real ~38:1
+      width:height ratio) **and** whose root-level layers show the confirmed real sweep shape (one
+      dominant position-keyframe pair spanning most of that layer's own `ip`/`op` range) suggests
+      Playback Viewport; a composition sized like the canvas itself with no such sweep suggests Full
+      Canvas. The review screen shows the detected mode explicitly and lets the user override it —
+      the same "signal, don't silently assume" principle Джанава's UI/UX vision already established
+      for this exact review screen (`01-requirements.md`'s UI entry point decision).
 
 ---
 
 ## Approval
 
-- [ ] Reviewed by:
-- [ ] Approved on:
-- [ ] Notes:
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-08
+- [x] Notes: Approved as drafted (v1.3), including the Export/Import Modes addition and its 3
+      same-day resolutions (scene-boundary convention, scroll-speed auto-derivation,
+      mode-selection UI). This approval also confirms `01-requirements.md` v0.3's and
+      `02-tests.md` v1.1's Category G addition, which this document derives from directly (same
+      feature, same session) — both were left "pending re-review" pending this approval, not
+      separately re-confirmed. 6 Open Design Questions remain genuinely open, carried forward to
+      Plan rather than blocking approval: D3's raster-mask export gap, the 2 deferred Text Region
+      sub-questions, the review-screen-vs-choice-dialogs UI-structure question, whether the mask
+      exclusion gets re-confirmed, how the review screen represents a deeply-parented layer chain,
+      and G5's scroll/time classification heuristic (ships as "everything scroll-basis" for now).

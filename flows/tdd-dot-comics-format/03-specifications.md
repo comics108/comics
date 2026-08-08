@@ -1,9 +1,9 @@
 # Specifications: dot-comics-format (TDD)
 
-> Version: 0.5 (CORRECTED 2026-08-07: device orientation is now a real `.comics` field —
-> `preferredOrientation`, 3 values including "auto" — not platform-config-only as v0.4 said)
+> Version: 0.7 (2026-08-08: NEW — `Layer.ZDepth`, an optional per-layer parallax-depth field,
+> default `0`, absent-key treated identically to explicit `0` for v2012 compatibility)
 > Status: APPROVED
-> Last Updated: 2026-08-07
+> Last Updated: 2026-08-08
 > Requirements: [01-requirements.md](01-requirements.md)
 > Tests: [02-tests.md](02-tests.md) (Test Cases B2-B5, D4, and the animation-inventory background
 > this derives from)
@@ -24,6 +24,8 @@ Anton's explicit request that they not live only in Tests:
    deliberately kept separate from `Kind` (role).
 5. **`scrollType` vs. device orientation as two independent dimensions** (Test Cases B2-B5) —
    content-scroll-axis vs. device-screen-orientation, never coupled or inferred from each other.
+6. **`Layer.ZDepth`** — a new optional per-layer parallax-depth field, default `0`, for faking depth
+   via scroll-response scaling on a format that otherwise remains genuinely flat 2D.
 
 ## Affected Systems
 
@@ -325,13 +327,90 @@ ever open new v2026-authored content that uses it.
 
 ---
 
-## `scrollType` vs. Device Orientation — Specification (DECIDED 2026-08-02, escalated 2026-08-07, CORRECTED 2026-08-07)
+## `Layer.ZDepth` — Parallax Depth — Specification (NEW, 2026-08-08)
+
+Per Anton's direct instruction: add a `z-depth` field to `.comics` v2026 for a parallax effect,
+defaulting to `0` — the same value whether the key is absent or explicitly `0` — for v2012
+compatibility. See `01-requirements.md`'s own section for the full narrative/rationale; this section
+states the interface/data-model/behavior shape.
+
+### Interfaces (New Types)
+
+```dart
+// lib/src/ui/models.dart -- EditorLayer, modified (additive)
+class EditorLayer {
+  // ...existing + id/parentId/solidColor/mask from above...
+  double zDepth = 0.0; // NEW -- optional per-layer parallax depth. 0 (the default, and every
+                        // existing/unmarked layer's implicit value) == no depth offset -- today's
+                        // exact 1:1-with-scroll behavior, unchanged. Absent JSON key and an
+                        // explicit `0` are the SAME value, not two distinguishable states.
+                        // Sign convention, scroll-response formula, and unit/range are not yet
+                        // decided -- see Open Design Questions.
+}
+```
+
+### Data Models — Schema Changes
+
+One new optional `Layer` key in `data.json`: `zDepth` (number). Absent → `0` — and, per Anton's
+explicit instruction, absent and explicit-`0` must resolve to the identical behavior, not be treated
+as two distinguishable states. Additive and ignorable by old readers, the same pattern as `id`/
+`parentId`/`solidColor`/`mask` above.
+
+### Behavior Specification
+
+**Happy path**: every existing file (all 27 dataset files, `samples/sample_v2012.comics`, every
+2012-through-2026-authored document) has no `zDepth` key on any layer, resolves every layer to `0`,
+and renders byte-identical to today — no reader anywhere currently has a concept of depth to apply.
+
+**The critical backward-compatibility invariant (mirrors `ParentId`'s own framing)**: a layer's
+`Anim` keyframes remain the literal, authored motion regardless of `zDepth`. `zDepth` is meant to
+modulate how a *`ZDepth`-aware reader* computes a layer's effective on-screen position from its
+authored `Anim` value and the current scroll position — it does not change what gets persisted, and
+a reader that has never heard of `zDepth` still renders every layer using its `Anim` values exactly
+as it does today. (Contrast with `ParentId`, where the *editor* resolves live-relative values into
+absolutes at save time — here, per the Requirements framing, the modulation is conceptually applied
+at *render* time by a reader that understands `zDepth`, not baked into the persisted `Anim` values.
+This distinction, and its consequences for a `zDepth`-unaware reader opening `zDepth`-bearing content,
+is flagged in Open Design Questions rather than fully specified here.)
+
+**Not a new driving dimension**: per "Layer & animation model" and the scroll-vs-time section in
+`01-requirements.md`, every `Anim` is a pure function of one driving value (scroll, or optionally
+time). `zDepth` modulates the scroll-driven case specifically; it is a coefficient, not a third
+independent value a layer's `Anim` is a function of.
+
+### Edge Cases
+
+| Case | Trigger | Expected Behavior |
+|------|---------|-------------------|
+| `zDepth` absent | Every existing v2012-2026 file | Resolves to `0`, byte-identical rendering to today |
+| `zDepth == 0` explicit | Any file | Resolves identically to absent — no distinguishable behavior between the two states anywhere in this format, per Anton's explicit instruction |
+| Negative `zDepth` | Author intentionally marks a layer "closer" than the default plane (or the reverse, depending on the eventual sign convention) | Must be accepted, not rejected — the value's exact effect is part of the open sign-convention question, but the value itself is legal |
+| `zDepth` set on a layer that also has `ParentId` set | A parented, depth-shifted layer | Not yet resolved whether depth composes through the parent chain (child inherits/adds to parent's own depth) or is purely per-layer/independent — flagged as a new open question, mirroring the existing `ParentId`/`GroupId` relationship question |
+| `zDepth` combined with a time-basis anim (`Anim.basis == time`) on the same layer | Real, valid combination once both features exist | Per the Requirements framing, depth should modulate the scroll-driven contribution only — a purely time-based property on that layer should be unaffected by `zDepth`, though this composition has not been tested or fully confirmed |
+| `zDepth` on a `Kind == "organizational"` layer (no visual content) | Unusual combination | Almost certainly meaningless (nothing to visually offset) — likely worth a soft editor warning, not a hard error, mirroring the equivalent `mask`-on-organizational-layer edge case above |
+
+### Testing Strategy
+
+- [ ] Unit: absent `zDepth` and explicit `zDepth: 0` produce identical rendered output for the same
+      layer at the same scroll position
+- [ ] Integration: every real dataset file + `samples/sample_v2012.comics` has zero `zDepth` keys —
+      confirms this addition doesn't alter parsing of any existing real file
+- [ ] Unit (blocked on the formula being decided): a nonzero `zDepth` layer's effective on-screen
+      position differs from its literal authored `Anim` value by the decided scroll-response formula
+- [ ] Unit (blocked on the `ParentId`-composition question being decided): a `zDepth`-bearing layer
+      that also has a `zDepth`-bearing parent resolves depth per whatever composition rule is chosen
+
+---
+
+## `scrollType` vs. Device Orientation vs. Preferred Viewport Size — Specification (DECIDED 2026-08-02, escalated 2026-08-07, CORRECTED 2026-08-07, third field added 2026-08-08)
 
 Escalated from `02-tests.md`'s Test Cases B2-B5 into Specifications proper, per Anton's explicit
-request. **Corrected same day**: device orientation is no longer platform-config-only — it becomes
-a real `.comics` field too (`preferredOrientation`), per Anton's direct instruction. Two genuinely
-independent *fields*, specified separately below — see `01-requirements.md` for the full
-narrative/rationale; this section states interfaces/data models/behavior.
+request. **Corrected 2026-08-07**: device orientation is no longer platform-config-only — it becomes
+a real `.comics` field too (`preferredOrientation`), per Anton's direct instruction. **New
+2026-08-08**: a third field, `preferredViewportWidth`/`preferredViewportHeight` (default 720×1600),
+motivated by `flows/comics-editor/tdd-dot-lottie-import-export`'s Playback Viewport export/import
+mode. Three genuinely independent *fields*, specified separately below — see `01-requirements.md`
+for the full narrative/rationale; this section states interfaces/data models/behavior.
 
 ### Interfaces (New Types)
 
@@ -354,6 +433,13 @@ class ComicsDoc {
       // the document's OWN declared preference for device orientation. Independent of
       // scrollType -- neither field may be inferred from the other, even though most real
       // content will likely pair scrollType=vertical with preferredOrientation=portrait.
+
+  // NEW, 2026-08-08: independent of both fields above -- scale/extent of the intended viewing
+  // window, not direction. Default 720x1600 matches the real value found in
+  // samples/sample_playback_viewport.lottie_unzip (checked byte-level). Flat ints, not a nested
+  // {width,height} object, to stay structurally parallel with ComicsDoc's own width/height.
+  int preferredViewportWidth = 720;
+  int preferredViewportHeight = 1600;
 }
 ```
 
@@ -367,24 +453,27 @@ platform API is called — that mapping is Plan/Implementation work, not specifi
 
 ### Data Models — Schema Changes
 
-Two new optional root-level `data.json` keys: `scrollType` (string, `"vertical"`/`"horizontal"`)
-and `preferredOrientation` (string, `"portrait"`/`"landscape"`/`"auto"`). Both omitted → their
-respective defaults (`"vertical"`, `"portrait"`) — matching every real file's current, unchanged
+Four new optional root-level `data.json` keys: `scrollType` (string, `"vertical"`/`"horizontal"`),
+`preferredOrientation` (string, `"portrait"`/`"landscape"`/`"auto"`), and (NEW, 2026-08-08)
+`preferredViewportWidth`/`preferredViewportHeight` (ints). All four omitted → their respective
+defaults (`"vertical"`, `"portrait"`, `720`, `1600`) — matching every real file's current, unchanged
 behavior, the same additive/ignorable-by-old-readers pattern as every other schema change here.
 
 ### Behavior Specifications
 
 **Happy path**: every existing file (all 27 dataset files, `samples/sample_v2012.comics`, every
-2012-through-2026-authored document) has neither key and resolves to `scrollType="vertical"`,
-`preferredOrientation="portrait"` — the exact behavior every reader already has today, verified by
-Test Case B4 (and its `preferredOrientation` equivalent, not yet its own test ID — see Testing
-Strategy).
+2012-through-2026-authored document) has none of the four keys and resolves to
+`scrollType="vertical"`, `preferredOrientation="portrait"`, `preferredViewportWidth=720`,
+`preferredViewportHeight=1600` — the exact behavior every reader already has today, verified by Test
+Case B4 (and its `preferredOrientation`/`preferredViewportWidth`/`Height` equivalents, not yet their
+own test IDs — see Testing Strategy).
 
 **The independence invariant (must be tested directly, not assumed)**: a reader's decision logic
 for "which axis does content scroll" must read `scrollType` and nothing else; its decision logic
 for "what orientation should this document request" must read `preferredOrientation` and nothing
-else. Neither field's code path may branch on the other's value, even now that both live in the
-same file.
+else; its decision logic for "what viewport size was this authored for" must read
+`preferredViewportWidth`/`Height` and nothing else. No field's code path may branch on another's
+value, even now that all three live in the same file.
 
 ### Edge Cases
 
@@ -395,18 +484,22 @@ same file.
 | Unknown `scrollType`/`preferredOrientation` value (neither of the recognized strings) | Malformed/future file | Should default to `"vertical"`/`"portrait"` respectively (safest), matching this format's established unknown-value-tolerant convention (Test D3's JSON-unknown-key tolerance, applied here to an unknown *value* instead) |
 | `preferredOrientation="auto"` combined with any `scrollType` | Real, valid combination | No coupling — a reader honoring `auto` lets the device rotate freely regardless of whether content scrolls vertically or horizontally; still two independent lookups |
 | `scrollType="horizontal", preferredOrientation="portrait"` (or any other "unusual" pairing) | Real, valid combination — must not be rejected | The independence principle means this is a legal, if unusual, combination — no validation should reject it just because it doesn't match today's only-exercised pairing |
+| `preferredViewportWidth`/`Height` present but `scrollType`/`preferredOrientation` absent (or any other partial combination) | Real, valid combination | Each of the three fields resolves independently to its own default when absent — no field's presence implies or requires another's presence |
+| Non-positive or absurd `preferredViewportWidth`/`Height` (e.g. 0 or negative) | Malformed/hand-edited file | Not yet specified whether this should clamp to the default, reject, or pass through as-is — flagged as a genuine gap, not guessed (mirrors this format's general stance of tolerating unknown *values* per the row above, but a non-positive dimension is a different class of problem than an unrecognized enum string) |
 
 ### Testing Strategy
 
-- [ ] Unit: absent `scrollType`/`preferredOrientation` resolve to `vertical`/`portrait` (Test B4 +
-      new equivalent)
-- [ ] Unit: a reader's orientation-preference decision never reads `scrollType`, and its scroll-axis
-      decision never reads `preferredOrientation` — a real, direct test of the independence
-      invariant (e.g. a mock reader configured with all combinations of the two fields' values,
-      asserting neither setting leaks into the other's decision)
+- [ ] Unit: absent `scrollType`/`preferredOrientation`/`preferredViewportWidth`/`Height` resolve to
+      `vertical`/`portrait`/`720`/`1600` (Test B4 + new equivalents)
+- [ ] Unit: a reader's orientation-preference decision never reads `scrollType` or
+      `preferredViewportWidth`/`Height`; its scroll-axis decision never reads `preferredOrientation`
+      or the viewport-size fields; its viewport-size decision never reads the other two — a real,
+      direct test of the independence invariant across all three fields (e.g. a mock reader
+      configured with all combinations of the three fields' values, asserting no setting leaks into
+      another's decision)
 - [ ] Integration: every one of the 27 real dataset files + `samples/sample_v2012.comics` has zero
-      `scrollType`/`preferredOrientation` keys — confirms this addition doesn't alter parsing of any
-      existing real file
+      `scrollType`/`preferredOrientation`/`preferredViewportWidth`/`Height` keys — confirms this
+      addition doesn't alter parsing of any existing real file
 
 ### UI Component (New Document dialog)
 
@@ -419,6 +512,12 @@ section is wired to `scrollType`/`preferredOrientation` — both fields need add
 and the dialog's `choice`/orientation-tile state needs to actually write them on `newDoc()`. The
 "Auto" third value for `preferredOrientation` has **no UI representation yet at all** — the real
 dialog only shows Portrait/Landscape tiles, two options, not three — a real gap for Plan to size.
+`preferredViewportWidth`/`Height` (NEW, 2026-08-08) has **no UI proposal at all yet**, in either the
+New Document dialog or anywhere else — its primary real motivation so far is the Lottie Playback
+Viewport export/import path (`flows/comics-editor/tdd-dot-lottie-import-export`), not a general
+editor-authoring concern the way `scrollType`/`preferredOrientation` are; whether it needs its own
+New Document dialog control, or only ever gets set indirectly (e.g. by the Lottie import flow itself
+when it detects a viewport-shaped source), is undecided.
 
 ---
 
@@ -486,16 +585,32 @@ representing it for real via `ParentId`.
       recommendation as-is.
 - [ ] `solidColor`/`Images[]` precedence when both are somehow set — still open, not specified
       (the one remaining detail under the now-decided design).
+- [ ] `Layer.ZDepth`'s sign convention (positive = farther/slower vs. closer/faster) — not decided.
+- [ ] Exact scroll-response formula/unit relating `ZDepth` to a position-scaling factor — not
+      decided.
+- [ ] Whether `ZDepth` is baked into persisted `Anim` values at save time (mirroring `ParentId`'s
+      editor-side-resolution pattern) or applied at render time by a `ZDepth`-aware reader (the
+      current draft's assumption) — genuinely undecided; changes what a `ZDepth`-unaware reader sees
+      when opening `ZDepth`-bearing content.
+- [ ] Whether `ZDepth` composes through `ParentId` parent chains (child inherits or adds to parent's
+      depth) or is purely independent per layer — not decided.
+- [ ] Which reader(s) implement the actual parallax rendering math first — not decided (mirrors the
+      same open question already carried for the time-basis dimension).
 
 ---
 
 ## Approval
 
 - [x] Reviewed by: Anton Dodonov
-- [x] Approved on: 2026-08-07
-- [x] Notes: Approved as drafted (v0.5), including the `preferredOrientation` correction. Still
-      partial/early — scoped to the five items above, not a claim that this flow's full
-      Specifications phase is complete — and the Open Design Questions above (`Anim.basis` field
-      shape, `Layer.Id` generation scheme, exact organizational `Kind` string, orphan policy,
-      `ParentId`/`GroupId` relationship, `solidColor`/`Images[]` precedence) remain genuinely open,
-      carried forward to Plan to resolve rather than blocking approval of what's already decided.
+- [x] Approved on: 2026-08-07 (v0.5 baseline); v0.6 (2026-08-08, `preferredViewportWidth`/`Height`)
+      and v0.7 (2026-08-08, `Layer.ZDepth`) additions approved same-session, same reasoning as
+      `01-requirements.md`'s v0.9/v0.10 Approval notes — narrow, directly-dictated additions.
+- [x] Notes: Approved as drafted (v0.7), including the `preferredOrientation` correction and the
+      `preferredViewportWidth`/`Height` and `Layer.ZDepth` fields. Still partial/early — scoped to
+      the seven items above, not a claim that this flow's full Specifications phase is complete —
+      and the Open Design Questions above (`Anim.basis` field shape, `Layer.Id` generation scheme,
+      exact organizational `Kind` string, orphan policy, `ParentId`/`GroupId` relationship,
+      `solidColor`/`Images[]` precedence, non-positive-viewport-dimension question, plus
+      `Layer.ZDepth`'s sign convention/formula/bake-vs-render-time/`ParentId`-composition questions)
+      remain genuinely open, carried forward to Plan to resolve rather than blocking approval of
+      what's already decided.

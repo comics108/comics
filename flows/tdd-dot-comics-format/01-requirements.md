@@ -1,11 +1,10 @@
 # Requirements: dot-comics-format (TDD)
 
-> Version: 0.8 (CORRECTION 2026-08-07: device orientation is now a `.comics`-format/content
-> property too — `preferredOrientation`, a new per-document field, supersedes the earlier "never in
-> data.json" framing. `scrollType` and `preferredOrientation` remain two separate, independent
-> fields — the independence principle is refined, not dropped.)
+> Version: 0.10 (2026-08-08: NEW — `Layer.ZDepth`, an optional per-layer parallax-depth field,
+> default `0`, per Anton's direct instruction. See the new "`Layer.ZDepth` — parallax depth"
+> subsection below.)
 > Status: APPROVED
-> Last Updated: 2026-08-07
+> Last Updated: 2026-08-08
 
 ## Promotion note (2026-08-02, read this first)
 
@@ -70,7 +69,7 @@ model are all vertical-only. **Vertical continuous strip is the default and the 
 built/exercised anywhere — not a hard schema constraint, but the format's real, load-bearing
 convention.**
 
-### `scrollType` vs. device orientation — two independent dimensions (decided 2026-08-02, escalated to Requirements 2026-08-07)
+### `scrollType` vs. device orientation vs. preferred viewport size — three independent dimensions (decided 2026-08-02, escalated to Requirements 2026-08-07, third axis added 2026-08-08)
 
 Two genuinely separate axes, previously decided and recorded only in `02-tests.md` (Categories
 B/C) — escalated here per Anton's explicit request that this not live only in Tests.
@@ -126,6 +125,48 @@ field independently says, never derive one from the other. This mirrors the exac
 already renamed `scrollType` away from the ambiguous bare "orientation" name — keeping the two
 fields distinctly named and independently read is what makes the principle enforceable in code,
 not just in prose.
+
+**Axis 3 — preferred viewport size (NEW, 2026-08-08, Anton: "дополни новым аттрибутом документа
+preferd phone-viewport-sized с дефолтом 720×1600 там же где Orientation")**: how large (in pixels)
+a reading viewport this document is authored/intended for — independent of both `scrollType`
+(which axis scrolls) and `preferredOrientation` (which way is "up"); this axis is about *scale/
+extent* of the viewing window, not direction. Motivated directly by
+`flows/comics-editor/tdd-dot-lottie-import-export`'s real "Playback Viewport" Lottie export/import
+mode (`01-requirements.md`'s Export/Import Modes section, 2026-08-08): that mode needs a real
+viewport rectangle to compose each scene's sweep against, and `samples/sample_playback_viewport
+.lottie_unzip`'s real Lottie composition is confirmed **720×1600** (checked byte-level: `w`/`h`
+top-level keys) — a genuine, already-produced value, not an arbitrary round number.
+
+**Naming (chosen by Claude, per Anton's explicit delegation — "Правильный нейминг сделай
+самостоятельно")**: **`preferredViewportWidth`** / **`preferredViewportHeight`** — two flat integer
+fields, not a nested `{width,height}` object. Reasoning: the document root already has flat
+`width`/`height` for the canvas itself (`ComicsDoc.width`/`.height`); a nested-object convention is
+used elsewhere in this format only for genuinely compound/variant shapes (`LayerMask`'s
+`rect`/`points`/`maskFile` union, `TextRegion`'s equivalent) — a plain fixed pair of ints doesn't
+need that, and flat fields keep this new axis visually/structurally parallel to the existing
+`width`/`height` pair it's a sibling concept to, and to `preferredOrientation`'s own flat,
+single-key shape. Rejected alternative: `preferredViewportSize` as one nested object — adds a level
+of JSON nesting for no real benefit here, and breaks the parallel with `width`/`height`.
+
+**Defaults**: `preferredViewportWidth` → **720**, `preferredViewportHeight` → **1600**, absent →
+both defaults apply — matching the real value found in `samples/sample_playback_viewport
+.lottie_unzip` exactly, and (same backward-compat reasoning as every other addition in this
+document) representing today's implicit, only-ever-exercised assumption for any document that
+predates this field, not a behavior change.
+
+**Independence, same principle as Axes 1-2**: `preferredViewportWidth`/`Height` must never be
+coupled to or inferred from `scrollType` or `preferredOrientation` — a document can in principle
+declare any combination (e.g. `preferredOrientation:"landscape"` with a portrait-shaped
+720×1600 viewport size — an unusual but not-forbidden combination), and no implementation may
+hardcode a derivation between them. **Not implemented anywhere yet** in `apps/comics-editor` or any
+reader — this is a forward-looking schema decision, matching this format's established pattern
+(`GroupId`/`TextRegion`/`ParentId`/`scrollType`/`preferredOrientation` were all specified the same
+way, engine work deferred to a later Plan). No corresponding UI decision is proposed here — unlike
+`scrollType`/`preferredOrientation`, which got New Document dialog tiles
+(`flows/tdd-dot-comics-format/04-visual.md` Screens/`05-plan.md` Phase 2, shipped), this field's
+primary real motivation so far is the Lottie Playback Viewport export/import path specifically, not
+a general editor-UI concern — whether it eventually gets its own New Document dialog control is an
+open question for whoever picks up that work, not decided here.
 
 ### Layer & animation model
 
@@ -343,6 +384,45 @@ schema change in this document. **Decided, adopted as-is.** Remaining detail (ex
 `solidColor`/`Images[]` precedence when both are somehow set) is still open — see Open Questions —
 but the core decision (separate fields, not `Kind` values) is settled.
 
+### `Layer.ZDepth` — parallax depth (NEW, 2026-08-08, Anton: "добавь в .comics v2026 в reqs и specs глубину z-depth для создания эффекта паралакс. По дефолту 0 или если не указано то 0 для совместимости с v2012")
+
+A new, additive, **per-`Layer`** field (not document-level, unlike `scrollType`/`preferredOrientation`/
+`preferredViewportWidth`/`Height` above) — every layer may optionally declare its own relative depth
+along a notional Z axis, purely to drive a **parallax** effect: as the reader scrolls, layers further
+"back" appear to move less per unit of scroll than layers further "forward," faking depth on a format
+that is otherwise, and remains, a genuinely flat 2D scroll strip. This doesn't contradict the earlier
+animation-inventory finding that real content never uses true 3D transforms (`ddd:1`/`rx`/`ry`/`rz` —
+**0 of 7** real produced Lottie chapters) — `ZDepth` never introduces an actual 3D
+transform/projection, only a per-layer scroll-response scaling.
+
+**Decided (2026-08-08, Anton's direct instruction)**: `Layer.ZDepth`, a numeric field, **defaults to
+`0`** — and, per Anton's explicit instruction, **absent-key and explicit-`0` are the same value**, not
+two cases needing separate handling. `0` means "no depth offset" and must reproduce **exactly** what
+every existing v2012-through-2026 layer already does today: its authored `Anim` keyframes are the full,
+literal onscreen motion, moving 1:1 with scroll with no additional scaling. This is the same
+additive/backward-compatible pattern as every other schema change in this document (`GroupId`/
+`TextRegion`/`ParentId`/`scrollType`/`preferredOrientation`/`preferredViewportWidth`/`Height`) — old
+readers that have never heard of `ZDepth` simply never see the key and render unaffected; new readers
+that see it absent must behave identically to seeing it explicitly `0`.
+
+**Relationship to the existing driving model**: per "Layer & animation model" above, every `Anim`
+keyframe is already a pure function of one driving value (scroll position, or — per the 2026-08-07
+decision — optionally wall-clock time). `ZDepth` does not introduce a third independent driving
+dimension; it **modulates the scroll-driven dimension specifically** — a coefficient applied to how a
+layer's position responds to scroll, not a new independent axis a layer's `Anim` is a function of. A
+layer with a nonzero `ZDepth` and no time-basis anim remains purely scroll-driven; the depth just
+changes the felt "speed" of that scroll response.
+
+**Genuinely open, not decided here** (flagged rather than guessed, matching this format's discipline
+elsewhere in this document): the exact sign convention (does positive mean "further away/slower" or
+"closer/faster"?), the precise formula relating `ZDepth` to a scroll-response scaling factor, the
+field's unit/range (a small bounded float like typical parallax-library "speed factors," or an
+unbounded "distance" value), whether `ZDepth` composes through `Layer.ParentId` chains (does a child
+inherit or add to its parent's depth, mirroring the still-open `ParentId`/`GroupId` relationship
+question above?), and which reader(s) implement the actual parallax math first. See
+`03-specifications.md` for the proposed interface shape and the same open questions carried into that
+document's Open Design Questions.
+
 ### Position representation (recomposition/AI-pipeline framing)
 
 Per `sdd-comics-ai-positioning/02-specifications.md`: absolute canvas X/Y (matching
@@ -375,6 +455,10 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
    schema change exactly (absolute values always persisted; old readers ignore the new field/value
    and render unaffected) — no new field in this document ever requires an old reader to understand
    it for correct display.
+5. **Given** the new `Layer.ZDepth` field (2026-08-08), **when** it is absent or explicitly `0` on any
+   layer, **then** that layer's rendering is byte-identical to today's behavior for every pre-existing
+   `.comics`/`.puzzle` file — no reader needs to understand `ZDepth`, and no distinction exists between
+   "absent" and "explicitly `0`," to render any file correctly.
 
 ### Should Have (added with the TDD promotion, 2026-08-02)
 
@@ -409,6 +493,9 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
       with what it does and doesn't contribute to format facts.
 - [x] The exact `Anim.start`/`end` ↔ document-pixel-height unit relationship — **resolved**, see the
       correction above in Layer & animation model.
+- [ ] `Layer.ZDepth`'s exact sign convention, scroll-response formula, unit/range, and whether it
+      composes through `ParentId` chains — not decided, see `03-specifications.md`'s Open Design
+      Questions.
 
 ## References
 
@@ -435,9 +522,17 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
 ## Approval
 
 - [x] Reviewed by: Anton Dodonov
-- [x] Approved on: 2026-08-07
+- [x] Approved on: 2026-08-07 (v0.8 baseline); v0.9 (2026-08-08, `preferredViewportWidth`/`Height`)
+      and v0.10 (2026-08-08, `Layer.ZDepth`) additions approved same-session — for v0.10, Anton
+      directly specified the field's purpose (parallax), name (`z-depth`), and default (`0`,
+      identical whether absent or explicit, for v2012 compatibility), per this document's established
+      pattern of folding in narrow, directly-dictated decisions without a separate re-approval round
+      (unlike the broader, still-open Export/Import Modes addition in the sibling `tdd-dot-lottie-
+      import-export` flow, which was left pending re-review as a larger design space).
 - [x] Notes: Approved as drafted, including all schema decisions (time-basis, `ParentId`/
-      organizational layers, `Mask`/`SolidColor`, `scrollType`/`preferredOrientation`) and the
-      Lottie-coverage gap analysis. This supersedes the original "not seeking approval" framing —
-      this document has grown well beyond a passive reference consolidation into a real set of
-      approved schema decisions.
+      organizational layers, `Mask`/`SolidColor`, `scrollType`/`preferredOrientation`,
+      `preferredViewportWidth`/`Height`, `Layer.ZDepth`) and the Lottie-coverage gap analysis. This
+      supersedes the original "not seeking approval" framing — this document has grown well beyond a
+      passive reference consolidation into a real set of approved schema decisions. `Layer.ZDepth`'s
+      exact math (sign, formula, `ParentId` composition) is explicitly carried forward as open, same
+      treatment as this document's other undecided numeric/formula details.

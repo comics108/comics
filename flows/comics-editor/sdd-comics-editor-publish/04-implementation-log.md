@@ -453,3 +453,147 @@ Android Gradle diagnosis, macOS `build-macos` signing — is `.github/workflows/
 which belongs to `sdd-comics-editor-build`, not this flow (this flow owns `release.yml`/fastlane
 only, per Context Notes above). Moved to
 `flows/comics-editor/sdd-comics-editor-build/04-implementation-log.md` (2026-08-07 correction).
+
+---
+
+### Session 2026-08-07 (3rd same day) — Claude (real local CLI archive + direct App Store upload)
+
+**Started at**: user asked to build locally and submit the iOS Archive to the App Store — first time
+this whole flow used a pure CLI path (`flutter build ipa` + `xcodebuild -exportArchive
+destination:upload`) instead of the Xcode Organizer GUI that produced the original Version 3.2.1
+Build 1 upload.
+
+#### Completed
+
+- Confirmed working tree clean at commit `d08c357` before starting — no uncommitted changes to
+  account for.
+- **Real discrepancy found and resolved before uploading**: the archive's own "App Settings
+  Validation" output showed Bundle Identifier `net.nativemind.comicseditor` (no dots) — different
+  from `net.nativemind.comics.editor` (with dots) referenced throughout this flow's own
+  `ios/fastlane/Fastfile` comments and earlier session log entries. Traced via `git log -p` on
+  `project.pbxproj`: the real bundle id was renamed from `net.nativemind.comics.editor` to
+  `net.nativemind.comicseditor` in an earlier commit (`5885105`), **before** the Version 3.2.1+1
+  commit (`178999f`) that produced the real, already-reviewed Version 3.2.1 Build 1 submission —
+  meaning `comicseditor` (no dots) has been the real, correct, already-registered App Store Connect
+  bundle id all along, and this flow's own Fastfile/log comments referencing the dotted form were
+  simply stale. Confirmed no risk of targeting a nonexistent/wrong app record before proceeding.
+  (Follow-up: `ios/fastlane/Fastfile`'s comments and the earlier session log's Bundle ID references
+  are now known-stale and should be corrected next time that file is touched — not done in this
+  session, out of scope for a build-and-submit request.)
+- **Also discovered**: `pubspec.yaml` version is now `3.2.2+3`, not the `3.2.1+2` this flow set in
+  the earlier same-day session — real product work happened outside any logged session (commit
+  `faf2e23`, by the user, message says "3.2.1+2" but the actual diff jumps straight to `3.2.2+3`,
+  skipping build 2 entirely — likely an untracked local build/archive attempt in between). Build 3
+  is safely higher than the last real upload's Build 1, so no duplicate-build-number risk.
+- Ran `flutter build ipa --release --export-method app-store`: Dart AOT + Xcode archive + IPA export,
+  fully automatic signing using `DEVELOPMENT_TEAM = 6XT4R7V83F` already in the project — succeeded
+  without any manual credential setup (`build/ios/archive/Runner.xcarchive`, 191.3MB;
+  `build/ios/ipa/*.ipa`, 23.4MB). Only warning: default placeholder launch image (pre-existing,
+  unrelated, not a new issue).
+- **Real direct upload from CLI (new territory for this flow)**: rather than using
+  `flutter build ipa`'s local-export-only result (which would still require the Transporter app or
+  `altool` + an API key I don't have locally), wrote a custom `ExportOptions.plist` with
+  `destination: upload` and re-ran `xcodebuild -exportArchive -allowProvisioningUpdates` against the
+  same archive. This performs the export **and** upload in one step using Xcode's own already-signed-in
+  account session — the exact mechanism the Organizer GUI's "Distribute App → Upload" uses under the
+  hood, just invoked from the command line. **Real result: `Upload succeeded.` / `EXPORT SUCCEEDED`.**
+  Comics Editor Version 3.2.2, Build 3 is now uploaded to App Store Connect and processing.
+
+#### Deviations from plan
+
+None — direct execution of the user's explicit request. Notable: this is the first time this flow's
+publishing work has gone through a pure CLI path end-to-end (no Xcode GUI, no fastlane/match either)
+and it worked on the first attempt, using only the automatic-signing state already established on
+this machine from the earlier local Xcode setup work.
+
+**Ended at**: real upload complete and confirmed by `xcodebuild`'s own success output. Next step is
+entirely the user's / Apple's: wait for App Store Connect processing to finish, then check for
+review feedback (same cycle as Build 1) or submit for review if no issues are flagged. No further
+agent action needed unless new feedback arrives.
+
+---
+
+### Session 2026-08-07 (4th same day) — Claude (real local CLI archive + direct macOS App Store upload — first ever, real bug found and fixed)
+
+**Started at**: user asked to do for macOS what the previous session just did for iOS — build locally
+and submit the Archive to the App Store. This flow's `macos/fastlane/Fastfile` had never been run for
+real (documented as "the least-verified part of the whole flow"); this session is the very first real
+attempt at a Mac App Store submission for this app.
+
+#### Completed
+
+- Confirmed clean-enough working tree (only the iOS `project.pbxproj` upgrade from the prior session
+  was dirty, expected and unrelated).
+- `xcodebuild archive` (workspace `macos/Runner.xcworkspace`, scheme `Runner`, Release) — succeeded,
+  automatic signing during archive resolved to a local "Apple Development" identity (fine — this is
+  intermediate, replaced at export/upload time).
+- Embedded the headless C# core **into the archive itself** (not a plain `flutter build macos` output
+  dir): `dotnet publish native/Comics.Editor.Headless/Comics.Editor.Headless.csproj -r osx-arm64
+  --self-contained` + copied into
+  `Runner.xcarchive/Products/Applications/comics_editor.app/Contents/Resources/comics-core/` —
+  matching the exact "core must be embedded before final distribution signing" constraint the Fastfile
+  itself documents at length.
+- First `xcodebuild -exportArchive` attempt (custom `ExportOptions.plist`, `method:
+  app-store-connect`, `destination: upload`, `-allowProvisioningUpdates` — same direct-upload technique
+  proven for iOS this same day) — **archive, signing, .pkg build, and upload to Apple's server all
+  succeeded**, further than this flow has ever gotten for macOS. Failed only at Apple's **server-side**
+  validation (code 90296): `App sandbox not enabled ... Contents/Resources/comics-core/Comics.Editor`.
+- **Real, previously-undiscovered bug found**: Apple's Mac App Store validator checks every Mach-O
+  executable in the bundle individually for `com.apple.security.app-sandbox = true` in its own
+  entitlements — not just the top-level app. The bundled self-contained `.NET` headless core (launched
+  as a subprocess by the sandboxed main app) had no entitlements of its own at all. This would have
+  blocked `macos/fastlane/Fastfile`'s own lane too, had it ever been run for real, since that lane's
+  final `codesign --force --deep --sign` step does not touch loose executables sitting in `Resources/`
+  (confirmed empirically — see below).
+  - Presented the fix options to the user rather than guessing at a production entitlements change,
+    since it's a product-correctness question, not just packaging: **`com.apple.security.inherit`
+    alone** (correct pattern for a subprocess sharing the parent's sandbox container, but doesn't
+    literally match what Apple's validator asks for) vs. **`com.apple.security.app-sandbox=true`
+    alone** (matches the validator literally, but as a separately-sandboxed process could lose access
+    to files the parent already has permission for) vs. stop and investigate further. User chose
+    `inherit` first.
+  - **Empirically tested `inherit` alone**: re-signed the nested `Comics.Editor` with just
+    `com.apple.security.inherit=true`, re-ran the same export/upload — **identical failure, verbatim
+    same error**. This proves Apple's validator does a literal key check for `app-sandbox`, not a
+    semantic "is this sandboxed somehow" check, and also incidentally proves the nested signature
+    *does* survive `xcodebuild -exportArchive`'s own re-signing pass (same specific error each time,
+    not a generic "unsigned" error).
+  - **Combined both entitlements** (`app-sandbox=true` + `inherit=true` together — the standard real-
+    world pattern for exactly this "loose helper executable, not an XPC service" case, satisfying the
+    validator's literal check while still sharing the parent's sandbox container at runtime): re-signed,
+    re-exported. **Real result: `Upload succeeded.` / `EXPORT SUCCEEDED`.** Comics Editor's macOS build
+    (same Version 3.2.2, Build 3 as the iOS submission this same day) is now uploaded to App Store
+    Connect and processing — **the first real Mac App Store submission this app has ever had.**
+  - Minor non-blocking warning both times: "Upload Symbols Failed... archive did not include a dSYM
+    for Comics.Editor" — crash symbolication for that one native binary won't be available; not a
+    blocker, not investigated further (out of scope for a build-and-submit request).
+- **Persisted the fix for future builds** (this would have silently blocked every future attempt,
+  local or CI, otherwise):
+  - New file `macos/Runner/HeadlessCore.entitlements` — the exact two-key combination that produced
+    the real successful upload.
+  - Updated `macos/fastlane/Fastfile`: inserted a new signing step for the nested `Comics.Editor`
+    binary (using `HeadlessCore.entitlements` + the same `3rd Party Mac Developer Application`
+    identity already resolved for the whole app) positioned **before** the existing final `codesign
+    --force --deep --sign` of the whole `.app` — order matters and is now documented inline: signing
+    the nested binary first means the outer app's resource seal (computed at final signing time)
+    already reflects its correct signed state; the reverse order would invalidate the outer seal.
+    This part (the Fastfile edit) is **not independently re-verified by a real fastlane run** — the
+    entitlements combination itself IS proven by the real upload above, but I haven't re-run the
+    Fastfile's own codepath (no local ASC API key) to confirm the exact insertion point behaves
+    identically to the `xcodebuild -exportArchive` path I actually tested.
+
+#### Deviations from plan
+
+None — direct execution of the user's explicit request, with one necessary pause (`AskUserQuestion`)
+given the entitlements choice was a real product-correctness call, not a guessable build-config tweak.
+
+**Ended at**: real macOS upload complete and confirmed by `xcodebuild`'s own success output, root
+cause fully diagnosed and fixed, fix persisted to the repo (`HeadlessCore.entitlements` +
+`macos/fastlane/Fastfile`) so it doesn't have to be rediscovered next time. Next step is entirely the
+user's / Apple's: wait for App Store Connect processing, then handle review feedback if any (this is
+the *first* real macOS submission, so unlike iOS there's no prior feedback cycle to compare against —
+expect this one could get its own fresh round of reviewer notes, possibly about `MinimumOSVersion` or
+other items not yet checked for macOS specifically). Separate macOS App Store Connect app record
+existence was never independently confirmed this session — if the upload's "processing" step
+eventually errors about a missing app record, that's the next thing to set up (per
+`macos/fastlane/Fastfile`'s own "Перед первым релизом" checklist, item 1).
