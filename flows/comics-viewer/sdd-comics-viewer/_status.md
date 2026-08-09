@@ -1,5 +1,25 @@
 # Status: sdd-comics-viewer
 
+## Cross-reference (2026-08-08, disclosed, added by `flows/comics-viewer/sdd-flutter-comics-viewer-dart`)
+
+Two sibling flows modified files this flow owns (`libs/comics_viewer/flutter_comics_viewer`) after this
+flow's own status here was last updated (2026-08-05):
+
+- `flows/sdd-flutter-comics` rewrote `dart_comics_viewer_backend.dart`/`dart_comics_viewer_surface.dart`
+  to consume a new shared `libs/flutter_comics` package instead of this file's own duplicate model —
+  this also **resolved** this doc's own Blockers line about
+  `test/dart_comics_viewer_backend_test.dart:14`'s `List<int>`/`Uint8List` compile error (confirmed:
+  that file compiles and passes cleanly as of 2026-08-08).
+- `flows/comics-viewer/sdd-flutter-comics-viewer-dart` (this note's author) added real sound playback
+  to the same backend (`_evaluateSounds`, `SoundPlaybackTrack` in a new `sound_playback.dart`, real
+  `setSoundEnabled`/`setMuted`/`dispose`) — previously no-ops. Also fixed an unrelated regression found
+  along the way: this package's `pubspec.yaml` `flutter_comics` dependency was malformed, breaking
+  `flutter pub get` outright.
+
+Neither sibling flow's own Plan/Specifications attempted to reconcile this flow's broader,
+still-stale Progress/Blockers below (Android/iOS native-app integration, React Native wrapper, Phase 6
+validation) — those remain this flow's own responsibility to update when it resumes.
+
 ## Current Phase
 
 IMPLEMENTATION (in progress)

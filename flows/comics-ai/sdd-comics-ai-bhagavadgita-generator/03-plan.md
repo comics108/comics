@@ -1,9 +1,18 @@
 # Implementation Plan: comics-ai-bhagavadgita-generator
 
-> Version: 0.1
-> Status: DRAFT
-> Last Updated: 2026-08-06
-> Specifications: [02-specifications.md](./02-specifications.md) (v0.2, **APPROVED** 2026-08-06)
+> Version: 0.6 (2026-08-09, DRAFT, supersedes v0.5): Phase 10 — Panoramic PDF Source rendering (all
+> 18 chapters), rewritten from v0.5's withdrawn `scrollType: horizontal` design to standard
+> vertical-scroll everywhere, with AI cutting (`comics-ai-multimodal`), AI arranging
+> (`comics-ai-positioning`), and AI animating (`comics-ai-animations`) as the core mechanism per
+> Anton's explicit correction — 6 tasks (10.1-10.6) become 8 (10.1-10.8). See
+> `02-specifications.md` v0.7. (The Lottie camera-path/per-layer z-depth extraction Phase that
+> previously used the "Phase 10" number has been extracted into its own flow, `flows/comics-ai/
+> sdd-comics-ai-bhagavadgita-from-lottie/` — this is a new, unrelated Phase 10, not a revival of
+> that one.) v0.1's own header said `Status: DRAFT` despite `_status.md` recording real approval on
+> 2026-08-06 and all 9 phases since implemented — corrected here, not silently left stale.
+> Status: v0.1-v0.4 (Phases 1-9) APPROVED 2026-08-06 and IMPLEMENTED; v0.6 (new Phase 10) DRAFT
+> Last Updated: 2026-08-09
+> Specifications: [02-specifications.md](./02-specifications.md) (v0.7, Panoramic PDF section DRAFT)
 
 ## Note on drafting order
 
@@ -260,6 +269,150 @@ only. Both corrections are reflected in Task 4.1 and Risk Assessment below.
   against the real manifest, not written from memory of what should have happened
 - **Complexity**: Low
 
+**Note (2026-08-09)**: a Phase 10 (Lottie camera-path/per-layer z-depth extraction) was drafted here
+and then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`,
+per Anton's explicit instruction — see that flow's own Plan for the full content, not duplicated here.
+
+### Phase 10: Panoramic PDF Source — All 18 Chapters, Vertical-Scroll Strip via AI Cut/Arrange/Animate
+### (NEW, 2026-08-09, DRAFT v2 — supersedes the withdrawn horizontal-scroll draft below)
+
+**Revision note**: v1 of this Phase (6 tasks: 10.1-10.6, "Horizontal Scroll, Camera Path, Z-Depth")
+planned a `scrollType: horizontal` document with an optional Should-Have figure-extraction enrichment
+tier. Anton explicitly rejected the horizontal-scroll premise and required AI-model-driven cutting/
+arranging/animating as the *core* path, not an optional enrichment — see `02-specifications.md`'s
+rewritten "Panoramic PDF Source" section. Tasks 10.1-10.2 (research/mapping) are unchanged; Tasks
+10.3-10.6 are replaced by the 8-task sequence below.
+
+#### Task 10.1: Full page-by-page visual review of both PDFs
+- **Description**: Requirements' own real finding disclosed only 4 of 12 `All_Black-n-White.pdf`
+  pages were visually reviewed (1, 2, 3, 12), with only 2 plausible chapter matches found. Before any
+  extraction code is written, review the remaining 8 pages (and confirm the `All_Coloured.pdf`
+  page-correspondence, only partially confirmed: color page 2 = B&W page 3) — real, low-cost work
+  (render low-DPI previews via `pdftoppm`, already proven this session) that directly determines how
+  much of Must-Have 11 (panorama art used where a mapping is confirmed) is actually achievable.
+- **Files**: None (research task; may update `01-requirements.md`'s own findings table with
+  confirmed results)
+- **Dependencies**: None
+- **Verification**: this task's own real output — an updated, more complete page-to-content
+  inventory, not assumed complete from the 4-page sample
+- **Complexity**: Low (mechanical review, already proven fast via low-DPI `pdftoppm` previews)
+
+#### Task 10.2: Chapter-mapping resolution
+- **Description**: Using Task 10.1's inventory, resolve as many of the 18 chapters as real evidence
+  allows — either Anton's direct review (upgrading entries to `"confirmed"`) or a local-Ollama-
+  assisted visual/thematic matching pass (`"inferred"`, per Specifications' Open Design Question —
+  exact method decided here, not before). Chapters with no real match stay `"unmapped"` and keep
+  today's deterministic fallback (Must-Have 11).
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_panorama.py` — Create
+    (`CHAPTER_MAPPING` table)
+- **Dependencies**: Task 10.1
+- **Verification**: every `CHAPTER_MAPPING` entry has a real, cited reason (visual description or
+  Anton's direct word) for its `confidence` value — no entry invented to fill out the table
+- **Complexity**: Medium (real judgment calls, not mechanical)
+
+#### Task 10.3: `import_panorama.py` — page rendering only
+- **Description**: Implement `render_pdf_page` (shells out to `pdftoppm`, already confirmed
+  installed and working this session). Real DPI/memory bound needs measuring against at least one
+  real page at production scale before committing to a default (Specifications' own flagged Open
+  Design Question). No tiling/camera-path logic here — that moves to Tasks 10.6/10.7 below, over the
+  *arranged* vertical layout rather than the raw panorama.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_panorama.py` — Modify (adds to
+    Task 10.2's file)
+- **Dependencies**: Task 10.2
+- **Verification**: a real render of at least one confirmed/inferred chapter's real PDF page, checked
+  for reasonable output size, not assumed safe
+- **Complexity**: High (the real unknown is production-scale memory behavior on pages up to ~108in
+  wide — not proven at any real scale yet, only at low-DPI preview resolution)
+
+#### Task 10.4: Cutting — tiled inference against `comics-ai-multimodal`'s trained segmenter + region dedup
+- **Description**: Implement `cut_panorama_regions`: slide a window across the rendered panorama
+  (window size/overlap determined by real experiment against the segmenter's actual training-image
+  scale — not assumed), call `comics-ai-multimodal/scripts/infer_segmenter.py`'s real
+  `infer_regions_with_crops` per window (reusing that module directly, same import-bridge convention
+  `comics-ai-positioning`/`comics-ai-animations` already use for `comics-multimodal`), map window-
+  local bboxes to panorama-global coordinates, and deduplicate regions straddling window boundaries
+  (real open problem — an IoU-based merge across adjacent windows is the natural first approach, not
+  assumed sufficient without real testing against actual multi-window output). Domain-shift risk
+  (Mahabharata-photo-trained model against Gita hand-drawn line art) is real and unverified — this
+  task's own verification must include a real visual spot-check, not just "did it return regions."
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_panorama.py` — Modify
+- **Dependencies**: Task 10.3
+- **Verification**: unit test for the dedup logic against a synthetic multi-tile figure-straddling
+  case; real cutting output for at least one confirmed/inferred chapter's page, visually spot-checked
+  against the source panorama for plausibility (not assumed correct just because it ran)
+- **Complexity**: High (tiling-window calibration and cross-tile dedup are both real, unresolved
+  engineering problems; domain-shift accuracy is unverified)
+
+#### Task 10.5: Arranging — `comics-ai-positioning`'s trained positioner
+- **Description**: Implement `arrange_regions_vertically`: feed Task 10.4's `CutRegion`s (kind,
+  global bbox, reading-order index derived from real horizontal panorama position) into
+  `comics-ai-positioning/scripts/infer_positioner.py`'s real `position_page_with_model` (backed by
+  the real trained `work/comics-ai-positioning/positioner_model.joblib`), reusing that module
+  directly rather than reimplementing its logic. Must carry forward, in code comments and the
+  manifest (Task 10.8), that flow's own documented finding that this learned model did not beat its
+  own calibrated baseline in held-out evaluation — used here on Anton's explicit instruction, not
+  because it's proven superior.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_panorama.py` — Modify
+- **Dependencies**: Task 10.4
+- **Verification**: unit test comparing this function's output against a direct call into
+  `comics-ai-positioning`'s own `position_page_with_model` for the same input, confirming no
+  divergence introduced by the adapter layer; a real bounds/overlap check on at least one chapter's
+  real arranged output
+- **Complexity**: Medium (real cross-app integration, but the model/logic itself is already built and
+  proven elsewhere — the new work is the adapter, plus a real off-canvas/overlap bounds clamp per
+  Specifications' Edge Cases, not yet proven safe for panorama-derived region shapes/sizes)
+
+#### Task 10.6: Animating + `cameraPath` — `comics-ai-animations`' Mahabharata-calibrated reveal model
+- **Description**: Implement `animate_arranged_regions` (calls `comics-ai-animations/scripts/
+  baseline_transform.py`'s real `propose_reveal(kind, stats)` per arranged region, mapping results to
+  `TranslateAnim`/`AlphaAnim` keyframes) and `build_camera_path_from_reveal_density` (same density-
+  lingering principle as the withdrawn draft, now driven by real per-region reveal timing/position
+  over the vertical layout, emitting real non-zero `y` motion).
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_panorama.py` — Modify
+- **Dependencies**: Task 10.5
+- **Verification**: unit test for `animate_arranged_regions` against known region kinds, asserting
+  output matches direct calls into `comics-ai-animations`' own `propose_reveal`; unit test for
+  `build_camera_path_from_reveal_density` against synthetic arranged regions with known reveal
+  density, asserting the remapped curve concentrates scroll distance in dense spans
+- **Complexity**: Medium (real cross-app integration, model/logic already built and proven elsewhere;
+  the density-to-cameraPath remapping is new but structurally identical to the withdrawn draft's
+  already-designed algorithm, just re-pointed at a different input)
+
+#### Task 10.7: Extend `package_comics.py` for AI-arranged layers + per-layer `zDepth` + document-root `cameraPath`
+- **Description**: `build_data_json` needs to accept the arranged/animated/z-depth-tagged regions
+  from Tasks 10.4-10.6 as ordinary layers (no `scrollType` parameter needed — vertical is the
+  existing default) plus the same document-root `cameraPath` list shape the sibling Lottie flow
+  already specified for its own `package_comics.py` extension — **reuse that same extension, not
+  duplicate it**. Coordinate with `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie`'s own Task
+  1.4 if both are implemented — whichever lands first should leave the `cameraPath`-writing code in a
+  shape the other can reuse directly.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/package_comics.py` — Modify
+- **Dependencies**: Task 10.6
+- **Verification**: existing Phase 6 tests (18-chapter static-placement path) unchanged and still
+  green; new tests for per-layer `zDepth` and document-root `cameraPath` output on a real
+  panorama-sourced chapter
+- **Complexity**: Medium (mostly plumbing, once the sibling flow's own equivalent extension exists to
+  coordinate with — real risk if both flows implement divergent shapes independently)
+
+#### Task 10.8: Manifest/report disclosure (mapping confidence + domain-shift + positioning-model caveats)
+- **Description**: Per Must-Have 13, every affected chapter's manifest/report entry states: its
+  `CHAPTER_MAPPING` confidence value verbatim; the segmenter's unverified Mahabharata→Gita
+  domain-shift risk; and the positioning model's own documented "did not beat its calibrated
+  baseline" finding, carried forward rather than silently presented as proven-superior. Three
+  distinct disclosures, all real, none optional.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/report.py` — Modify
+- **Dependencies**: Task 10.7
+- **Verification**: real generated report inspected for all three disclosure texts, for a real
+  chapter exercising each mapping case (confirmed, inferred, unmapped)
+- **Complexity**: Low
+
 ## Dependency Graph
 
 ```
@@ -269,6 +422,17 @@ only. Both corrections are reflected in Task 4.1 and Risk Assessment below.
                                                               7.2 ────┘                │
                                                     (needs 6.1's real output) ─────────┘
 4.1 (independent) ─────────────────────────────────> feeds into 5.1 for chapter 5 only
+
+10.1 -> 10.2 -> 10.3 -> 10.4 -> 10.5 -> 10.6 -> 10.7 -> 10.8   (Phase 10: independent of Phases
+                                                 1-9's own chain except reusing 6.1's
+                                                 package_comics.py, which 10.7 extends rather than
+                                                 forks; coordinate with the sibling Lottie flow's
+                                                 own package_comics.py extension, per Task 10.7's
+                                                 own note. 10.4/10.5/10.6 each bridge live into a
+                                                 different sibling app -- comics-ai-multimodal,
+                                                 comics-ai-positioning, comics-ai-animations --
+                                                 same import-bridge convention those apps already
+                                                 use for each other)
 ```
 
 ## File Change Summary
@@ -291,6 +455,15 @@ only. Both corrections are reflected in Task 4.1 and Risk Assessment below.
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/requirements.txt` | Create | Pillow, Playwright, psd-tools, pytest |
 | `apps/comics-editor/test/bhagavadgita_generator_test.dart` | Create | Real editor-loader validation (Task 7.2) |
 | `work/bhagavadgita/*.comics`, `manifest.json`, `report.md` | Create (gitignored) | Real pipeline output |
+| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_panorama.py` | Create (NEW, 2026-08-09, v2) | Panorama page rendering, chapter mapping, AI cutting (`comics-ai-multimodal`), AI arranging (`comics-ai-positioning`), AI animating + reveal-density `cameraPath` (`comics-ai-animations`) (Tasks 10.2-10.6) |
+| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/package_comics.py` | Modify (NEW, 2026-08-09, v2) | Per-layer `zDepth` + document-root `cameraPath` for AI-arranged vertical layers (Task 10.7), coordinated with the sibling Lottie flow's own extension |
+| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/report.py` | Modify (NEW, 2026-08-09, v2) | Mapping-confidence + domain-shift + positioning-model-caveat disclosure (Task 10.8) |
+
+*(The Lottie camera-path/z-depth extraction's own file changes now live in
+`flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/03-plan.md` — extracted 2026-08-09, not
+duplicated here. Note that flow's own Plan does still modify `package_comics.py`/`pipeline.py`/
+`report.py` from this app, a real cross-flow file-ownership fact disclosed in both flows' status
+docs.)*
 
 ## Risk Assessment
 
@@ -301,6 +474,11 @@ only. Both corrections are reflected in Task 4.1 and Risk Assessment below.
 | The image-slot fix (Task 6.1) regresses if someone edits the packager later without re-reading this Plan/Specifications | Low | High (silent semantic corruption, not a crash — same character as the original bug) | Task 7.1's dedicated regression test is the real guard, not just code comments |
 | Task 7.2 (Flutter/Dart editor test) requires real cross-app coordination this Plan's author has less direct visibility into than the Python side | Medium | Medium | Budget real time for this task specifically; do not treat it as a formality — Requirements' Must-Have 10 explicitly requires a *real* editor/viewer open, not a simulated one |
 | Large chapter-5 PSDs (up to 264MB, 4127×26421px, confirmed via real header inspection) could exceed reasonable memory during compositing | Medium | Low (Should-Have, non-blocking) | Task 4.1's own fallback path already treats "excessive memory demand" as an expected, handled failure mode |
+| **(NEW, 2026-08-09)** Panorama pages up to ~108in wide (confirmed real page size) produce excessively large rasters at production DPI | Medium — not yet measured at real scale, only low-DPI previews so far | High (Task 10.3 specifically; could make chapters practically unusable) | Task 10.3 requires a real, measured DPI/memory bound before committing to a default — not assumed safe by analogy to the PSD case |
+| **(NEW, 2026-08-09, v2)** The segmenter's fixed 256×256 input requires tiling a panorama up to ~93,524px wide; cross-tile region dedup is a real, unsolved problem | High — inherent to combining a fixed-input-size model with this source's real dimensions | High (Task 10.4; wrong dedup produces duplicate/split figures throughout every panorama-sourced chapter) | Task 10.4's own unit test targets exactly this case (synthetic figure straddling a tile boundary); real visual spot-check required before trusting output at scale |
+| **(NEW, 2026-08-09, v2)** Segmenter, positioner, and reveal-baseline were all trained/calibrated on Mahabharata data, not Bhagavad Gita hand-drawn panorama art — domain-shift accuracy is unverified for all three stages | Medium-High — a real, disclosed, carried-forward risk from this flow's own Existing AI Flow Audit table | Medium-High (could produce visually wrong cuts/placement/timing without any pipeline-level failure signal) | Task 10.8's manifest disclosure is the mitigation for transparency; Tasks 10.4-10.6 each require a real visual spot-check against source panorama as part of verification, not just "the model returned output" |
+| **(NEW, 2026-08-09, v2)** `comics-ai-positioning`'s learned model is reused per Anton's explicit instruction despite that flow's own held-out evaluation showing it did not beat its calibrated baseline | Certain — confirmed via that flow's own `_status.md`, not speculative | Low-Medium (a real, disclosed quality tradeoff, not a bug) | Task 10.8's manifest disclosure carries this caveat forward per chapter; not silently presented as though the model were proven superior |
+| **(NEW, 2026-08-09)** Chapter-mapping resolution (Task 10.2) yields far fewer than 18 confirmed/inferred chapters, undermining "redesign for all 18 chapters" as originally framed | Medium — only 2/18 found in this session's limited 4-page review | Medium | Task 10.1 (full page review) runs first specifically to reduce this risk before committing engineering effort; Must-Have 11's own design (confirmed mappings only, deterministic fallback otherwise) means a low mapping count degrades gracefully rather than blocking the whole Phase |
 
 ## Rollback Strategy
 
@@ -308,6 +486,14 @@ Entirely new app (`apps/comics-ai/comics-ai-bhagavadgita-generator/`) plus gener
 `work/bhagavadgita/` (gitignored) plus one new Dart test file. Rollback is deleting the new app
 directory and the new test file; no existing app's code is modified, no `.comics` schema migration
 is introduced, `dataset/bhagavadgita/` is never written to.
+
+**Phase 10 addition (2026-08-09, v2)**: rollback is deleting `import_panorama.py` and reverting the
+backward-compatible additions to `package_comics.py`/`report.py` — chapters without a confirmed/
+inferred mapping are entirely unaffected either way (they never leave the deterministic path), so
+rollback or not, only the (currently 2 of 18) mapped chapters' output changes. No `.comics` schema
+change is introduced by this Phase's v2 design (per-layer `zDepth` and document-root `cameraPath`
+are both already-additive fields decided elsewhere); rollback never needs to un-write a `scrollType`
+value since v2 no longer writes one.
 
 ## Checkpoints
 
@@ -335,6 +521,21 @@ After each phase, verify:
 
 ## Approval
 
-- [ ] Reviewed by: Anton Dodonov
-- [ ] Approved on: [date]
-- [ ] Notes:
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-06 (`_status.md` records "plan approved") — v0.1, Phases 1-9. This
+      section's own checkboxes were never updated at the time, corrected here rather than left
+      stale.
+- [x] Notes: the Lottie camera-path/z-depth extraction Phase (v0.2-v0.3, "Phase 10") was drafted and
+      approved here 2026-08-09, then **extracted into its own flow** per Anton's explicit
+      instruction — see `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/03-plan.md` for that
+      content's own Plan and approval record.
+- [ ] v0.6 (2026-08-09, Phase 10 rewritten, Panoramic PDF Source rendering — vertical-scroll +
+      AI cut/arrange/animate) — awaiting approval. Supersedes v0.5's withdrawn `scrollType:
+      horizontal` draft per Anton's explicit correction. Real, disclosed risks: production-scale
+      rendering not yet measured (Task 10.3); tiling-window calibration and cross-tile region dedup
+      for the segmenter are real, unsolved engineering problems (Task 10.4); domain-shift accuracy
+      is unverified for all three reused models — segmenter, positioner, reveal baseline — since all
+      were trained/calibrated on Mahabharata data, not Bhagavad Gita art (Tasks 10.4-10.6); the
+      positioning model is known, by that sibling flow's own evaluation, not to beat its calibrated
+      baseline, and is used anyway per Anton's explicit instruction (Task 10.5); chapter-mapping
+      resolution is real, not-yet-done work with only 2/18 confirmed so far (Tasks 10.1-10.2).

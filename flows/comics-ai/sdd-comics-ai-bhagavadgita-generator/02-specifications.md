@@ -1,13 +1,15 @@
 # Specifications: comics-editor-ai-bhagavadgita-generator
 
-> Version: 0.2 (Claude, 2026-08-06): corrected a real image-slot/language-index bug found by
-> checking `.comics` Packaging Contract against the actual `Cultures` enum and a real dataset
-> file — Russian moved from slot 0 to slot 1 (see that section for the full verified finding).
-> Everything else independently spot-checked (root JSON keys, tile filename convention, layer
-> JSON shape) matched Codex's original draft exactly against real code/data.
-> Status: APPROVED (2026-08-06, Anton — "specs approved")
-> Last Updated: 2026-08-06
-> Requirements: [01-requirements.md](./01-requirements.md)
+> Version: 0.7 (2026-08-09, DRAFT, supersedes v0.6): design for rendering all 18 chapters from the
+> real panoramic PDF source (`All_Black-n-White.pdf`/`All_Coloured.pdf`) as a standard vertical-scroll
+> `.comics` strip — panorama treated as draft/source material, AI-cut (`comics-ai-multimodal`),
+> AI-arranged (`comics-ai-positioning`), AI-animated (`comics-ai-animations`), with per-layer
+> `zDepth` and a reveal-density-derived `cameraPath`. Rewrites v0.6's withdrawn `scrollType:
+> horizontal` design per Anton's explicit correction — see "Panoramic PDF Source" section's own
+> "Revision history" note. v0.5's extraction note is unchanged.
+> Status: v0.5 APPROVED; v0.7 addition DRAFT
+> Last Updated: 2026-08-09
+> Requirements: [01-requirements.md](./01-requirements.md) (v0.6, revised Must-Have 12)
 
 ## Overview
 
@@ -328,6 +330,288 @@ Format rules:
   normalized so identical inputs/configuration produce identical archive bytes and SHA-256 hashes;
 - packaging first writes a staging file, validates it, then atomically replaces the final path.
 
+**Note (2026-08-09)**: a Lottie camera-path/per-layer z-depth extraction design was drafted here and
+then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`, per
+Anton's explicit instruction — see that flow for the full specification, not duplicated here.
+
+## Panoramic PDF Source — Vertical-Scroll Comic Strip via AI Cutting/Positioning/Animation (NEW, 2026-08-09, DRAFT v2 — supersedes the withdrawn horizontal-scroll draft below)
+
+Answers Requirements' new Must-Haves 11-13, and Anton's direct request for a rendering plan for all
+18 chapters "включая camera и z-depth". Source: `dataset/bhagavadgita/vaishnav/drawing/
+All_Black-n-White.pdf` (12 pages) and `All_Coloured.pdf` (6 pages), real findings in Requirements'
+new section above.
+
+**Revision history on this section**: a first draft (2026-08-09, same day) proposed
+`scrollType: horizontal` to preserve the panorama's native orientation untouched. Anton explicitly
+rejected this: *"Нет, используем везде именно vertical-scroll comic strip, арт дан в виде драфта,
+нужно его скомпоновать правильно и нарезать с учетом ИИ и обученной модели"* — the panorama pages are
+**draft/source material**, not final layers; the format stays the standard, universally-working
+vertical-scroll `.comics` convention everywhere, and getting from draft panorama to final vertical
+page is real AI work (cutting, arranging, animating), not a schema choice. Anton then further
+sharpened this: *"Это только драфты не упрощай себе задачу, нарезать нужно именно моделью а не
+прямоугольниками, срасставить и анимировать нужно тоже моделью которая предобучена на реальных
+данных mahabharata"* — cutting, arranging, and animating must each go through the real trained
+models this repo already has (not a hand-rolled bbox-grid heuristic), and arranging/animating
+specifically the ones **pretrained on real Mahabharata data**. This section is a full rewrite under
+that constraint, not a patch.
+
+### Architecture decision: vertical-scroll strip, draft panorama → AI cut → AI arrange → AI animate
+
+The pipeline has four real stages, each explicitly required to go through an existing, already-
+trained/calibrated model from this repo rather than new bespoke heuristics:
+
+1. **Render** the panorama page to a raster image (`pdftoppm`, unchanged from the withdrawn draft).
+2. **Cut**: segment the panorama into individual figures/elements using `comics-ai-multimodal`'s real
+   trained segmenter, not manual rectangle slicing.
+3. **Arrange**: lay the cut regions out into a vertical reading order/position using
+   `comics-ai-positioning`'s real trained positioner (residual model on top of its calibrated
+   baseline), reusing the exact model this repo already trained on real Mahabharata ground truth.
+4. **Animate**: assign reveal animations (and derive `cameraPath`) using `comics-ai-animations`'
+   Mahabharata-ground-truth-calibrated reveal model, not a from-scratch density heuristic.
+
+Each stage below documents the real tool being reused, its real interface, and — honestly, per this
+flow's own established disclosure standard — the real limitations found while inspecting it, since
+"use the model" does not mean these models are free of known gaps.
+
+### Stage 1 — Cutting: `comics-ai-multimodal`'s trained segmenter, tiled over the panorama
+
+**Real tool, confirmed by direct inspection this session**: `apps/comics-ai/comics-ai-multimodal/
+scripts/infer_segmenter.py` — `load_model()` loads a real trained `UNetBaseline` checkpoint at
+`work/comics-ai-multimodal/models/unet_baseline.pt`; `infer_regions()` runs real per-pixel semantic
+segmentation (softmax → argmax over `dataset.KIND_TO_LABEL` classes → per-class
+`cv2.connectedComponents` → bbox per component, `MIN_REGION_AREA=200`). `segment_image.py` wraps this
+as a real single-ad-hoc-image entry point (`run(image_path, checkpoint_path, device)`, NDJSON
+event protocol), already built and used by the Dart editor's own Cutting mode — the correct,
+already-existing tool to call rather than re-implementing region proposal.
+
+**Real, disclosed limitation on "not rectangles"**: the segmenter's own training data has **no
+per-pixel mask ground truth** — confirmed by reading `segmenter_models/maskrcnn.py`'s own docstring
+("Ground truth is rectangle-only everywhere in this pipeline... a documented approximation, not an
+oversight"). The U-Net path (the only one with a wired inference script) does produce a genuine
+per-pixel class map internally, and the *proposal* of where a region is comes from real pixel
+classification + connected components (not a hand-drawn rectangle grid) — but the artifact each
+region resolves to downstream is still an axis-aligned bbox crop, because that's what every
+consumer of `CutRegion`/`infer_regions_with_crops` expects today. A second checkpoint exists —
+`work/comics-ai-multimodal/models/maskrcnn.pt`, trained via `train_segmenter.py` on
+`segmenter_models/maskrcnn.py` (torchvision Mask R-CNN, real instance masks architecturally) — but
+**has no wired inference script anywhere in this repo today** (`infer_segmenter.py` only ever loads
+`UNetBaseline`), and its own mask supervision was the same box-shaped ground truth, so it would not
+actually yield pixel-accurate irregular cutouts even if wired up. **Conclusion, stated plainly**: the
+real model-driven region *proposal* (which pixels belong to which figure, via real learned pixel
+classification) satisfies "not a hand-written rectangle heuristic," but pixel-accurate non-rectangular
+*cutout edges* are not available from any currently-wired model in this repo — achieving that would
+need new work (new mask ground truth, and wiring `maskrcnn.pt` for inference), out of scope here
+unless Anton wants it added as a separate task.
+
+**Real technical adaptation needed — tiling**: `infer_regions` resizes its whole input to a fixed
+`TRAIN_SIZE = (256, 256)` before inference. A panorama page up to ~93,524px wide fed in directly would
+collapse to a useless 256px-wide smear — nothing like the model's real training distribution (single
+already-reasonably-sized page photos). `import_panorama.py`'s cutting step must instead **slide a
+window across the panorama** (real window size TBD by experiment against the model's real training
+image scale — Plan task, not decided here), call `infer_regions_with_crops` per window, map each
+window-local bbox back to panorama-global coordinates, and **deduplicate regions that straddle window
+boundaries** (a real, open problem — flagged below, not solved by assumption).
+
+**Real, carried-forward domain-shift risk** (already flagged in this flow's own Existing AI Flow
+Audit table): the segmenter was trained on `DEFAULT_LOWCAMERA_DIR` — photographed Mahabharata comic
+pages — not dense hand-drawn Bhagavad Gita panorama line art. Region proposals here are a real,
+unverified transfer; the manifest must disclose this per chapter (extends Must-Have 13).
+
+### Stage 2 — Arranging: `comics-ai-positioning`'s trained residual model
+
+**Real tool, confirmed by direct inspection**: `apps/comics-ai/comics-ai-positioning/scripts/
+infer_positioner.py` — `load_model()` loads a real trained artifact, confirmed present on disk at
+`work/comics-ai-positioning/positioner_model.joblib`; `position_page_with_model()` runs
+`baseline_position.position_page()` first, then adds a learned per-region y-residual
+(`final_y = baseline_y + predicted_residual`) from a model trained on real Mahabharata ground truth
+(`positioning_bridge.py` reads `work/canvas/*.gt.json` and `work/alignment.jsonl`, materialized from
+`comics-multimodal`'s real aligned Mahabharata pages). This is the real "model pretrained on real
+Mahabharata data" Anton asked for arranging.
+
+Each panorama page's cut `CutRegion`s become that page's `RegionFeatures` input (`kind`,
+`local_bbox`, `reading_order_index` — reading order derived from the regions' real horizontal
+position in the panorama, left-to-right, which is the panorama's own real narrative sequence per
+every page visually reviewed so far) and `position_page_with_model` returns real per-region
+`(x, y)` placement for a normal vertical `.comics` canvas.
+
+**Real, disclosed finding this flow must not paper over**: `sdd-comics-ai-positioning`'s own
+`_status.md` records that this exact learned model was evaluated honestly against its own calibrated
+baseline and **did not beat it** ("Phase 5 (learned model) built and evaluated for real — does not
+beat baseline, even after a refit"). Per Anton's explicit instruction we use the learned model anyway
+(not the baseline it lost to) — a real, disclosed deviation from that sibling flow's own
+recommendation, made on Anton's direct call, not silently presented as though the model were proven
+superior. The manifest/report must carry this caveat forward per chapter that used it.
+
+### Stage 3 — Animating and `cameraPath`: `comics-ai-animations`' Mahabharata-calibrated reveal model
+
+**Real tool, confirmed by direct inspection**: `apps/comics-ai/comics-ai-animations/scripts/
+baseline_transform.py`'s `propose_reveal(kind, stats)`, calibrated by `transform_stats.py` against
+real ground-truth transform statistics mined from real Mahabharata episodes (`build_transform_pairs.py`
+→ `transforms_bridge.py`, which bridges live into `comics-multimodal`'s `resting_position.
+resolve_reveal_animation`). **Honest caveat**: unlike the positioner, this repo has **no trained
+model with learned weights** for animation — only this real, ground-truth-calibrated statistical
+baseline (occurrence/duration stats per `kind`, evaluated file-wise held-out in `evaluate_transforms.
+py`). It is the closest, and only, real artifact in this repo matching "model pretrained on real
+Mahabharata data" for animation, so it is what gets reused here — stated plainly as calibrated
+statistics, not literally trained weights, so the manifest doesn't overclaim.
+
+For each vertically-arranged region, `propose_reveal(region.kind, stats)` yields real per-property
+reveal proposals (occurs-or-not, direction where applicable, duration) which map directly onto
+`.comics` `TranslateAnim`/`AlphaAnim` keyframes at that region's arranged `(x, y)`.
+
+`cameraPath` is then derived from the same real per-region reveal timing/order (not raw panorama
+pixel-column density, which only made sense over the untouched horizontal source): a virtual vertical
+pan whose speed is inversely proportional to local reveal density (more regions revealing/animating
+in a given vertical span ⇒ camera lingers there ⇒ more scroll distance allotted), built the same way
+the withdrawn draft's density algorithm worked, just over the vertically-arranged layout's real region
+positions instead of raw pixel columns — same chained `{start, end, x, y}` `cameraPath` schema shape,
+now with real `y` motion instead of the withdrawn draft's `y: 0`-only pan.
+
+### Stage 4 — Recomposition: reuse `layout_chapter.py`, not a new layout engine
+
+The arranged, animated regions become ordinary `.comics` layers assembled the same way
+`layout_chapter.py` already assembles a chapter's vertical strip today (Phase 3) — this stage adds no
+new layout code, only a new *source* of layers (AI-cut/arranged panorama regions instead of
+Chromium-rendered verse cards) feeding the same existing assembly path.
+
+### Z-depth — now core, not an enrichment tier
+
+Because every chapter using this source now goes through real per-region extraction (Stage 1) as the
+baseline, not an optional add-on, non-uniform per-layer `zDepth` is available for every such chapter,
+not gated behind a separate enrichment decision. **Heuristic unchanged from the withdrawn draft**:
+`zDepth` derived from each region's own size and vertical position in the *arranged* layout — larger
+and/or lower-positioned regions read as nearer (lower/negative `zDepth`), smaller/higher regions read
+as farther (higher/positive `zDepth`) — still a real, disclosed heuristic approximation, not verified
+against the artist's actual intended depth (Open Design Question, unchanged).
+
+### Extraction pipeline
+
+```python
+# scripts/import_panorama.py -- NEW
+
+def render_pdf_page(pdf_path: Path, page: int, dpi: int) -> Image:
+    """Unchanged from the withdrawn draft -- shells out to pdftoppm (poppler, already installed)."""
+
+@dataclass(frozen=True)
+class ChapterMapping:
+    chapter_order: int          # 1-18
+    pdf: str                    # "black_and_white" | "coloured"
+    page: int                   # 1-indexed real PDF page
+    confidence: str             # "confirmed" | "inferred" | "unmapped"
+
+CHAPTER_MAPPING: list[ChapterMapping] = [
+    # Unchanged from the withdrawn draft -- only 2 real, visually-grounded entries; the rest remain
+    # "unmapped" pending Plan's chapter-mapping-resolution task (below), not invented here.
+    ChapterMapping(chapter_order=1, pdf="black_and_white", page=2, confidence="inferred"),
+    ChapterMapping(chapter_order=11, pdf="black_and_white", page=12, confidence="inferred"),
+]
+
+def cut_panorama_regions(image: Image, tile_width: int, tile_overlap: int) -> list[CutRegion]:
+    """Slides a window across the panorama, calls comics-ai-multimodal's infer_regions_with_crops
+    per window (real trained UNetBaseline), maps window-local bboxes to panorama-global coordinates,
+    and deduplicates regions straddling window boundaries. See Stage 1 above -- tile_width/overlap
+    and the dedup strategy are real, unresolved Plan-level parameters, not assumed here."""
+
+def arrange_regions_vertically(regions: list[CutRegion]) -> list[PositionProposal]:
+    """Calls comics-ai-positioning's real infer_positioner.position_page_with_model against the cut
+    regions, reading_order_index derived from each region's original horizontal panorama position.
+    See Stage 2 above."""
+
+def animate_arranged_regions(regions: list[PositionProposal]) -> list[dict]:
+    """Calls comics-ai-animations' baseline_transform.propose_reveal per region kind, mapping the
+    result onto TranslateAnim/AlphaAnim keyframes at the region's arranged position. See Stage 3."""
+
+def build_camera_path_from_reveal_density(animated_regions: list[dict], document_scroll_height: int) -> list[dict]:
+    """See Stage 3 -- same principle as the withdrawn draft's pixel-density algorithm, now driven by
+    arranged-region reveal density over the vertical layout instead of raw horizontal pixel columns."""
+
+def derive_layer_z_depth(region_bbox: tuple[int, int, int, int], layout_size: tuple[int, int]) -> float:
+    """See "Z-depth -- now core, not an enrichment tier" above."""
+```
+
+### Chapter-mapping resolution — disclosed, not guessed
+
+Unchanged from the withdrawn draft: `CHAPTER_MAPPING` ships with only the 2 real, visually-grounded
+entries found in Requirements — not a complete, invented 18-entry table. Resolving the rest is real,
+separate Plan work (full manual/Anton-reviewed pass, or a local-Ollama-assisted visual-similarity
+pass per `sdd-comics-ai-script-context`'s precedent) — still an Open Design Question, not decided
+here. `confidence` must carry through to the manifest verbatim per chapter (Must-Have 13);
+`"confirmed"` only ever set by explicit human review.
+
+### Data Models
+
+```json
+{
+  "width": 1080,
+  "height": 1920,
+  "layers": [
+    {
+      "images": [{}, {"file": "ch01_region_014.png", "width": 812, "height": 1104}, {}],
+      "animations": [{"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor", "x": 0, "y": 640}],
+      "zDepth": -0.3,
+      "kind": "character"
+    },
+    {
+      "images": [{}, {"file": "ch01_region_015.png", "width": 340, "height": 288}, {}],
+      "animations": [{"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor", "x": 0, "y": 1310}],
+      "zDepth": 0.6,
+      "kind": "art"
+    }
+  ],
+  "cameraPath": [
+    {"start": 0, "end": 640, "x": 0, "y": 640},
+    {"start": 640, "end": 1310, "x": 0, "y": 1310}
+  ],
+  "sounds": []
+}
+```
+
+`scrollType` is intentionally **absent** (defaults to `"vertical"`, per `tdd-dot-comics-format`) —
+this is the whole point of the correction: no new, unimplemented reader capability is required.
+`width`/`height` follow the existing chapter canvas convention (Specifications' existing Canvas
+section), unaffected by this addition. `cameraPath` now carries real, non-zero `y` motion (unlike the
+withdrawn draft's X-only pan), matching a genuinely vertical document.
+
+### Edge Cases
+
+| Case | Trigger | Expected Behavior |
+|------|---------|-------------------|
+| A chapter has no confirmed or inferred page mapping | Most chapters, per the real 2-of-18 finding above | Falls back to today's deterministic text-forward Chromium-rendered card path unchanged — Must-Have 11's own explicit requirement |
+| Cut regions from adjacent tiling windows overlap/duplicate the same figure | Expected for any figure that straddles a tile boundary, given the panorama's real width vs. the segmenter's fixed input size | Must be deduplicated before arranging (real, open Plan-level problem — not solved by assumption here) |
+| The segmenter finds zero regions on a page (domain-shift failure, not just low confidence) | Real, disclosed possibility given the unverified Mahabharata→Gita transfer | Chapter falls back to the deterministic text-forward path, same as an unmapped chapter — not a hard pipeline failure |
+| The positioning model's residual pushes a region off-canvas or overlapping another | Not yet observed for this source (never run against panorama-derived regions) | Needs a real bounds/overlap clamp — analogous to `baseline_position.py`'s own existing bounds handling — flagged for Plan, not assumed safe |
+| Rendering a page at production DPI produces an excessively large raster (pages up to ~108in wide) | Real, confirmed risk given real file sizes already observed (up to 622MB for the 12-page PDF) | Needs a real memory/tile-count bound, analogous to the chapter-5 PSD adapter's own handled-failure mode — not yet measured for this source, flagged for Plan |
+
+### Testing Strategy
+
+- [ ] Unit: `render_pdf_page` against a small real crop/test fixture (not the full 622MB file)
+- [ ] Unit: `cut_panorama_regions`'s tiling + dedup against a synthetic multi-tile image with a known
+      figure straddling a tile boundary, asserting it yields one region, not two
+- [ ] Unit: `arrange_regions_vertically` against a small known set of `CutRegion`s, asserting output
+      matches direct calls into `comics-ai-positioning`'s own `position_page_with_model`
+- [ ] Unit: `animate_arranged_regions` against known region kinds, asserting output matches direct
+      calls into `comics-ai-animations`' own `propose_reveal`
+- [ ] Unit: `build_camera_path_from_reveal_density` against synthetic arranged regions with known
+      reveal density, asserting the remapped curve concentrates scroll distance in dense spans
+- [ ] Unit: `derive_layer_z_depth` against known bbox/position combinations
+- [ ] Integration: end-to-end render of the one confirmed-plausible chapter (Chapter 1, page 2) once
+      `CHAPTER_MAPPING`'s entries are upgraded from `"inferred"` to real
+- [ ] Manifest/report: assert disclosed-confidence text, domain-shift caveat, and the positioning
+      model's own "did not beat baseline" caveat all appear for every affected chapter (Must-Have 13)
+
+### Open Design Questions
+
+- [ ] Manual vs. Ollama-assisted chapter-mapping resolution — not decided.
+- [ ] Tiling window size/overlap for Stage 1 cutting, and the region-dedup strategy across tile
+      boundaries — real, unresolved engineering parameters, not decided here.
+- [ ] Production rendering DPI and the resulting tile-count/memory bound — not yet measured.
+- [ ] Whether wiring up `maskrcnn.pt` for real inference (currently unwired anywhere in this repo)
+      is worth doing to get closer to true non-rectangular cutouts, given its own mask supervision
+      was also box-shaped — a real scope call for Anton, not decided here.
+- [ ] Whether `cameraPath`'s reveal-density derivation should also directly inform per-region
+      `zDepth` (regions the camera lingers on could plausibly also be "foreground") — a real,
+      unexplored connection between the two mechanisms, not assumed.
+
 ## Manifest Contract
 
 `manifest.json` uses a versioned root:
@@ -512,4 +796,13 @@ baseline without changing source ingestion or chapter cardinality.
 - [x] AI summaries are optional, labeled, cited, and never replace source verses.
 - [x] PSD and audio fallback behavior is explicit.
 - [x] Output, manifest, packaging, validation, and resumability contracts are defined.
-- [x] Specifications reviewed and approved by user (2026-08-06, "specs approved").
+- [x] Specifications reviewed and approved by user (2026-08-06, "specs approved") — v0.2 baseline.
+- [x] Lottie camera-path/per-layer z-depth extraction design (v0.3-v0.4) was drafted and approved
+      here 2026-08-09, then **extracted into its own flow** per Anton's explicit instruction — see
+      `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/02-specifications.md` for the full
+      content and its own approval record.
+- [ ] **NEW (2026-08-09)**: Panoramic PDF Source design (v0.6) — DRAFT, awaiting approval. Real
+      findings recorded (page counts/dimensions, visual review of 4/12 pages, coloured-vs-B&W
+      correspondence); chapter mapping is real but mostly unresolved (2 of 18); the
+      `scrollType: horizontal` architecture choice is disclosed as not-yet-renderable by any current
+      reader, not claimed to work visually today.
