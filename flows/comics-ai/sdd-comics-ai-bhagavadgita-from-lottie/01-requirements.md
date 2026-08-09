@@ -1,6 +1,6 @@
 # Requirements: comics-ai-bhagavadgita-from-lottie
 
-> Version: 1.0
+> Version: 1.1
 > Status: APPROVED
 > Last Updated: 2026-08-09
 
@@ -220,9 +220,9 @@ actual parallax rendering later has real ground-truth data to render, not just a
       if so, which), or is it genuinely a separate, standalone piece? Not resolved — the translation
       JSONs (`_translations/{en,ru}.json`) weren't read for narrative content to cross-check against
       chapter titles; a real, cheap next step if this matters.
-- [ ] Exact `zDepth` derivation formula's scale constant `K` — proposed `K = 1.0` as a working
-      default in `02-specifications.md`, not calibrated against anything; a real, two-flow-spanning
-      open question shared with `flows/tdd-dot-comics-format`.
+- [x] Exact `zDepth` scale constant — resolved by the approved `tdd-dot-comics-format` v0.11/v0.8
+      contract as `K = 1`: `zDepth` is unitless and the inverse relation is
+      `motionRatio = 1 / (1 + zDepth)`.
 - [ ] Should the 3 scenes (`0_1`/`0_2`/`0_3`) become 3 separate `.comics` files or one combined
       document with 3 internal scroll regions? Not decided — leaning toward one document (matching
       the parent flow's own "one continuous-scroll document" convention) but a real open call.
@@ -237,8 +237,8 @@ actual parallax rendering later has real ground-truth data to render, not just a
 - `dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/unzip/1/Mediation of the Bhagavat Gita_content/
   Mediation of the Bhagavat Gita.json` — the real Lottie source inspected directly for this flow
 - `flows/tdd-dot-comics-format/01-requirements.md`, `03-specifications.md` — `Layer.ZDepth`'s own
-  design (default 0, additive), source of the "not yet implemented anywhere" constraint; also the
-  home this flow's own `cameraPath` proposal should eventually be formally adopted into
+  design (default 0, additive), source of the "not yet implemented anywhere" constraint, and the
+  canonical adopted home of this flow's `cameraPath` proposal
 - `flows/comics-editor/tdd-dot-lottie-import-export/` — the general Lottie↔`.comics` mapping
   precedent (parent chains, precomp handling), and the source of `libs/flutter_comics`'s tested
   Lottie parser this flow's verification work reuses instead of installing new tooling
@@ -255,3 +255,10 @@ actual parallax rendering later has real ground-truth data to render, not just a
       does not require re-approval.
 - [x] Notes: real open engineering questions remain (see Open Questions above), disclosed and
       unaffected by this extraction.
+
+### v1.1 review gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-09
+- [x] Notes: aligns this producer with the canonical `cameraPath`/`zDepth` contract in
+      `tdd-dot-comics-format` v0.11/v0.8; no implementation work is included.

@@ -1,8 +1,8 @@
 # Requirements: sdd-flutter-comics — shared `.comics` format library
 
-> Version: 0.3
+> Version: 0.4
 > Status: APPROVED
-> Last Updated: 2026-08-08
+> Last Updated: 2026-08-09
 
 ## Origin
 
@@ -13,7 +13,8 @@ comics-editor и comics-viewer обрабатывающую чтение и за
 sdd-flutter-comics, в нем сразу пропиши requirements и спецификации, но только после того как
 сделаешь анализ кодовой базы. Так же вынеси туда тесты с этим связанные (именно перемести из тех
 флоу сюда)." Requirements and Specifications are drafted together per that instruction, after the
-codebase analysis below — both still await Anton's approval before Plan.
+codebase analysis below. The original documents and the v0.4 camera/depth addendum are approved;
+the next gate is the v0.4 Plan addendum.
 
 ## Codebase Analysis (done before drafting, per instruction)
 
@@ -251,6 +252,61 @@ recommendation for `ComicsArchiveReader` still stands for now. Noted here only b
 concrete algorithm to adapt if/when real Dart-side `.comics` *writing* is ever needed by
 `flutter_comics` — not invented from scratch, should this become a real requirement later.
 
+## Addendum (v0.4, 2026-08-09): shared camera-path and z-depth support
+
+The implemented v0.3 library predates the now-concrete camera contract: its current
+`EditorLayer` has no `zDepth`, `ComicsDoc` has no `cameraPath`, and `ComicsArchiveReader` parses
+neither. `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie` now supplies a real producer and
+real non-uniform source data; `flows/tdd-dot-comics-format` v0.11/v0.8 defines the portable schema
+and response math. The shared model must adopt that contract so editor/viewer code does not create
+new duplicate camera models or platform-specific formulas.
+
+The boundary stays the same as v0.3: `flutter_comics` owns persisted types, tolerant parsing,
+cloning, camera-path sampling, and pure parallax-value calculation. `flutter_comics_viewer` owns the
+widget/render transform that consumes those values; `apps/comics-editor` owns editing UI and its
+native-core merge/save bridge. A camera feature must behave identically on Android, iOS, Web,
+macOS, Windows, and Linux because all consumers call the same shared pure-Dart calculation.
+
+### New User Stories
+
+**As** a viewer/editor implementer, **I want** `CameraPath`, `CameraKeyframe`, and `zDepth` in the
+shared model and public package API, **so that** each platform does not invent its own schema or
+parallax convention.
+
+**As** a reader of legacy content, **I want** absent camera/depth fields to resolve to inert values,
+**so that** upgrading `flutter_comics` cannot move a single existing layer.
+
+**As** an import pipeline, **I want** one deterministic camera sampler and depth-response function,
+**so that** a Lottie-derived path can be validated before any viewer UI is involved.
+
+### v0.4 Acceptance Criteria (additional Must Haves)
+
+10. **Given** a `.comics` root with `cameraPath` and layers with `zDepth`, **when**
+    `ComicsArchiveReader` reads it, **then** the full typed values survive parsing and cloning;
+    absent/empty camera and absent/explicit-zero depth resolve identically and inertly.
+11. **Given** valid camera points and any valid depth (`zDepth > -1`), **when** the shared evaluator
+    is called at a scroll coordinate, **then** it returns the exact sampling and adjustment defined
+    by `tdd-dot-comics-format/03-specifications.md`, without widgets, platform channels, device
+    pixels, or orientation APIs.
+12. **Given** invalid depth (`<= -1` or non-finite), unordered/duplicate camera points, or malformed
+    point values, **when** the portable reader/evaluator handles them, **then** it follows the
+    format's tolerant normalization/fallback rules and never produces `NaN`/infinite transforms.
+13. **Given** the editor's native-core merge path, **when** a camera/depth document is opened,
+    edited, cloned/undo-redone, and saved, **then** `cameraPath` and every layer's `zDepth` are
+    preserved; this addendum may extend mapping for the new fields but must not redesign ZIP/FFI I/O.
+14. **Given** phone, tablet, desktop, and Web consumers at the same document scroll coordinate,
+    **when** they use `flutter_comics`'s evaluator, **then** they receive the same document-space
+    camera sample and layer adjustment. Viewport scaling is applied afterward by each rendering
+    surface and cannot change the document-space result.
+
+### v0.4 Scope Boundary
+
+- Included: shared types, clone behavior, portable read support, editor bridge round-trip, public
+  exports, pure sampling/response math, and automated contract tests.
+- Excluded: applying the result in a viewer widget, editor controls/visualization for camera/depth,
+  reconstructing a path from Lottie, and changing platform orientation/scroll UX. Those belong to
+  their respective viewer, VDD, and importer flows.
+
 ## Problem Statement
 
 `.comics` format read/write logic is split across two Dart codebases that don't share a model:
@@ -426,6 +482,8 @@ relocated — no behavior change to the editor's native-core-backed save/load pa
   `dart_comics_viewer_surface.dart`, `comics_viewer.dart`
 - `flows/tdd-dot-comics-format/` — the schema decisions this library must stay synced with going
   forward (whoever adds a new field should now only need to touch this library)
+- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/` — v0.4's real producer/source of
+  non-uniform depth and reconstructed camera-path fixtures
 - `flows/comics-editor/tdd-dot-lottie-import-export/` — NEW in v0.2: the flow that created the Lottie
   files now in scope, and the schema fields (`groupId`/`textRegion`/`preferredViewportWidth`/`Height`)
   they depend on
@@ -450,3 +508,10 @@ relocated — no behavior change to the editor's native-core-backed save/load pa
 - [x] Notes: Approved as drafted (v0.3) — v0.1's original content plus the v0.2 (Lottie/interpolator
       scope, full flow survey) and v0.3 (`.puzzle` decided, architecture-boundary verification)
       addenda all approved together ("specs and reqs approved").
+
+### v0.4 review gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-09
+- [x] Notes: v0.4 is a camera/z-depth extension only. Requirements and Specifications are approved;
+      implementation still requires a separately approved Plan addendum.

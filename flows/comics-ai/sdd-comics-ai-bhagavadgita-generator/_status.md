@@ -2,15 +2,30 @@
 
 ## Current Phase
 
-Phases 1-9: IMPLEMENTATION — functionally complete (see below, unchanged from 2026-08-07).
-**Phase 10 (2026-08-09, REWRITTEN same day): REQUIREMENTS/SPECIFICATIONS/PLAN DRAFTED v2, awaiting
-approval** — Panoramic PDF Source rendering for all 18 chapters, now standard vertical-scroll
-everywhere with AI cutting (`comics-ai-multimodal`), AI arranging (`comics-ai-positioning`), and AI
-animating (`comics-ai-animations`) as the core mechanism, per-layer `zDepth`, and a reveal-density-
-derived `cameraPath`. Real PDF inspection done (see below); chapter mapping mostly unresolved
-(2 of 18).
+Phases 1-9: IMPLEMENTATION — functionally complete and retained as format/source-fidelity regression
+fixtures, not accepted as final production artwork.
 
-## NEW (2026-08-09): Panoramic PDF Source inspected — real findings, new rendering plan drafted
+**Production-art pivot: SPECIFICATIONS v0.8 awaiting review.** Anton approved the asset-first Requirements
+v0.8 on 2026-08-09 (`reqs approved`). The old direct panorama
+cut/arrange/animate Phase 10 and its Specifications/Plan are explicitly superseded and must not be
+implemented. Revised Requirements now define source recovery, true bitmap masks/matting,
+identity/style asset graph, story-beat coverage, paired sketch colourization, controlled local and
+`gpt-image-2` gap filling, exact lettering, golden chapters 1+11, and production art-direction gates.
+Revised Specifications are now drafted as the active artifact; implementation remains gated by separate
+`specs approved` and `plan approved` transitions.
+
+## NEW (2026-08-09): Production asset-first vision recorded
+
+- `.comics` is the final compiler target; the canonical intermediate is a reviewed asset graph.
+- PSD alpha/hierarchy and Lottie assets are recovered before flattened-image segmentation.
+- A compact local instance segmenter may be trained on the Apple M4 Max, but must output and retain
+  RGBA + bitmap masks, use source-disjoint evaluation, and beat the current bbox path.
+- Visual narrative maps chapters to 6+ story beats, not one PDF page to one chapter.
+- Chapters 1 and 11 are the golden production pilots before scaling to all 18.
+- The separate `gpt-image-2` path becomes one provider for explicit missing/repair/variant asset
+  tasks, never unchecked one-shot chapter art or final lettering.
+
+## HISTORICAL / SUPERSEDED (2026-08-09): Panoramic PDF Source direct-rendering draft
 
 Per Anton's direct instruction, inspected `dataset/bhagavadgita/vaishnav/drawing/
 All_Black-n-White.pdf` (12 pages, 622MB) and `All_Coloured.pdf` (6 pages, 95MB) via `pdfinfo`/
@@ -62,9 +77,10 @@ per-layer z-depth from a real, previously-unaudited Lottie source in the dataset
 (`dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/`) and exporting it into `.comics` v2026. Per
 Anton's explicit follow-up instruction ("Вынеси в отдельный sdd, из прошлого sdd удали"), **that
 content has been moved into its own flow**: `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`
-— see that flow's own `_status.md` for current progress (Requirements/Specifications/Plan approved,
-Implementation not yet started, real `cameraPath` coordinates already computed ad hoc for all 3
-scenes). Nothing about that work is duplicated here anymore.
+— that flow is now IMPLEMENTATION COMPLETE: it added the standalone `--lottie-source` pipeline and
+extended this flow's `package_comics.py`/`pipeline.py`/`report.py` backward-compatibly; all 92 tests
+pass and the 18-chapter path remains unchanged. See its `_status.md` for the verified output details.
+Nothing about that work is duplicated here anymore.
 
 ## Phase Status
 
@@ -86,25 +102,17 @@ Full task-by-task detail (files, real test counts, real visual spot-checks) is i
 
 ## Last Updated
 
-2026-08-09 by Claude (Panoramic PDF Source inspected, new Phase 10 Requirements/Specifications/Plan
-drafted for all-18-chapter rendering with camera path + z-depth, then rewritten same day after Anton
-rejected the horizontal-scroll draft in favor of vertical-scroll + AI cut/arrange/animate via
-comics-ai-multimodal/comics-ai-positioning/comics-ai-animations, still awaiting approval; Lottie work
-extracted to its own flow; Phases 1-9 unchanged since 2026-08-07)
+2026-08-09 by Codex (Requirements v0.8 explicitly approved; replacement production Specifications
+v0.8 drafted and awaiting review; backend TDD cross-flow cases queued without skipping its own
+Requirements gate; prior Phase 10 Specifications/Plan remain superseded)
 
 ## Blockers
 
-- **Phase 10 (Panoramic PDF Source) drafted v2, awaiting approval, not yet started**: real PDF
-  inspection is done (see above); `01-requirements.md` v0.6, `02-specifications.md` v0.7,
-  `03-plan.md` v0.6 all await approval. Real, disclosed risks carried into the Plan itself: only
-  4 of 12 B&W pages visually reviewed so far (Task 10.1 is the first Implementation step, closing
-  this); chapter mapping stands at 2 of 18 confirmed-plausible; production-scale PDF rendering
-  (pages up to ~108in wide) has not been measured, only low-DPI previews; the segmenter's tiling/
-  cross-tile dedup for a panorama this wide is a real, unsolved engineering problem; domain-shift
-  accuracy is unverified for all three reused models (segmenter, positioner, reveal baseline — all
-  trained/calibrated on Mahabharata, not Gita art); the positioning model is known, by its own
-  flow's evaluation, not to beat its calibrated baseline, used anyway per Anton's instruction.
-  Independent of the item below — Phase 10 doesn't touch Phases 1-9's own working output.
+- **SDD gate**: replacement production Specifications must be reviewed and explicitly approved
+  before a replacement Plan is drafted.
+- **Later production decisions, not blockers to Requirements approval**: minimum corrected gold-mask
+  budget; compact segmenter/framework/license shortlist; chapter-specific exceptions to the proposed
+  six-visual-beat floor; paid API/reference-upload authority for `gpt-image-2`.
 - **One manual verification step is still outstanding**: Specifications/Requirements ask for,
   beyond the real automated Dart test against all 18 real files (done, passing), "a documented
   manual open in the actual Comics Editor app" — i.e. actually launching the real macOS GUI app
@@ -168,8 +176,15 @@ extracted to its own flow; Phases 1-9 unchanged since 2026-08-07)
       section rewritten around real trained/calibrated models: `comics-ai-multimodal` for cutting,
       `comics-ai-positioning` for arranging, `comics-ai-animations` for animating), Plan revised to
       v0.6 (Phase 10 grown from 6 tasks to 8: 10.1-10.8)
-- [ ] Phase 10 Requirements/Specifications/Plan approval — awaiting Anton
-- [ ] Phase 10 Implementation — not started; Task 10.1 (full page review) is next
+- [x] **SUPERSEDED (2026-08-09)**: direct panorama → existing cut/arrange/animate Phase 10 rejected
+      in favor of the production asset-first vision; its v0.7 Specifications/v0.6 Plan retained only
+      as historical evidence and marked MUST NOT implement
+- [x] Production asset-first vision approved by Anton and saved in Requirements v0.8
+- [x] Requirements v0.8 formally approved on 2026-08-09 (`reqs approved`)
+- [x] Replacement production Specifications v0.8 drafted
+- [ ] Replacement production Specifications v0.8 approved
+- [ ] Replacement production Plan — not drafted before Specifications approval
+- [ ] Production asset-graph implementation — not started
 
 ## Context Notes
 
@@ -199,24 +214,14 @@ extracted to its own flow; Phases 1-9 unchanged since 2026-08-07)
 
 ## Next Action
 
-Two independent tracks now:
+Anton reviews replacement Specifications v0.8 for the asset graph, source adapters, gold
+annotations/evaluation, story-beat coverage, colourization, exact lettering, generation-provider
+contract, review gates, and golden chapters 1+11, then says `specs approved`. Codex subsequently
+drafts a replacement Plan; no production implementation begins before that Plan is approved.
 
-1. **Phases 1-9 (18-chapter Must-Have path)**: one item remains — **Anton (or Claude, with explicit
-   go-ahead) manually opens one generated chapter — recommend
-   `work/bhagavadgita/chapter_05.comics`, the most feature-complete — in the running desktop Comics
-   Editor app** to close out Requirements' Must-Have 10's literal "manual viewer launch" clause.
-   Everything else is done and verified.
-2. **Phase 10 (Panoramic PDF Source, rewritten 2026-08-09 to vertical-scroll + AI cut/arrange/
-   animate)**: Anton reviews/approves `01-requirements.md` v0.6, `02-specifications.md` v0.7,
-   `03-plan.md` v0.6. On approval, Task 10.1 (full page-by-page review of both PDFs, only 4/12 done
-   so far) is the real next step, before any extraction code is written.
-
-The Lottie camera-path/z-depth work's own next action (Task 1.1) now lives in
-`flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/_status.md`, not here.
-
-Optional, non-blocking follow-ups noted in the Plan but out of the Must-Have path: Task 2.2
-(Ollama-backed storyboard enrichment), and the still-separately-unresolved YOLO11-seg/AGPL
-licensing question in `sdd-comics-ai-multimodal` (Anton's own call, tracked there).
+The old manual GUI-open item remains a regression-proof task for Phases 1-9 but cannot make their
+text-card output production art. The Lottie camera-path/z-depth implementation remains in its own
+approved flow and is not silently folded back into this one.
 
 ## Fork History
 

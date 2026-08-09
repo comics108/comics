@@ -1,9 +1,8 @@
 # Specifications: dot-comics-format (TDD)
 
-> Version: 0.7 (2026-08-08: NEW — `Layer.ZDepth`, an optional per-layer parallax-depth field,
-> default `0`, absent-key treated identically to explicit `0` for v2012 compatibility)
+> Version: 0.8 (2026-08-09: completed `Layer.ZDepth` math and added `cameraPath`.)
 > Status: APPROVED
-> Last Updated: 2026-08-08
+> Last Updated: 2026-08-09
 > Requirements: [01-requirements.md](01-requirements.md)
 > Tests: [02-tests.md](02-tests.md) (Test Cases B2-B5, D4, and the animation-inventory background
 > this derives from)
@@ -26,6 +25,8 @@ Anton's explicit request that they not live only in Tests:
    content-scroll-axis vs. device-screen-orientation, never coupled or inferred from each other.
 6. **`Layer.ZDepth`** — a new optional per-layer parallax-depth field, default `0`, for faking depth
    via scroll-response scaling on a format that otherwise remains genuinely flat 2D.
+7. **`cameraPath`** — an optional document-level, scroll-keyed XY path used with `Layer.ZDepth` for
+   portable 2.5D parallax; motivated by a real Lottie-derived `.comics` producer.
 
 ## Affected Systems
 
@@ -39,6 +40,9 @@ Anton's explicit request that they not live only in Tests:
 | `apps/comics-editor/lib/src/ui/models.dart`'s `EditorLayer` | Modify (additive) | New `id`, `parentId` fields; every existing layer has no parent, behaves exactly as today |
 | `apps/comics-editor`'s canvas/layers-panel editing logic | Modify (new behavior) | Moving a parent layer should visually move its children live during editing — new interaction, doesn't exist today (flat, independent layers) |
 | Any reader (2012 Java/Swift, v2.8, current) | None required | Absent `parentId`/organizational `Kind` → today's exact behavior; file always persists resolved absolute `Anim` values regardless of parenting, so no reader ever needs to resolve a parent chain to render correctly |
+| `.comics`/`data.json` root + `Layer` (v0.8) | Modify (additive) | Optional root `cameraPath`; optional numeric layer `zDepth`, absent/zero is inert |
+| `libs/flutter_comics` (v0.8) | Modify in downstream SDD | Canonical Dart types, tolerant parsing/cloning, camera sampling, and pure parallax adjustment; detailed in `flows/sdd-flutter-comics` v0.4 |
+| Camera-aware viewer surface (v0.8) | Modify in downstream viewer flow | Applies shared document-space adjustment after authored transforms and before viewport scaling; legacy readers may ignore both keys |
 
 ## Architecture
 
@@ -344,8 +348,8 @@ class EditorLayer {
                         // existing/unmarked layer's implicit value) == no depth offset -- today's
                         // exact 1:1-with-scroll behavior, unchanged. Absent JSON key and an
                         // explicit `0` are the SAME value, not two distinguishable states.
-                        // Sign convention, scroll-response formula, and unit/range are not yet
-                        // decided -- see Open Design Questions.
+                        // Unitless relative depth: positive = farther/slower, negative =
+                        // nearer/faster. Valid authored domain is zDepth > -1.
 }
 ```
 
@@ -369,9 +373,30 @@ authored `Anim` value and the current scroll position — it does not change wha
 a reader that has never heard of `zDepth` still renders every layer using its `Anim` values exactly
 as it does today. (Contrast with `ParentId`, where the *editor* resolves live-relative values into
 absolutes at save time — here, per the Requirements framing, the modulation is conceptually applied
-at *render* time by a reader that understands `zDepth`, not baked into the persisted `Anim` values.
-This distinction, and its consequences for a `zDepth`-unaware reader opening `zDepth`-bearing content,
-is flagged in Open Design Questions rather than fully specified here.)
+at *render* time by a reader that understands `zDepth`, not baked into the persisted `Anim` values.)
+
+**Sign, unit, and domain (completed in v0.8)**: `zDepth` is a finite, unitless relative-depth
+coefficient. `0` is the reference plane; `zDepth > 0` is farther and responds less; `-1 < zDepth < 0`
+is nearer and responds more. Values `<= -1`, `NaN`, or infinite are invalid because the response
+formula below would be singular or non-finite; tolerant readers resolve them to neutral `0`, while
+authoring tools must not emit them.
+
+Let `C(s)` be the camera-path point sampled at scroll coordinate `s`, `C0` its first point, and
+`D(s) = C(s) - C0`. After all scroll- and time-basis authored animation values have been composed,
+the final layer translation is:
+
+```text
+response(z) = 1 / (1 + z)
+parallaxAdjustment(s, z) = D(s) * (response(z) - 1)
+effectiveTranslation(s) = authoredTranslation(s) + parallaxAdjustment(s, zDepth)
+```
+
+This form is intentional: `zDepth == 0` gives exactly zero adjustment; positive values partially
+counter the reference-plane camera motion (farther/slower); negative values reinforce it
+(nearer/faster). It also matches the motivating importer's derivation
+`zDepth = 1 / motionRatio - 1`, because the inverse relation is
+`motionRatio = 1 / (1 + zDepth)`. No arbitrary scale constant `K` remains; `K = 1` defines the
+format's unit.
 
 **Not a new driving dimension**: per "Layer & animation model" and the scroll-vs-time section in
 `01-requirements.md`, every `Anim` is a pure function of one driving value (scroll, or optionally
@@ -384,8 +409,9 @@ independent value a layer's `Anim` is a function of.
 |------|---------|-------------------|
 | `zDepth` absent | Every existing v2012-2026 file | Resolves to `0`, byte-identical rendering to today |
 | `zDepth == 0` explicit | Any file | Resolves identically to absent — no distinguishable behavior between the two states anywhere in this format, per Anton's explicit instruction |
-| Negative `zDepth` | Author intentionally marks a layer "closer" than the default plane (or the reverse, depending on the eventual sign convention) | Must be accepted, not rejected — the value's exact effect is part of the open sign-convention question, but the value itself is legal |
-| `zDepth` set on a layer that also has `ParentId` set | A parented, depth-shifted layer | Not yet resolved whether depth composes through the parent chain (child inherits/adds to parent's own depth) or is purely per-layer/independent — flagged as a new open question, mirroring the existing `ParentId`/`GroupId` relationship question |
+| `-1 < zDepth < 0` | Author marks a layer nearer/faster than the reference plane | Accepted; `response(z) > 1`, so camera-relative motion is increased |
+| `zDepth <= -1`, `NaN`, or infinite | Malformed/hand-edited future file | Authoring tools reject; tolerant readers resolve to `0` and continue without a parallax adjustment |
+| `zDepth` set on a layer that also has `ParentId` set | A parented, depth-shifted layer | Depth remains the child's own absolute optical property; it is neither inherited nor added from the parent. Parent transforms resolve first, then the child's single parallax adjustment is applied once |
 | `zDepth` combined with a time-basis anim (`Anim.basis == time`) on the same layer | Real, valid combination once both features exist | Per the Requirements framing, depth should modulate the scroll-driven contribution only — a purely time-based property on that layer should be unaffected by `zDepth`, though this composition has not been tested or fully confirmed |
 | `zDepth` on a `Kind == "organizational"` layer (no visual content) | Unusual combination | Almost certainly meaningless (nothing to visually offset) — likely worth a soft editor warning, not a hard error, mirroring the equivalent `mask`-on-organizational-layer edge case above |
 
@@ -395,10 +421,93 @@ independent value a layer's `Anim` is a function of.
       layer at the same scroll position
 - [ ] Integration: every real dataset file + `samples/sample_v2012.comics` has zero `zDepth` keys —
       confirms this addition doesn't alter parsing of any existing real file
-- [ ] Unit (blocked on the formula being decided): a nonzero `zDepth` layer's effective on-screen
-      position differs from its literal authored `Anim` value by the decided scroll-response formula
-- [ ] Unit (blocked on the `ParentId`-composition question being decided): a `zDepth`-bearing layer
-      that also has a `zDepth`-bearing parent resolves depth per whatever composition rule is chosen
+- [ ] Unit: `zDepth` values `0`, `1`, and `-0.5` produce response factors `1`, `0.5`, and `2`, and
+      therefore parallax adjustments `0`, `-0.5 × D`, and `+1 × D`, respectively
+- [ ] Unit: a child and parent with their own nonzero depths each receive exactly their own one-time
+      adjustment after authored parent transforms resolve; neither depth value changes the other
+
+---
+
+## `cameraPath` — Document Camera Movement — Specification (NEW, 2026-08-09)
+
+### Interfaces (New Types)
+
+```dart
+class CameraKeyframe {
+  CameraKeyframe({required this.position, required this.x, required this.y});
+  int position; // document scroll-axis pixels; strictly increasing in the persisted list
+  double x;     // document-space pixels
+  double y;     // document-space pixels
+}
+
+class CameraPath {
+  final List<CameraKeyframe> points = [];
+}
+
+class ComicsDoc {
+  // ...existing fields...
+  CameraPath? cameraPath; // null/empty/one point = zero delta, no visual effect
+}
+```
+
+These model/interpolation types belong in `libs/flutter_comics`. A viewer owns painting and applies
+the returned adjustment to its render transform; the shared package must not own widgets or device
+orientation APIs.
+
+### Data Models — Schema Changes
+
+One optional root-level key, sibling to `layers` and `sounds`:
+
+```json
+"cameraPath": [
+  {"position": 0, "x": 592.164, "y": 3231.145},
+  {"position": 781, "x": 436.120, "y": 3449.613},
+  {"position": 1139, "x": 417.329, "y": 3631.284}
+]
+```
+
+The first point is both the initial camera coordinate and the zero-delta reference `C0`; this avoids
+the missing-start-value ambiguity of encoding the path as endpoint-only `TranslateAnim` segments.
+`position` uses the same document scroll-axis pixel domain that drives scroll-basis `Anim`s, but the
+point shape deliberately has no `$type`, `basis`, `start`, `end`, or `loop`: a camera path is always
+scroll-driven and each point is a value at one coordinate, not a layer animation. X/Y use document
+pixels before viewport/device scaling.
+
+### Behavior Specification
+
+- Points must be emitted in strictly increasing `position` order. Between adjacent points, sample
+  X/Y with the same cubic-ease-out curve used by `KeyframeInterpolator`; before/after the path, hold
+  the first/last point. A one-point path therefore always has `D(s) == 0`.
+- Camera sampling is driven only by current scroll position. Time-basis layer animations continue to
+  run independently and are composed before the camera-depth adjustment.
+- Both X and Y are evaluated for either `scrollType`; the chosen scroll type only determines which
+  input scroll coordinate advances. This permits a future horizontal strip to use vertical camera
+  drift and a vertical strip to use horizontal drift without coupling camera to orientation.
+- A reader unaware of `cameraPath` ignores it and renders persisted layer animations. A reader aware
+  of the path but not `zDepth` also produces no change because every layer resolves to depth `0`.
+- Path reconstruction provenance is out of schema: the Bhagavad Gita importer may derive it from a
+  reference layer, while another producer may use a real authored camera. Both serialize identically.
+
+### Edge Cases and Error Handling
+
+| Case | Expected Behavior |
+|------|-------------------|
+| key absent, `null`, empty array, or one valid point | Zero delta; no visual change |
+| points out of order | Tolerant reader stable-sorts by `position`; authoring tools must emit sorted data |
+| duplicate `position` values | Last point at that position wins after stable ordering; authoring tools must reject duplicates |
+| a point has missing/non-finite X/Y or non-numeric position | Ignore that point; if fewer than two valid points remain, path is inert |
+| scroll is before first or after last point | Hold first or last point respectively; never extrapolate |
+
+### Testing Strategy
+
+- [ ] Parser/model/clone round-trip: absent, empty, one-point, and multi-point paths
+- [ ] Sampling: exact endpoints, cubic midpoint, before-first/after-last holds, and stable handling of
+      unordered/duplicate/malformed input
+- [ ] Compatibility: absent path plus absent/zero depth yields the exact pre-camera transform
+- [ ] Cross-platform conformance: the same fixture and scroll coordinate yield identical sampled
+      camera delta and parallax adjustment on mobile, desktop, and Web
+- [ ] Real fixture: the Bhagavad Gita producer emits a non-linear multi-point path with normalized,
+      increasing `position` values and at least two distinct nonzero layer depths
 
 ---
 
@@ -585,15 +694,13 @@ representing it for real via `ParentId`.
       recommendation as-is.
 - [ ] `solidColor`/`Images[]` precedence when both are somehow set — still open, not specified
       (the one remaining detail under the now-decided design).
-- [ ] `Layer.ZDepth`'s sign convention (positive = farther/slower vs. closer/faster) — not decided.
-- [ ] Exact scroll-response formula/unit relating `ZDepth` to a position-scaling factor — not
-      decided.
-- [ ] Whether `ZDepth` is baked into persisted `Anim` values at save time (mirroring `ParentId`'s
-      editor-side-resolution pattern) or applied at render time by a `ZDepth`-aware reader (the
-      current draft's assumption) — genuinely undecided; changes what a `ZDepth`-unaware reader sees
-      when opening `ZDepth`-bearing content.
-- [ ] Whether `ZDepth` composes through `ParentId` parent chains (child inherits or adds to parent's
-      depth) or is purely independent per layer — not decided.
+- [x] `Layer.ZDepth` sign/unit/formula — resolved in v0.8: finite unitless coefficient, positive =
+      farther/slower, `-1 < negative < 0` = nearer/faster,
+      `response(z) = 1 / (1 + z)`, with the zero-preserving adjustment specified above.
+- [x] Bake vs. render time — resolved in v0.8: persisted `Anim` values remain literal; a capable
+      reader applies camera/depth after authored animation interpolation at render time.
+- [x] `ParentId` composition — resolved in v0.8: no depth inheritance/addition. Resolve authored
+      parent transforms first, then apply each visual layer's own depth exactly once.
 - [ ] Which reader(s) implement the actual parallax rendering math first — not decided (mirrors the
       same open question already carried for the time-basis dimension).
 
@@ -614,3 +721,10 @@ representing it for real via `ParentId`.
       `Layer.ZDepth`'s sign convention/formula/bake-vs-render-time/`ParentId`-composition questions)
       remain genuinely open, carried forward to Plan to resolve rather than blocking approval of
       what's already decided.
+
+### v0.8 review gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-09
+- [x] Notes: v0.8 adopts `cameraPath` and closes the prior z-depth questions;
+      implementation remains a separate, not-yet-approved Plan update.

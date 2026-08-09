@@ -1,27 +1,25 @@
 # Specifications: comics-editor-ai-bhagavadgita-generator
 
-> Version: 0.7 (2026-08-09, DRAFT, supersedes v0.6): design for rendering all 18 chapters from the
-> real panoramic PDF source (`All_Black-n-White.pdf`/`All_Coloured.pdf`) as a standard vertical-scroll
-> `.comics` strip — panorama treated as draft/source material, AI-cut (`comics-ai-multimodal`),
-> AI-arranged (`comics-ai-positioning`), AI-animated (`comics-ai-animations`), with per-layer
-> `zDepth` and a reveal-density-derived `cameraPath`. Rewrites v0.6's withdrawn `scrollType:
-> horizontal` design per Anton's explicit correction — see "Panoramic PDF Source" section's own
-> "Revision history" note. v0.5's extraction note is unchanged.
-> Status: v0.5 APPROVED; v0.7 addition DRAFT
+> Version: 0.8 (2026-08-09, DRAFT): production asset-first specification derived from approved
+> Requirements v0.8. Retains implemented Phases 1-9 as regression infrastructure, supersedes the
+> unapproved v0.7 direct panorama/U-Net/positioner/heuristic-animation design, and defines the
+> production asset refinery, gold evaluation, story-beat coverage, controlled generation, exact
+> lettering, composition, review, and release contracts.
+> Status: DRAFT — awaiting explicit `specs approved`
 > Last Updated: 2026-08-09
-> Requirements: [01-requirements.md](./01-requirements.md) (v0.6, revised Must-Have 12)
+> Requirements: [01-requirements.md](./01-requirements.md) (v0.8 APPROVED)
 
 ## Overview
 
-Create a new Python application at
+Extend the existing Python application at
 `apps/comics-ai/comics-ai-bhagavadgita-generator/` that reads the Bhagavad Gita CSV/PSD dataset,
 normalizes the Russian edition into 18 canonical chapters, optionally derives a grounded local-LLM
 storyboard, renders every source sloka into a readable continuous-strip card, packages one valid
 `.comics` archive per chapter, and validates/reports the complete set under `work/bhagavadgita/`.
 
-The completion path is deliberately independent of LLM and PSD availability. AI enrichment and
-chapter-5 artwork may improve the output, but deterministic source-grounded rendering must always
-be capable of producing all 18 valid documents.
+The implemented text-card path remains deterministic and source-grounded, but is now explicitly a
+format/fidelity regression path. Production completion is owned by the asset-first pipeline below;
+text cards cannot satisfy production visual or release gates.
 
 ## Architectural Decisions
 
@@ -334,7 +332,488 @@ Format rules:
 then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`, per
 Anton's explicit instruction — see that flow for the full specification, not duplicated here.
 
-## Panoramic PDF Source — Vertical-Scroll Comic Strip via AI Cutting/Positioning/Animation (NEW, 2026-08-09, DRAFT v2 — supersedes the withdrawn horizontal-scroll draft below)
+## Production Asset-First Architecture (v0.8)
+
+### Release levels
+
+Every chapter and composition has one of four non-overlapping levels:
+
+| Level | Meaning | May be called production? |
+|---|---|---|
+| `fixture` | Existing text-card/format regression artifact | No |
+| `draft` | Incomplete/reviewable visual output with explicit gaps | No |
+| `candidate` | All automated gates pass; human gates remain | No |
+| `release` | Immutable artifact with every required human and automated approval | Yes |
+
+The existing `work/bhagavadgita/chapter_*.comics` files remain `fixture`. Packaging or opening a
+file successfully never promotes its release level.
+
+### Component topology
+
+```text
+dataset/bhagavadgita (read-only)
+        │
+        ├── SourceInventory ── NativeSourceAdapters (PSD/PDF/Lottie/.comics/text)
+        │                              │
+        │                              ▼
+        ├────────────────────── AssetStore + AssetGraph
+        │                              │
+        ├── AnnotationStore ── GoldDatasetBuilder ── ModelEvaluationRegistry
+        │                              │
+        ├── StoryBeatBuilder ── CoverageResolver
+        │                              │
+        ├── ActionRunner (local / external providers) ── CandidateStore
+        │                              │
+        ├── LetteringEngine ── CompositionEngine ── ReviewRegistry
+        │                              │
+        └────────────────────── ReleaseCompiler ── `.comics` validators/viewers
+```
+
+All generated state lives below `work/bhagavadgita/production/`. Tracked implementation remains
+inside `apps/comics-ai/comics-ai-bhagavadgita-generator/`. Existing Phase 1-9 modules may be called
+through adapters but their output formats are not the canonical production state.
+
+### Work directory contract
+
+```text
+work/bhagavadgita/production/
+├── inventory.json
+├── sources/<source-id>/metadata.json
+├── assets/<asset-id>/<version>/
+│   ├── metadata.json
+│   ├── rgba.png                 # when raster visual content exists
+│   ├── mask.png                 # L/8-bit bitmap mask when separable
+│   ├── contour.json             # optional derivative, never sole ground truth
+│   └── preview.webp
+├── entities/entities.json
+├── annotations/<dataset-version>/
+├── models/<model-id>/<version>/
+├── evaluations/<evaluation-id>/report.json
+├── story/chapter_<NN>/beats.json
+├── story/chapter_<NN>/coverage.json
+├── actions/<action-id>/action.json
+├── candidates/<candidate-id>/
+├── reviews/reviews.jsonl
+├── compositions/chapter_<NN>/<version>/
+└── releases/chapter_<NN>/<release-id>/
+```
+
+Paths are implementation details referenced through stable IDs. Metadata never relies on a path as
+identity. Writes use staging + validation + atomic rename; immutable versions are never overwritten.
+
+## Canonical Production Data Model
+
+### `SourceRecord`
+
+```python
+@dataclass(frozen=True)
+class SourceRecord:
+    id: str
+    kind: Literal[
+        "structured_text", "manuscript", "psd", "pdf", "raster", "lottie",
+        "audio", "comics", "font", "lettering_sample", "palette", "editorial_note"
+    ]
+    relative_path: str
+    sha256: str
+    byte_size: int
+    media_type: str
+    metadata: dict[str, JsonValue]
+    parent_source_id: str | None = None
+```
+
+Inventory walks only configured source roots, records checksums and media facts, and never modifies
+source files. Derived files are new `AssetVersion`s, not `SourceRecord` mutations.
+
+### `Asset` and `AssetVersion`
+
+```python
+@dataclass
+class Asset:
+    id: str
+    canonical_entity_ids: list[str]
+    semantic_kind: Literal[
+        "background", "environment", "character", "animal", "prop", "vehicle",
+        "architecture", "fx", "ornament", "balloon", "caption", "lettering", "art"
+    ]
+    versions: list["AssetVersion"]
+
+@dataclass(frozen=True)
+class AssetVersion:
+    version: int
+    source_id: str
+    source_region: tuple[int, int, int, int] | None
+    rgba_file: str | None
+    bitmap_mask_file: str | None
+    contour_file: str | None
+    width: int
+    height: int
+    art_stage: Literal["thumbnail", "sketch", "ink", "flat", "shaded", "final"]
+    style_tags: tuple[str, ...]
+    palette: tuple[str, ...]
+    pose: str | None
+    expression: str | None
+    costume: str | None
+    view: str | None
+    allowed_transformations: tuple[str, ...]
+    lineage: "Lineage"
+    metrics: dict[str, float]
+    review_state: Literal["proposed", "accepted", "rejected", "superseded"]
+```
+
+For separable foreground kinds, `rgba_file` and `bitmap_mask_file` are mandatory before acceptance.
+The mask uses the asset canvas, 0 outside/255 inside with optional soft alpha retained separately in
+RGBA. A contour is a compact derivative and may not replace the bitmap mask.
+
+### Identity and classification links
+
+`Entity` stores canonical ID, type, names/aliases/languages, iconographic attributes, and review
+state. `AssetEntityLink` stores asset version, entity, role, confidence, method/model, and review.
+Model proposals never mutate canonical identity directly. Merge/split creates auditable link/entity
+revisions; rejected links remain in history.
+
+### `StoryBeat` and `CoverageItem`
+
+```python
+@dataclass(frozen=True)
+class StoryBeat:
+    id: str
+    chapter_order: int
+    order: int
+    title: str
+    source_sloka_ids: tuple[int, ...]
+    source_quote_ids: tuple[int, ...]
+    synopsis: str
+    required_entities: tuple[str, ...]
+    required_actions: tuple[str, ...]
+    required_location: str | None
+    required_shots: tuple[str, ...]
+    review_state: str
+
+@dataclass
+class CoverageItem:
+    beat_id: str
+    requirement: str
+    state: Literal[
+        "accepted_source", "reusable", "transformable", "generation_required",
+        "waiting_for_review", "blocked", "rejected"
+    ]
+    asset_version_ids: list[str]
+    proposed_action_ids: list[str]
+```
+
+Every chapter has at least six accepted beats by default. A project-level exception must name the
+chapter, rationale, reviewer, and replacement quality criterion; it cannot silently lower the gate.
+
+### `ModelAction`, `Candidate`, and lineage
+
+Actions are immutable typed requests. Required fields: ID, action type, input source/asset versions,
+constraints, expected output contract, provider/model/version, configuration, prompt/template hash
+when applicable, authorization/budget record, and idempotency fingerprint. Supported action types
+cover extraction/refinement, classification/retrieval, restoration, colourization, generation/edit,
+lettering style, composition, animation/camera, and QA.
+
+Each result is a separate `Candidate`; reruns do not overwrite older candidates. `Lineage` records
+all input checksums, action ID, code revision, model/checkpoint, prompt/configuration, environment,
+timestamp, cost/usage, and reviewer decisions.
+
+### Reviews and release manifest
+
+Review dimensions are independent:
+
+- `technical`: files, masks, metrics, reproducibility;
+- `identity_style`: character/iconography/style/palette consistency;
+- `art_direction`: composition and visual finish;
+- `lettering`: exactness, shaping, readability;
+- `cultural_editorial`: chapter mapping and religious/narrative correctness;
+- `runtime`: editor/viewer/device behavior.
+
+Changing or superseding an upstream source, asset version, text, action, or composition invalidates
+all dependent approvals through graph traversal. A release manifest contains exact accepted IDs,
+checksums, gate results, and reviewer decisions and is immutable after creation.
+
+## Source Recovery Adapters
+
+### PSD adapter
+
+`psd-tools` walks groups and pixel layers, preserving hierarchy, visibility, blend mode, opacity,
+bbox, and alpha. Each meaningful pixel layer becomes a proposed asset with RGBA and a bitmap mask
+derived from alpha. Groups remain graph relationships, not flattened assets unless explicitly
+requested. Tiny/noise layers are retained in inventory but may be rejected by review; names such as
+`Generative Fill` are provenance signals, not semantic labels.
+
+The known real checkpoints are recorded: `5_1.psd` has 5 descendants/1 group, `5_2.psd` 32/6, and
+`app_BG._chiba5.psd` 419/92. Inventory tests assert counts/checksums without modifying the files.
+
+### PDF panorama adapter
+
+Embedded images are extracted directly with Poppler tooling where possible rather than re-rendered
+through a page canvas. The adapter records original dimensions/DPI/color profile. Production
+processing uses overlapping multi-scale windows with global coordinates; it never creates a single
+93k-wide in-memory RGBA copy unless a measured memory guard allows it.
+
+Cross-window candidate instances are merged by mask overlap, embedding similarity, and global
+geometry. Conflicts remain review candidates. The output is an instance mask/asset proposal, not a
+fixed rectangle-grid slice.
+
+### B&W/colour registration adapter
+
+All 6 colour pages are matched against 12 B&W pages using global perceptual candidates followed by
+local feature/geometry registration and mandatory human confirmation. Confirmed pairs produce
+aligned crops plus an occlusion/invalid-pixel mask. Page number equality is never assumed.
+
+### Lottie and `.comics` adapters
+
+The Lottie adapter consumes the separate approved from-Lottie flow's verified parser contract and
+recovers referenced images, transforms, timing, hierarchy, and audio/translation provenance. It
+does not import unverified ad hoc camera formulas as gold truth.
+
+The `.comics` adapter reconstructs tiled layers and imports transforms/animations/text slots as
+training/reference evidence. Format/runtime fixtures are tagged separately from production-approved
+art so existing output cannot contaminate release labels.
+
+## Gold Annotation and Model Competition
+
+### Gold v1 dataset
+
+Before model promotion, Gold v1 must contain:
+
+- at least 120 accepted foreground instances;
+- at least 4 source-disjoint compositions: minimum 2 PSD-derived compositions and 2 panorama pages;
+- at least 30 held-out instances from a composition absent from training;
+- semantic kinds and canonical identity labels for all principal-character instances in the gold
+  subset;
+- corrected bitmap masks at source resolution or a documented review resolution with reversible
+  mapping to source coordinates;
+- reviewer identity and acceptance timestamp for every gold annotation.
+
+PSD alpha creates proposed gold masks but still needs semantic/instance review. Box-shaped labels
+and the current discarded connected-component masks are bootstrap data, never gold by default.
+
+### Split policy
+
+Train/validation/test split keys are source composition and narrative scene, not crop/tile. Adjacent
+windows from one panorama cannot cross splits. Mahabharata support data is tagged as a separate
+domain and no Gita evaluation claim may be computed from it.
+
+### Segmenter promotion defaults
+
+A compact local candidate is compared with the current U-Net connected-component path and any
+licensed alternative under equal gold data/budget. Default promotion gates:
+
+- mask IoU ≥ 0.75 on held-out accepted instances;
+- boundary F1 ≥ 0.70;
+- instance recall ≥ 0.85 at IoU 0.5;
+- duplicate-instance rate after cross-window merge ≤ 3%;
+- semantic-kind macro F1 not worse than the best baseline;
+- zero release-blocking mask failures in human review of the golden chapters.
+
+These are minimum defaults, not promises that a named architecture will pass. The model/framework
+license must be approved for the intended production use. Apple MPS is the preferred local training
+device; CPU fallback is required for deterministic smoke inference, not equal training speed.
+
+### Other model gates
+
+- Identity retrieval: principal-character top-1 ≥ 0.90 on the accepted gold subset, with uncertain
+  results routed to review.
+- Colourization: ink-edge preservation F1 ≥ 0.95 on held-out registered pairs, invalid-region mask
+  excluded; palette error and human identity/iconography review must pass.
+- Lettering: normalized authoritative string equals OCR/readback result on the test corpus; any
+  mismatch is release-blocking regardless of visual score.
+- Positioning/animation: compare rule/model/manual candidates on the same golden compositions;
+  existing learned positioner and heuristic animation receive no privileged status.
+
+Evaluation reports are immutable and include dataset version, split manifest, checkpoint hash,
+environment, metrics, failures, and reviewer outcome.
+
+## Story, Coverage, and Golden Chapters
+
+`StoryBeatBuilder` creates a deterministic source-cited baseline from chapter/sloka structure and may
+add a local-LLM candidate. LLM output is never authoritative text and every beat must cite source
+row IDs. Review can edit beats while retaining original candidates.
+
+Coverage resolution searches accepted source assets first, then reusable assets, then proposes
+allowed transformations, and only then creates generation-required tasks. It ranks by entity,
+action, location, art stage, style, palette, view, and provenance. Similarity alone cannot confirm a
+chapter mapping or character identity.
+
+Chapters 1 and 11 are golden pilots because current visual review suggests the strongest source
+mappings (B&W page 2 and page 12 respectively). This is still a hypothesis until cultural/editorial
+review accepts each mapping. If either mapping is rejected, the pilot chapter remains the same but
+coverage records that source as rejected and fills the resulting explicit gaps through the normal
+pipeline.
+
+Expansion beyond the two pilots is blocked until both have:
+
+- ≥6 accepted story beats;
+- all foreground assets mask-accepted;
+- all principal entities identity/style-approved;
+- exact lettering approved;
+- composition/art-direction/cultural review approved;
+- `.comics` validation and real target-device opening approved.
+
+## Transformation and Generation Providers
+
+### Provider interface
+
+```python
+class ActionProvider(Protocol):
+    def capabilities(self) -> ProviderCapabilities: ...
+    def plan(self, action: ModelAction) -> ActionPlan: ...
+    def execute(self, action: ModelAction, authorization: Authorization) -> list[Candidate]: ...
+```
+
+`plan` is side-effect-free and reports prerequisites, expected outputs, estimated resources/cost,
+external uploads, and unsupported constraints. `execute` refuses missing/expired authorization.
+Providers write only to action staging and never accept/promote their own candidates.
+
+### `gpt-image-2` provider
+
+The separate flow remains the source of API-specific prompting/caching/cost details. This pipeline
+uses it for explicit actions such as masked repair, outpaint, missing pose/view/expression, sketch
+polish, or a missing coverage asset. Default candidate count is 4 when supported and authorized;
+the provider may return fewer with a disclosed reason.
+
+Reference upload permission is source-specific. Paid-call permission is action-specific and bound to
+a maximum cost. The provider stores no credential and produces no release asset directly. Prompts
+request no baked textual lettering; any incidental generated text is rejected or removed before
+asset acceptance.
+
+### Local colourization
+
+Colourization conditions on registered ink/line art and an approved palette/reference pack. Output
+is decomposed where feasible into ink, flats, shadows, and highlights; at minimum it preserves the
+original ink as a separate immutable source-derived asset. Anatomical, facial, costume, or
+iconographic drift is a rejection, not a creative variant.
+
+## Exact Lettering Contract
+
+The lettering pipeline separates semantic text from style:
+
+```text
+authoritative string
+  → Unicode normalization + script/language metadata
+  → HarfBuzz-compatible shaping and line breaking
+  → exact glyph/stroke bitmap mask
+  → optional learned hand-lettering texture/distortion
+  → composite into accepted TextRegion
+  → OCR/readback + visual review
+```
+
+An existing balloon's safe interior bitmap mask and erased-text mask are retained rather than
+collapsed/discarded. `TextRegion` defaults to bitmap-mask truth with optional simplified polygon.
+When no balloon exists, a separate candidate task selects an approved template or creates a reviewed
+shape; the engine never silently inserts a generic balloon.
+
+OCR equality compares normalized text while retaining punctuation/script-specific rules. OCR is a
+guard, not a source of authoritative replacement text. Complex scripts require shaping-capable
+rendering; plain Pillow text drawing is insufficient.
+
+## Composition, Animation, and Camera
+
+The vertical strip is composed from accepted story beats/assets. `CompositionCandidate` stores
+viewport width, canvas dimensions, placements, masks, transforms, z-order/depth, beat order,
+lettering, animations, camera proposal, method lineage, and quality results.
+
+Candidate sources may be deterministic rules, learned models, Lottie evidence, manual templates, or
+human edits. All candidates pass bounds, overlap/occlusion, mask edge, reading order, viewport, and
+runtime checks. Human edits create a new version; they do not destroy model evidence.
+
+`cameraPath` and animations are optional until supported consistently by target readers. Their
+absence cannot block a visually complete static composition; invalid/unsupported animation cannot
+be silently packaged. The separate Lottie flow may provide evidence after its own verification.
+
+## Review State Machine
+
+```text
+proposed → in_review → accepted
+                    ↘ rejected
+accepted → superseded       # dependency changed or better version accepted
+accepted → revoked          # explicit reviewer decision
+```
+
+Acceptance records dimension, actor, timestamp, reason, and exact object version. Required review
+dimensions are configurable but golden releases require all six dimensions defined above. Any
+upstream version change traverses dependencies and marks affected downstream approvals/release
+candidates stale; immutable prior releases remain historically valid but are not silently rebuilt.
+
+## Production Validation and Release
+
+Automated release checks include:
+
+- source and lineage checksum completeness;
+- accepted mask presence, dimensions, alpha agreement, boundary/halo checks;
+- duplicate/seam/cross-window merge checks;
+- identity/style/palette consistency and unresolved-cluster checks;
+- story-beat count/order/source citations and coverage closure;
+- exact lettering, shaping, contrast/readability, and no unreviewed generated text;
+- composition bounds, overlap/occlusion policy, reading order, viewport snapshots;
+- `.comics` schema, path safety, tile reconstruction, slot mapping, checksum and archive integrity;
+- current editor/viewer loader tests and a real open on each release-target device class.
+
+The compiler consumes only accepted immutable versions and writes to release staging. A failed gate
+leaves a report and no production release. A successful release contains `.comics`, manifest,
+validation report, review summary, thumbnails, and checksums, then is atomically published inside
+`work/bhagavadgita/production/releases/`.
+
+## Production Dependencies and Isolation
+
+- Core metadata/orchestration: Python standard library plus the existing app's typed dataclasses and
+  JSON/ZIP/checksum infrastructure.
+- Raster/source adapters: Pillow, `psd-tools`, Poppler commands already present, and OpenCV where
+  registration/mask processing is required.
+- Local ML: isolated torch/vision environment with Apple MPS support and CPU smoke inference.
+  Architecture/framework packages are optional plugins selected only after license/evaluation.
+- Embeddings/indexing: provider-neutral interface; concrete local model and vector index are a Plan
+  checkpoint, with raw embeddings versioned and rebuildable.
+- Lettering: shaping-capable renderer (HarfBuzz/Pango or equivalent) and existing browser renderer
+  only where it proves exact complex-script behavior; Playwright screenshots are not visual art.
+- External image generation: isolated provider adapter owned by the separate `gpt-image-2` flow;
+  absent credentials/authority leave actions blocked, never downgraded to an implicit paid call.
+- Review tooling: file/JSON review manifests are the minimum implementation; editor/backend UI may
+  consume the same contract but is not required to define truth.
+
+Each heavy adapter runs behind a subprocess/provider boundary so a missing dependency or model crash
+fails only its action and cannot corrupt the asset graph. Dependency availability is reported by a
+capabilities command before orchestration.
+
+## Cross-Flow Backend TDD Contract
+
+The future backend must expose equivalent resource/state behavior from
+`flows/comics-backend/tdd-comics-backend-endpoints-v2026-ai/01-requirements.md` v0.3. During this SDD
+flow, every new production behavior contributes a case to that TDD's cases-first backlog:
+
+- native-source recovery precedes flattening;
+- bbox-only foreground asset cannot be accepted;
+- source/scene-disjoint model evaluation and promotion;
+- beat coverage prevents generation when accepted lower-tier art exists;
+- paid/upload authorization and idempotent multi-candidate generation;
+- exact lettering failure blocks release;
+- upstream revision invalidates dependent approvals;
+- format-valid draft cannot become production release;
+- job cancellation/restart/retry preserves lineage and avoids duplicate paid calls.
+
+Per `flows/tdd.md`, these cases are written to `02-tests.md` only after that TDD's Requirements v0.3
+receive their own explicit approval; they are not silently treated as approved Specifications here.
+
+## Requirements Traceability (v0.8 production addition)
+
+| Requirement | Specification ownership |
+|---|---|
+| MH11 source recovery | Source Recovery Adapters; `SourceRecord`/lineage |
+| MH12 canonical asset graph/masks | `Asset`/`AssetVersion`; Work directory contract |
+| MH13 local segmentation evaluation | Gold Annotation and Model Competition |
+| MH14 identity/type/style catalogue | Identity and classification links |
+| MH15 sketch-to-colour | B&W/colour registration; local colourization; model gates |
+| MH16 story-beat coverage | `StoryBeat`/`CoverageItem`; Story, Coverage, and Golden Chapters |
+| MH17 golden chapters | Golden Chapters scale-out gate |
+| MH18 ≥6 visual beats | Story-beat schema and configurable exception contract |
+| MH19 exact lettering | Exact Lettering Contract; lettering promotion gate |
+| MH20 controlled generation | Provider interface; `gpt-image-2` provider; Candidate/Lineage |
+| MH21 model competition | Gold datasets, split policy, promotion defaults |
+| MH22 production QA/review | Review State Machine; Production Validation and Release |
+| MH23 honest release status | Release levels and immutable release manifest |
+
+## SUPERSEDED: Panoramic PDF Source — direct AI Cutting/Positioning/Animation draft
 
 Answers Requirements' new Must-Haves 11-13, and Anton's direct request for a rendering plan for all
 18 chapters "включая camera и z-depth". Source: `dataset/bhagavadgita/vaishnav/drawing/
@@ -612,6 +1091,14 @@ withdrawn draft's X-only pan), matching a genuinely vertical document.
       `zDepth` (regions the camera lingers on could plausibly also be "foreground") — a real,
       unexplored connection between the two mechanisms, not assumed.
 
+## Legacy Phases 1-9 Regression Contract
+
+Everything from this heading through the pre-v0.8 Manifest/CLI/validation/dependency sections below
+documents the already-implemented deterministic fixture pipeline. It remains authoritative for
+regression behavior only. Statements such as “text-forward output is sufficient,” “no segmentation
+dependencies,” or “never upload” do **not** define production release behavior and are superseded by
+the v0.8 architecture, provider authorization, mask, review, and release gates above.
+
 ## Manifest Contract
 
 `manifest.json` uses a versioned root:
@@ -792,17 +1279,27 @@ baseline without changing source ingestion or chapter cardinality.
 - [x] Exactly 18 logical chapters are the production target.
 - [x] Russian `BookId=1` and all 663 slokas are the source baseline.
 - [x] One continuous-scroll `.comics` file is produced per chapter.
-- [x] Deterministic text-forward output is sufficient for completion.
+- [x] Deterministic text-forward output is retained only as a fixture/draft regression fallback.
 - [x] AI summaries are optional, labeled, cited, and never replace source verses.
-- [x] PSD and audio fallback behavior is explicit.
-- [x] Output, manifest, packaging, validation, and resumability contracts are defined.
+- [x] Native PSD/PDF/Lottie/`.comics` recovery precedes flattened-image fallback.
+- [x] Canonical source, asset, entity, story-beat, coverage, action, candidate, review, composition,
+      evaluation, and release models are defined.
+- [x] True bitmap-mask acceptance and source/scene-disjoint Gold v1 evaluation are defined.
+- [x] Segmenter, identity, colourization, lettering, positioning, and animation promotion gates are
+      defined without hardcoding a model winner.
+- [x] Story-beat coverage and golden chapters 1+11 are defined as scale-out gates.
+- [x] Provider-neutral local/external action contract, cost/upload authorization, candidate review,
+      and immutable lineage are defined.
+- [x] Exact multilingual lettering and retained TextRegion mask contracts are defined.
+- [x] Automated and six-dimensional human production review/release gates are defined.
+- [x] Fixture, draft, candidate, and production release levels are distinct.
+- [x] Cross-flow backend TDD cases are enumerated as a backlog pending that flow's own Requirements
+      approval.
 - [x] Specifications reviewed and approved by user (2026-08-06, "specs approved") — v0.2 baseline.
 - [x] Lottie camera-path/per-layer z-depth extraction design (v0.3-v0.4) was drafted and approved
       here 2026-08-09, then **extracted into its own flow** per Anton's explicit instruction — see
       `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/02-specifications.md` for the full
       content and its own approval record.
-- [ ] **NEW (2026-08-09)**: Panoramic PDF Source design (v0.6) — DRAFT, awaiting approval. Real
-      findings recorded (page counts/dimensions, visual review of 4/12 pages, coloured-vs-B&W
-      correspondence); chapter mapping is real but mostly unresolved (2 of 18); the
-      `scrollType: horizontal` architecture choice is disclosed as not-yet-renderable by any current
-      reader, not claimed to work visually today.
+- [x] v0.7 direct panorama cut/arrange/animate draft explicitly superseded and marked historical.
+- [ ] v0.8 production asset-first Specifications reviewed.
+- [ ] v0.8 production asset-first Specifications approved with explicit `specs approved`.

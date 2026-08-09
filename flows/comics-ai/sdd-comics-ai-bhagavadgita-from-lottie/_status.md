@@ -2,24 +2,34 @@
 
 ## Current Phase
 
-IMPLEMENTATION — not started (real ad hoc computation done outside the formal task sequence, see
-below). Requirements/Specifications/Plan all APPROVED.
+IMPLEMENTATION COMPLETE. Requirements v1.1, Specifications v1.2, and Plan v1.1 are approved.
 
 ## Phase Status
 
-APPROVED (all three docs, inherited from the parent flow's same-day approval, per extraction)
+COMPLETE — all Tasks 1.1-1.6 implemented and verified
 
 ## Last Updated
 
-2026-08-09 by Claude
+2026-08-09 by Codex
 
 ## Blockers
 
-- None blocking. Task 1.1 (verify the absolute-position compositing formula, no external renderer)
-  is the real next step and the one with genuine open engineering risk — see Plan's own Risk
-  Assessment.
+- None for this flow. Current viewers still do not render `cameraPath`/`zDepth`; that separately
+  approved schema/library work awaits its own Plan/implementation flows.
 
 ## Progress
+
+- [x] Cross-flow `cameraPath`/`zDepth` contract drafted into `tdd-dot-comics-format` v0.11/v0.8 and
+      shared-library ownership drafted into `sdd-flutter-comics` v0.4 (2026-08-09)
+- [x] This producer's Requirements/Specifications aligned as v1.1: increasing scroll coordinates,
+      complete camera points, `K=1`, and canonical render formula; approved 2026-08-09
+- [x] v1.1/cross-flow Requirements and Specifications approved (2026-08-09)
+- [x] Plan v1.1 alignment drafted (2026-08-09)
+- [x] Plan v1.1 approved (2026-08-09)
+- [x] Implementation started — Task 1.1 (2026-08-09)
+- [x] Tasks 1.1-1.6 complete (2026-08-09)
+- [x] Real standalone `.comics` + manifest/report generated (2026-08-09)
+- [x] 92/92 generator tests passing; ZIP integrity verified (2026-08-09)
 
 - [x] Flow extracted (2026-08-09) from `flows/comics-ai/sdd-comics-ai-bhagavadgita-generator`
       (which had this content as its v0.2-v0.3 Requirements / v0.3-v0.4 Specifications / v0.2-v0.3
@@ -32,13 +42,13 @@ APPROVED (all three docs, inherited from the parent flow's same-day approval, pe
 - [x] Real `cameraPath` coordinates computed for all 3 scenes, ad hoc, ahead of the formal task
       sequence — per Anton's direct request. See `04-implementation-log.md` for full values and the
       disclosed caveat that they depend on Task 1.1's not-yet-verified compositing formula.
-- [ ] Task 1.1 (verify compositing formula)
-- [ ] Task 1.2 (`import_lottie.py` core)
-- [ ] Task 1.3 (camera-reference selection + `cameraPath`)
-- [ ] Task 1.4 (extend `package_comics.py`)
-- [ ] Task 1.5 (new pipeline entry point)
-- [ ] Task 1.6 (manifest/report disclosure)
-- [ ] Implementation complete
+- [x] Task 1.1 (verify/correct compositing formula)
+- [x] Task 1.2 (`import_lottie.py` core)
+- [x] Task 1.3 (camera-reference selection + `cameraPath`)
+- [x] Task 1.4 (extend `package_comics.py`)
+- [x] Task 1.5 (new pipeline entry point)
+- [x] Task 1.6 (manifest/report disclosure)
+- [x] Implementation complete
 
 ## Context Notes
 
@@ -49,9 +59,9 @@ APPROVED (all three docs, inherited from the parent flow's same-day approval, pe
   — Anton's explicit constraint. Verification reuses `flows/comics-editor/
   tdd-dot-lottie-import-export`'s findings and `libs/flutter_comics`'s existing, tested Lottie
   parser instead.
-- Real, disclosed cross-flow follow-up not yet done: `flows/tdd-dot-comics-format` should formally
-  adopt the `cameraPath` schema concept this flow proposes (same pattern as `Layer.ZDepth`/
-  `preferredViewportWidth` before it) — not done as part of this flow.
+- Cross-flow follow-up is now approved: `flows/tdd-dot-comics-format` v0.11/v0.8 formally adopts
+  `cameraPath` and completes `zDepth`; `flows/sdd-flutter-comics` v0.4 assigns the shared Dart model,
+  parser, clone, and evaluator. Neither addendum is implemented yet.
 - A separate, real critique from Anton about `sdd-comics-ai-bhagavadgita-generator`'s own Phase 3
   (Chromium-rendered verse cards vs. real PSD panorama assets) came up in the same session but is
   **out of scope for this flow** — tracked in that flow's own `_status.md`, not here.
@@ -65,6 +75,5 @@ APPROVED (all three docs, inherited from the parent flow's same-day approval, pe
 
 ## Next Action
 
-Begin Implementation at Task 1.1: verify the absolute-position compositing formula against
-`tdd-dot-lottie-import-export`'s findings and `libs/flutter_comics`'s existing Lottie parser (no
-external renderer).
+Downstream only: draft/approve/implement the separate `sdd-flutter-comics` and viewer Plan addenda
+when visible parallax rendering is desired. This producer flow itself is complete.

@@ -2,21 +2,23 @@
 
 ## Current Phase
 
-IMPLEMENTATION — complete (14/15 tasks; Task 5.5 deferred). DOCUMENTATION phase not started.
+PLAN ADDENDUM NOT STARTED — camera path + z-depth Requirements/Specifications are approved. The
+v0.3 implementation remains complete (14/15 tasks; Task 5.5 deferred).
 
 ## Phase Status
 
-APPROVED
+Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; camera/depth Plan not drafted
 
 ## Last Updated
 
-2026-08-08 by Claude
+2026-08-09 by Codex
 
 ## Blockers
 
-- None blocking. Task 5.5 (manual verification on a real device/simulator) remains — deferred, not
-  blocking, per `04-implementation-log.md`'s own notes; automated coverage already confirms the
-  underlying fix works.
+- Next gate: draft and approve the v0.4 Plan addendum before implementing camera/depth support.
+
+- The v0.3 baseline has no blocker. Task 5.5 (manual verification on a real device/simulator)
+  remains deferred, per `04-implementation-log.md`; automated coverage confirms the underlying fix.
 - Real, unactioned cross-flow item: add the disclosed cross-reference to `flows/comics-viewer/
   sdd-comics-viewer`'s own `_status.md` (Phase 5 modified `dart_comics_viewer_backend.dart`/
   `_surface.dart`, files that flow owns).
@@ -29,6 +31,9 @@ APPROVED
   new decision for Anton).
 
 ## Progress
+
+- [x] v0.4 camera/z-depth Requirements addendum approved (2026-08-09)
+- [x] v0.4 camera/z-depth Specifications addendum approved (2026-08-09)
 
 - [x] Codebase analysis done (2026-08-08) — read `apps/comics-editor/lib/src/ui/models.dart` +
       `lib/src/bridge/models_mapping.dart`, `libs/comics_viewer/flutter_comics_viewer/lib/src/
@@ -129,17 +134,17 @@ flow's own `_status.md` for the disclosed note.
 
 ## Next Actions
 
-1. Anton reviews `01-requirements.md` (v0.2) and `02-specifications.md` (v0.2) together — both now
-   include the Lottie/interpolator scope and the full flow-survey corrections.
-1. Task 5.5: manual verification on a real device/simulator (open a real dataset `.comics` file
+1. Update `03-plan.md` for the shared camera/depth model, parser, editor bridge,
+   evaluator, and tests; viewer rendering remains downstream.
+2. Task 5.5 from the v0.3 baseline: manual verification on a real device/simulator (open a real dataset `.comics` file
    with `solidColor`/`mask` set in the macOS-targeted `flutter_comics_viewer` example app, confirm
    those fields survive parsing) — the only undone item.
-2. Add the disclosed cross-reference to `flows/comics-viewer/sdd-comics-viewer`'s own `_status.md`
+3. Add the disclosed cross-reference to `flows/comics-viewer/sdd-comics-viewer`'s own `_status.md`
    (`dart_comics_viewer_backend.dart`/`_surface.dart`, files that flow owns, were modified here).
-3. Anton/whoever owns release process should decide how to resolve `flutter_comics_viewer`'s new
+4. Anton/whoever owns release process should decide how to resolve `flutter_comics_viewer`'s new
    publishability gap (`publish_to: 'none'` — can't go back to pub.dev until `flutter_comics` is
    also published, or the dependency is swapped at publish time).
-4. `flows/comics-viewer/sdd-flutter-comics-viewer-dart` can now proceed to its own Plan — this flow
+5. `flows/comics-viewer/sdd-flutter-comics-viewer-dart` can now proceed to its own Plan — this flow
    is fully implemented, not just Plan-approved; no interpolator-location coordination needed
    (resolved, delivered).
-5. This flow's own DOCUMENTATION phase (client-facing readme) hasn't been requested yet.
+6. This flow's own DOCUMENTATION phase (client-facing readme) hasn't been requested yet.

@@ -1,10 +1,9 @@
 # Requirements: dot-comics-format (TDD)
 
-> Version: 0.10 (2026-08-08: NEW — `Layer.ZDepth`, an optional per-layer parallax-depth field,
-> default `0`, per Anton's direct instruction. See the new "`Layer.ZDepth` — parallax depth"
-> subsection below.)
+> Version: 0.11 (2026-08-09: completed `Layer.ZDepth` semantics and added the document-level
+> `cameraPath` contract, derived from the real Bhagavad Gita Lottie extraction flow.)
 > Status: APPROVED
-> Last Updated: 2026-08-08
+> Last Updated: 2026-08-09
 
 ## Promotion note (2026-08-02, read this first)
 
@@ -413,15 +412,42 @@ layer's position responds to scroll, not a new independent axis a layer's `Anim`
 layer with a nonzero `ZDepth` and no time-basis anim remains purely scroll-driven; the depth just
 changes the felt "speed" of that scroll response.
 
-**Genuinely open, not decided here** (flagged rather than guessed, matching this format's discipline
-elsewhere in this document): the exact sign convention (does positive mean "further away/slower" or
-"closer/faster"?), the precise formula relating `ZDepth` to a scroll-response scaling factor, the
-field's unit/range (a small bounded float like typical parallax-library "speed factors," or an
-unbounded "distance" value), whether `ZDepth` composes through `Layer.ParentId` chains (does a child
-inherit or add to its parent's depth, mirroring the still-open `ParentId`/`GroupId` relationship
-question above?), and which reader(s) implement the actual parallax math first. See
-`03-specifications.md` for the proposed interface shape and the same open questions carried into that
-document's Open Design Questions.
+**Completed semantics (v0.11, approved)**: `zDepth` is a finite, unitless relative-depth
+coefficient. Positive values mean farther/slower, negative values mean nearer/faster, and valid
+authored values must be greater than `-1`; `0` remains the neutral/reference plane. A camera-aware
+reader combines the layer with the document's optional `cameraPath` at render time using the formula
+in `03-specifications.md`. Depth is explicitly per visual layer and does **not** inherit or add
+through `ParentId`: parenting controls authored transforms, while depth controls optical response to
+the camera. This keeps reparenting from silently changing the layer's apparent depth and avoids
+double-applying depth on nested organizational rigs.
+
+### `cameraPath` — document camera movement (NEW, 2026-08-09)
+
+The document may declare one optional root-level `cameraPath`: a scroll-position-keyed sequence of
+camera coordinates in the same authored pixel coordinate system as layer translation. It represents
+the camera's **additional non-linear XY movement relative to its first point**; the ordinary viewer
+scroll still supplies the base vertical/horizontal traversal. This distinction is required by the
+real Bhagavad Gita Lottie source: its top-level traversal is a simple linear vertical pan, while the
+perceived broken camera curve has to be reconstructed from relative layer motion.
+
+`cameraPath` and `Layer.zDepth` are complementary but independently optional:
+
+- absent `cameraPath`, an empty path, or a one-point path has zero camera delta and therefore no
+  visual effect, regardless of layer depth;
+- absent/zero `zDepth` has no parallax adjustment, even when a camera path exists;
+- a nonzero `zDepth` only modulates the additional camera-path contribution; it never rewrites the
+  layer's persisted `Anim` values and never becomes a third animation time basis;
+- points are ordered by strictly increasing scroll position in the document's scroll-axis pixel
+  coordinate. Importers whose source time runs in the opposite direction must normalize/reverse it;
+  readers must not depend on decreasing animation ranges;
+- camera X/Y are document coordinates, not device pixels. Viewport scaling happens after the camera
+  and layer transforms, so one file behaves consistently on phone, tablet, desktop, and Web.
+
+The path is document-level in v2026. A multi-scene producer either emits one continuous path in the
+combined document coordinate space or emits separate `.comics` documents; implicit per-scene
+coordinate resets are not part of this schema. How an importer reconstructs a path (single reference
+layer, blended layers, authored camera, or another method) is provenance/tooling policy and is not
+encoded into the format.
 
 ### Position representation (recomposition/AI-pipeline framing)
 
@@ -459,6 +485,12 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
    layer, **then** that layer's rendering is byte-identical to today's behavior for every pre-existing
    `.comics`/`.puzzle` file — no reader needs to understand `ZDepth`, and no distinction exists between
    "absent" and "explicitly `0`," to render any file correctly.
+6. **Given** a document with `cameraPath` and layers on the reference, farther, and nearer planes,
+   **when** a camera-aware reader evaluates them at the same scroll position, **then** `zDepth == 0`
+   adds no offset, positive depth reduces motion relative to the reference plane, and negative depth
+   increases it, using one platform-independent formula.
+7. **Given** any v2012-through-v2026 document without `cameraPath` and `zDepth`, **when** it is opened
+   by a new reader, **then** its model values and rendering remain identical to the pre-v0.11 path.
 
 ### Should Have (added with the TDD promotion, 2026-08-02)
 
@@ -493,9 +525,8 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
       with what it does and doesn't contribute to format facts.
 - [x] The exact `Anim.start`/`end` ↔ document-pixel-height unit relationship — **resolved**, see the
       correction above in Layer & animation model.
-- [ ] `Layer.ZDepth`'s exact sign convention, scroll-response formula, unit/range, and whether it
-      composes through `ParentId` chains — not decided, see `03-specifications.md`'s Open Design
-      Questions.
+- [x] `Layer.ZDepth` sign, unit/domain, camera-response formula, and `ParentId` composition — resolved
+      and approved in v0.11; see `03-specifications.md`.
 
 ## References
 
@@ -513,6 +544,9 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
   (based on `ASHES.json` alone) that this flow's animation-inventory section corrects/narrows
 - `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md`, `03-specifications.md` —
   the Precomp Handling decision this flow's parenting finding says needs to generalize
+- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/01-requirements.md`,
+  `02-specifications.md`, `04-implementation-log.md` — real source and motivating producer for the
+  `cameraPath` contract and the non-uniform per-layer `zDepth` semantics
 - `dataset/mahabharata/boranko/mahabharata-dot-lottie/unzip/.../*_content/*.json` — all 7 real
   produced Lottie chapters, inspected directly (not just the one previously-sampled file) for the
   animation-inventory/coverage table
@@ -536,3 +570,10 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
       passive reference consolidation into a real set of approved schema decisions. `Layer.ZDepth`'s
       exact math (sign, formula, `ParentId` composition) is explicitly carried forward as open, same
       treatment as this document's other undecided numeric/formula details.
+
+### v0.11 review gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-09
+- [x] Notes: v0.11 completes the previously-open `zDepth` semantics and
+      adopts `cameraPath`; no implementation is authorized by this documentation update.

@@ -1,14 +1,13 @@
 # Requirements: comics-editor-ai-bhagavadgita-generator
 
-> Version: 0.6 (2026-08-09, DRAFT, revises v0.5): real inspection of the two previously-unaudited
-> PDFs (`All_Black-n-White.pdf`, `All_Coloured.pdf`) found in `dataset/bhagavadgita/vaishnav/
-> drawing/`, per Anton's explicit request — see new "Panoramic PDF Source" section below and
-> `02-specifications.md`. This is real, rich, hand-drawn artwork covering far more than chapter 5,
-> materially changing the visual-strategy picture this flow's v0.1 Requirements were built on. New
-> Must-Haves 11-13 below; Must-Have 12 revised in v0.6 after Anton rejected the v0.5 draft's
-> horizontal-scroll premise in favor of standard vertical-scroll + AI-cut/arrange/animate. v0.4's
-> extraction note is unchanged.
-> Status: v0.4 APPROVED; v0.6 addition DRAFT
+> Version: 0.8 (2026-08-09, DRAFT): production-art pivot approved as the desired vision by Anton
+> ("Утверждено именно твое видение"). Replaces v0.6's direct panorama → existing U-Net bbox →
+> known-underperforming positioner → heuristic animation proposal with an asset-first production
+> pipeline: source recovery, bitmap masks/matting, identity/style graph, story-beat coverage,
+> transformation/generation of explicit gaps, exact lettering, art-direction gates, and only then
+> `.comics` compilation. Phases 1-9 remain implemented and unchanged; their text-card output is a
+> format/fidelity baseline, not accepted as the final production-art result.
+> Status: v0.8 APPROVED on 2026-08-09 (`reqs approved`)
 > Last Updated: 2026-08-09
 
 ## Origin
@@ -120,6 +119,68 @@ direct visual review of rendered page previews, not assumed from filenames**:
 12); the remaining 8 were not inspected in this pass. A full page-by-page review, and a real attempt
 to confirm the 12 (or 6) pages against the 18 known chapter titles, is real, not-yet-done work — see
 Open Questions and the new Plan phase.
+
+## Production Visual Pipeline Pivot (NEW, 2026-08-09, approved vision)
+
+The production unit is an **asset with provenance**, not a rectangle and not a final `.comics`
+layer. `.comics` is the last compiler backend after art recovery, transformation, generation,
+composition, lettering, review, and quality control. The pipeline must prefer source recovery over
+generation:
+
+1. extract an existing source layer when one exists;
+2. segment/matte an object from a flattened bitmap when no source layer exists;
+3. reconstruct or transform a source-grounded asset when it is incomplete;
+4. generate a new asset only for an explicit, measured coverage gap.
+
+The real source inventory already includes more structure than v0.6 used:
+
+- structured chapter/sloka/translation/commentary/vocabulary/quote records;
+- three PSDs with real hierarchy and per-layer alpha (`5_1.psd`: 5 descendants/1 group;
+  `5_2.psd`: 32 descendants/6 groups; `app_BG._chiba5.psd`: 419 descendants/92 groups);
+- 12 B&W and 6 coloured panoramic raster compositions, including six potential paired
+  line-art/colour supervision examples after geometric registration;
+- a Lottie package with source assets, transforms/timing, music, and RU/EN translations;
+- existing Bhagavad Gita `.comics` as format baselines and Mahabharata `.comics`/AI outputs as
+  external training/evaluation evidence, never as automatic proof of Gita-domain quality.
+
+The canonical intermediate representation must preserve, where available: source URI/checksum,
+source coordinates, RGBA pixels, bitmap mask, optional vector contour, semantic kind, canonical
+entity/character identity, pose/expression/costume, art stage (sketch/ink/flats/shaded/final), style
+and palette descriptors, scene/chapter candidates, depth/occlusion hints, allowed transformations,
+model/prompt lineage, review state, and quality metrics.
+
+The required model-action catalogue is broader than segmentation:
+
+- source extraction, normalization, registration, deduplication, OCR, and provenance capture;
+- instance/semantic segmentation, alpha matting, contour refinement, cross-tile instance merging;
+- object/character/type/style classification, visual retrieval, identity clustering, and manual
+  merge/split correction;
+- de-overlap, background reconstruction, inpainting, scan cleanup, line extraction, and upscale;
+- sketch cleanup/inking, paired line-art colourization, palette transfer, flats/shadows/highlights;
+- reference-conditioned generation/editing for explicit missing assets, including the parallel
+  `gpt-image-2` flow, with candidates and approval rather than silent automatic inclusion;
+- story-beat extraction/mapping, shot planning, vertical-strip composition, z-order/depth, camera,
+  and animation proposals;
+- balloon/text-region recovery, exact multilingual shaping, deterministic glyph masks, learned
+  hand-lettering style, and OCR/exact-text verification;
+- automated visual/runtime QA followed by human art-direction and cultural/editorial approval.
+
+The current model artifacts are candidates, not mandated winners. In particular, v0.6's U-Net
+discards its connected-component mask and persists only a bbox; its mask supervision is
+box-shaped; the learned positioner is documented as 55% worse than its rule baseline on the later
+held-out evaluation; and `comics-ai-animations` contains calibrated heuristics rather than learned
+weights. Each may propose or bootstrap labels, but no one of them is allowed to bypass a production
+quality gate.
+
+Compact instance segmentation is expected to be trainable locally on the attached Apple M4 Max
+GPU. PSD alpha is the first high-quality mask source; panorama pseudo-labels must be corrected;
+train/validation/test splits must be by source composition or scene, never random adjacent tiles.
+The production cut result is RGBA + bitmap mask (and optionally a contour), not a bbox crop.
+
+The 18-chapter mapping is defined through **story beats**, not one panorama page per chapter. Each
+chapter receives a coverage matrix of required beats/entities/locations/actions against recovered,
+transformable, and missing assets. Two golden chapters (1 and 11, the strongest currently plausible
+source mappings) must prove the complete artistic pipeline before expansion to all 18 chapters.
 
 ## Existing AI Flow Audit
 
@@ -240,56 +301,82 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
 10. **Real completion proof**: The final implementation report lists all 18 output files and their
     validation status, and includes at least one real editor/viewer open test rather than relying
     only on unit tests of the generator.
-11. **Panoramic PDF art used where a real chapter mapping is confirmed (NEW, 2026-08-09)**: for
-    every chapter whose corresponding panorama page is confirmed (by visual review, cross-check, or
-    Anton's direct input — see Open Questions), that chapter's primary visual content comes from the
-    real hand-drawn panorama, not a synthetic Chromium-rendered text card. Chapters without a
-    confirmed mapping keep today's deterministic text-forward fallback — this criterion does not
-    require guessing a mapping that isn't real.
-12. **Correct AI-assisted composition into the standard vertical strip, not naive cropping/rotation
-    (REVISED, 2026-08-09)**: the panorama pages are draft/source material, not a final layer —
-    output stays the standard, universally-working vertical-scroll `.comics` convention (no
-    unimplemented `scrollType`). Getting from panorama draft to final vertical page must go through
-    real, already-trained/calibrated models this repo has (cutting via `comics-ai-multimodal`'s
-    trained segmenter, arranging via `comics-ai-positioning`'s trained positioner, animating via
-    `comics-ai-animations`' Mahabharata-calibrated reveal model) — not a hand-written rectangle-grid
-    slice, and not a naive crop/rotate of the whole page. Per Anton's explicit correction
-    ("используем везде именно vertical-scroll comic strip... нарезать нужно именно моделью а не
-    прямоугольниками, срасставить и анимировать нужно тоже моделью"); see `02-specifications.md`'s
-    rewritten "Panoramic PDF Source" section for the real tools, their real interfaces, and honestly
-    disclosed limitations (domain-shift risk, the positioning model's own documented failure to beat
-    its baseline, and the segmenters' rectangle-only mask supervision).
-13. **Disclosed limitation on chapter-mapping confidence (NEW, 2026-08-09)**: the manifest/report
-    states, per chapter, whether its panorama source was a confirmed match, an inferred/unconfirmed
-    match, or absent (deterministic fallback used) — never silently presents an inferred guess as
-    equivalent to a confirmed one.
+11. **Asset-first source recovery**: PSD hierarchy/alpha, Lottie assets/transforms, paired PDF
+    compositions, and existing `.comics` layers are extracted before flattened-image segmentation
+    or generation is attempted. The manifest records why each lower-fidelity fallback was used.
+12. **Canonical asset graph**: every accepted visual asset has stable identity, provenance,
+    semantic/art-stage metadata, review state, and a recoverable RGBA image plus true bitmap mask
+    whenever it is a separable foreground object. Bboxes alone do not satisfy this criterion.
+13. **Local segmentation training and evaluation**: a compact instance-segmentation candidate is
+    trained/evaluated locally from PSD alpha, corrected panorama labels, and explicitly separated
+    Mahabharata support data. Data splits are source/scene-disjoint. A model ships only after
+    beating the current U-Net/bbox path on mask and boundary metrics plus real visual review.
+14. **Identity/type/style catalogue**: recovered regions can be grouped and corrected by canonical
+    character/entity, object kind, scene/location, pose/expression/costume, and art stage/style.
+    Automatic clustering remains reviewable; uncertain clusters are not silently merged.
+15. **Paired sketch-to-colour pipeline**: the six coloured panorama pages are registered to their
+    B&W counterparts where matches exist, producing paired training/evaluation crops. Colourization
+    preserves ink geometry and canonical character palettes; generated anatomy/iconography changes
+    are rejected.
+16. **Explicit story-beat coverage**: each chapter is decomposed into required visual beats, and a
+    coverage matrix records source assets, reusable assets, required transformations, missing
+    generation, and approval. A page filename or a guessed one-page-per-chapter mapping is never the
+    narrative model.
+17. **Golden-chapter gate**: chapters 1 and 11 are developed first as complete production pilots.
+    Expansion to all 18 starts only after both pass visual, narrative, lettering, format, device,
+    and human art-direction review.
+18. **Production visual density**: every final chapter has at least six approved visual beats in a
+    coherent vertical-scroll composition. A text card, title card, or unprocessed panorama does not
+    count as a visual beat for this gate.
+19. **Exact production lettering**: balloon/caption geometry is retained as polygon or bitmap mask;
+    multilingual text is deterministically shaped from authoritative strings before any learned
+    hand-lettering texture/style is applied. Final lettering passes exact-string/OCR and human
+    readability checks; an image model may not invent final word images unchecked.
+20. **Controlled generative gap filling**: local generators and `gpt-image-2` are used only for
+    explicit missing/repair/variant tasks with approved references and masks. Multiple candidates,
+    identity/style ranking, input/output hashes, model/prompt lineage, and human selection are
+    required before a generated asset becomes release-eligible.
+21. **Model competition, not forced reuse**: existing U-Net, Mask R-CNN, positioning, and animation
+    artifacts may bootstrap/propose output, but known-underperforming or domain-shifted models are
+    never mandatory. Rule, learned, and generative alternatives are evaluated against the same gold
+    set; the best verified result wins, with human override recorded.
+22. **Production QA and art-direction**: release candidates have automated checks for mask edges,
+    halos, cross-tile duplicates, seams, overlap, ink preservation, identity/style consistency,
+    exact lettering, viewport readability, archive validity, and runtime opening. Every chapter also
+    requires recorded human visual/cultural/editorial approval.
+23. **Honest release status**: the existing 18 format-valid files remain useful regression fixtures
+    but are not labelled production art. A chapter becomes production-complete only after all
+    applicable gates above pass; partial progress is reported as such.
 
 ### Should Have
 
 - Preserve all 663 Russian slokas in the chapter set, even when an AI-generated visual summary uses
   only a representative subset as foreground dialogue/captions.
 - Render Sanskrit text/transcription alongside Russian translation in a reviewable, readable form.
-- Use the three PSD files (and, per the new Panoramic PDF Source section, the two panorama PDFs) to
-  enrich chapters when a reliable extraction path is available, while keeping this non-blocking for
-  any chapter where source art can't be reliably identified or extracted.
-- Reuse the existing kind vocabulary (`background`, `character`, `balloon`, `art`) and established
-  alpha/scale reveal behavior where it improves the document without compromising compatibility.
+- Preserve editable ink/flats/shadows/highlights as separate derived assets where source or model
+  output makes this practical.
+- Rank generative candidates automatically by identity/style/palette similarity before review.
+- Reuse Lottie timing/camera/depth evidence through its separate approved flow without coupling the
+  production path to unverified ad hoc formulas.
+- Support local and external generation providers behind the same asset-task/review contract.
 - Produce a human-readable report summarizing chapter coverage, source use, fallbacks, AI warnings,
   and visual/format validation.
-- Provide a fast smoke mode for one selected chapter and a production mode for all 18 chapters.
+- Provide asset, golden-chapter, selected-chapter, and all-18 execution modes.
 
 ### Won't Have (This Iteration)
 
-- Training a new foundation image model or promising hand-drawn, publication-ready artwork for
-  chapters where no real source art (PSD or panorama PDF) can be confirmed.
+- Training a foundation image model from scratch. Compact segmentation, classification,
+  colourization, ranking, and style-transfer models are in scope.
+- One-shot text-to-full-chapter generation with no source recovery, intermediate assets, or review.
+- Treating existing bboxes, heuristic layouts, or model confidence as equivalent to art approval.
 - Treating absent audio files as available merely because CSV paths are populated; audio embedding
   is out unless real media is provided or independently generated and clearly labeled.
 - Modifying existing Mahabharata training data, model outputs, or generated libraries.
-- Building a new editor batch-generation UI before the CLI/batch pipeline produces and validates
-  the required 18 files.
 - Publishing generated comics, changing app-store assets, or uploading artifacts outside the local
   workspace.
-- Claiming theological/editorial approval of AI summaries; this flow produces reviewable drafts.
+- Uploading PSD/PDF/reference art or making paid API calls without separate explicit authorization.
+- Claiming theological/editorial approval from automated metrics; this requires recorded human
+  review.
 
 ## Constraints
 
@@ -298,29 +385,33 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
 - **Chapter cardinality**: exactly 18 logical chapters in the current dataset.
 - **Compatibility**: use the current `.comics` schema and 512px tiling conventions; avoid depending
   on unimplemented forward-looking schema fields.
-- **AI execution**: prefer the existing local Ollama precedent for text understanding. No paid API
-  or external publishing is assumed by these requirements.
+- **AI execution**: prefer local execution for training, indexing, segmentation, colourization, and
+  text understanding. External image generation remains separately authorized, cached, and audited.
+- **Local hardware**: Apple M4 Max, 40-core GPU/Metal 4; compact model candidates must support a
+  practical local training/inference path or provide a justified alternative.
+- **Licensing**: model/framework licensing is a release gate. No production dependency is adopted
+  merely because a checkpoint can be trained locally.
 - **Cultural fidelity**: preserve diacritics, Sanskrit/Cyrillic Unicode, source order, and explicit
   provenance. Generated paraphrase must never be formatted as a verbatim verse.
 - **Dirty worktree**: unrelated existing changes in the repository must be preserved.
 
-## Proposed Requirement Defaults (Awaiting Approval)
-
-These defaults make the acceptance criterion achievable without pretending the missing art exists:
+## Production Requirement Defaults (vision approved; formal Requirements approval pending)
 
 1. **Primary edition**: Russian `BookId=1` for the first production set; other editions remain
    available as source/reference but do not multiply the deliverable to 108 files.
 2. **Content strategy**: preserve all 663 Russian slokas in the 18 outputs; AI may additionally
    produce a clearly labeled chapter synopsis/storyboard and select representative lines for visual
    panels.
-3. **Visual strategy**: first guarantee 18 valid, readable, text-forward illustrated documents with
-   deterministic visual fallbacks. Enrich chapter 5 from PSD artwork if technically reliable;
-   net-new generative artwork for chapters 1–4 and 6–18 is an optional enhancement, not the
-   completion gate.
+3. **Visual strategy**: build a reusable asset refinery and story-beat coverage matrix; complete
+   chapters 1 and 11 as golden production pilots; then expand the accepted pipeline to all 18.
 4. **Audio strategy**: record missing-media warnings and omit sounds from the package until actual
    media exists.
-5. **Review strategy**: generated summaries/storyboards remain drafts with provenance and warnings;
-   source verse text remains the authoritative content.
+5. **Review strategy**: source text remains authoritative; every derived/generated visual asset and
+   every final chapter has explicit review state and provenance.
+6. **Generation strategy**: `gpt-image-2` and local generative tools fill explicit asset gaps; they
+   do not replace source extraction or emit unchecked final lettering.
+7. **Release strategy**: format validity is necessary but insufficient; production status requires
+   automated visual QA, real-device opening, and human art-direction/cultural review.
 
 ## Open Questions
 
@@ -328,9 +419,9 @@ These defaults make the acceptance criterion achievable without pretending the m
       text-forward fallback for chapters without artwork.
 - [x] **Document granularity resolved by approval of the recommended default (2026-08-05)**: one
       continuous-scroll `.comics` document per logical chapter.
-- [x] **Raster-art scope resolved by approval of the defaults (2026-08-05)**: net-new AI raster art
-      is optional enrichment, not required in this iteration. Source-grounded typography and
-      chapter-5 PSD enrichment are the scoped visual baseline.
+- [x] **Raster-art scope superseded (2026-08-09)**: Anton approved the asset-first production-art
+      vision. Source recovery remains first priority; controlled AI generation of measured gaps is
+      now part of the production path rather than optional decoration.
 - [ ] **NEW (2026-08-09)**: which of the 12 `All_Black-n-White.pdf` pages (and 6 `All_Coloured.pdf`
       pages) correspond to which of the 18 known chapters, if any beyond the two plausible visual
       matches found (page 2 → Chapter 1, page 12 → Chapter 11)? Not resolved — 8 of 12 B&W pages
@@ -343,14 +434,14 @@ These defaults make the acceptance criterion achievable without pretending the m
       favor of the standard vertical-scroll convention everywhere, with the panorama treated as
       draft/source material to be AI-cut, AI-arranged, and AI-animated into a normal vertical strip.
       See `02-specifications.md`'s rewritten "Panoramic PDF Source" section.
-- [ ] **NEW (2026-08-09)**: tiling window size/overlap for running `comics-ai-multimodal`'s
-      segmenter (fixed 256×256 input) across a panorama up to ~93,524px wide, and the strategy for
-      deduplicating regions that straddle tile boundaries — real, open engineering parameters, not
-      decided in Specifications.
-- [ ] **NEW (2026-08-09)**: whether wiring up the existing-but-unused `maskrcnn.pt` checkpoint for
-      real inference is worth doing to get closer to true non-rectangular cutouts, given its own
-      training used the same box-shaped mask supervision as the U-Net baseline — a real scope call
-      for Anton, not decided here.
+- [ ] **Golden chapter beat count**: six approved visual beats/chapter is the proposed production
+      floor; Specifications must define whether chapter-specific exceptions are allowed.
+- [ ] **Segmentation implementation/license**: compare compact local instance-segmentation
+      candidates after the license gate; do not hardcode YOLO11 or assume Ultralytics Enterprise.
+- [ ] **Gold annotation budget**: Specifications must set the minimum manually corrected panorama
+      masks and identity labels needed before a fair model comparison.
+- [ ] **`gpt-image-2` authority**: separate paid-call and source-upload permission remains required
+      even after this flow's Requirements are approved.
 
 ## References
 
@@ -379,7 +470,8 @@ These defaults make the acceptance criterion achievable without pretending the m
       ("reqs,specs and plan approved"), then extracted into its own flow per Anton's explicit
       instruction — see `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/` for that content's
       own approval record, carried over unchanged.
-- [ ] v0.5 (2026-08-09, Panoramic PDF Source) — awaiting approval. Real, disclosed limitations: only
-      4 of 12 B&W pages visually reviewed; chapter-mapping mostly unconfirmed (2 plausible matches
-      out of 18); horizontal-orientation rendering approach not yet decided (see
-      `02-specifications.md`).
+- [x] v0.6 panorama cut/arrange/animate draft rejected/superseded by the later production-art pivot;
+      it must not be implemented as written.
+- [x] v0.8 production vision approved on 2026-08-09 ("Утверждено именно твое видение"). This records
+      the architectural direction and authorizes drafting these revised Requirements.
+- [x] v0.8 Requirements formally approved on 2026-08-09 (`reqs approved`).

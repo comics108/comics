@@ -1,6 +1,6 @@
 # Implementation Plan: comics-ai-bhagavadgita-generator
 
-> Version: 0.6 (2026-08-09, DRAFT, supersedes v0.5): Phase 10 — Panoramic PDF Source rendering (all
+> Version: 0.6 (2026-08-09, SUPERSEDED DRAFT): Phase 10 — Panoramic PDF Source rendering (all
 > 18 chapters), rewritten from v0.5's withdrawn `scrollType: horizontal` design to standard
 > vertical-scroll everywhere, with AI cutting (`comics-ai-multimodal`), AI arranging
 > (`comics-ai-positioning`), and AI animating (`comics-ai-animations`) as the core mechanism per
@@ -10,9 +10,11 @@
 > sdd-comics-ai-bhagavadgita-from-lottie/` — this is a new, unrelated Phase 10, not a revival of
 > that one.) v0.1's own header said `Status: DRAFT` despite `_status.md` recording real approval on
 > 2026-08-06 and all 9 phases since implemented — corrected here, not silently left stale.
-> Status: v0.1-v0.4 (Phases 1-9) APPROVED 2026-08-06 and IMPLEMENTED; v0.6 (new Phase 10) DRAFT
+> Status: v0.1-v0.4 (Phases 1-9) APPROVED 2026-08-06 and IMPLEMENTED; v0.6 Phase 10 SUPERSEDED by
+> Requirements v0.8 and MUST NOT be implemented. A replacement Plan can only be drafted after
+> revised Requirements and Specifications receive their explicit SDD approvals.
 > Last Updated: 2026-08-09
-> Specifications: [02-specifications.md](./02-specifications.md) (v0.7, Panoramic PDF section DRAFT)
+> Specifications: [02-specifications.md](./02-specifications.md) (v0.7 SUPERSEDED DRAFT)
 
 ## Note on drafting order
 
@@ -273,8 +275,8 @@ only. Both corrections are reflected in Task 4.1 and Risk Assessment below.
 and then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`,
 per Anton's explicit instruction — see that flow's own Plan for the full content, not duplicated here.
 
-### Phase 10: Panoramic PDF Source — All 18 Chapters, Vertical-Scroll Strip via AI Cut/Arrange/Animate
-### (NEW, 2026-08-09, DRAFT v2 — supersedes the withdrawn horizontal-scroll draft below)
+### SUPERSEDED Phase 10: direct panorama AI Cut/Arrange/Animate
+### Historical draft only; do not implement
 
 **Revision note**: v1 of this Phase (6 tasks: 10.1-10.6, "Horizontal Scroll, Camera Path, Z-Depth")
 planned a `scrollType: horizontal` document with an optional Should-Have figure-extraction enrichment
@@ -529,13 +531,7 @@ After each phase, verify:
       approved here 2026-08-09, then **extracted into its own flow** per Anton's explicit
       instruction — see `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/03-plan.md` for that
       content's own Plan and approval record.
-- [ ] v0.6 (2026-08-09, Phase 10 rewritten, Panoramic PDF Source rendering — vertical-scroll +
-      AI cut/arrange/animate) — awaiting approval. Supersedes v0.5's withdrawn `scrollType:
-      horizontal` draft per Anton's explicit correction. Real, disclosed risks: production-scale
-      rendering not yet measured (Task 10.3); tiling-window calibration and cross-tile region dedup
-      for the segmenter are real, unsolved engineering problems (Task 10.4); domain-shift accuracy
-      is unverified for all three reused models — segmenter, positioner, reveal baseline — since all
-      were trained/calibrated on Mahabharata data, not Bhagavad Gita art (Tasks 10.4-10.6); the
-      positioning model is known, by that sibling flow's own evaluation, not to beat its calibrated
-      baseline, and is used anyway per Anton's explicit instruction (Task 10.5); chapter-mapping
-      resolution is real, not-yet-done work with only 2/18 confirmed so far (Tasks 10.1-10.2).
+- [x] v0.6 Phase 10 was never approved and is now explicitly superseded by Requirements v0.8. Its
+      tasks remain historical evidence only and must not be executed.
+- [ ] Replacement Plan — blocked by the normal SDD gates: Requirements v0.8 approval, then revised
+      Specifications drafting/approval.

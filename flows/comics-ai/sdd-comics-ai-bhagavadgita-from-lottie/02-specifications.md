@@ -1,6 +1,6 @@
 # Specifications: comics-ai-bhagavadgita-from-lottie
 
-> Version: 1.0
+> Version: 1.2 (implementation-verified compositing + seed-keyframe correction)
 > Status: APPROVED
 > Last Updated: 2026-08-09
 > Requirements: [01-requirements.md](./01-requirements.md)
@@ -71,9 +71,9 @@ def extract_layer_motion(layer: dict) -> LottieLayerMotion: ...
 def to_translate_anim_keyframes(
     motion: LottieLayerMotion, pan: tuple[int, float, int, float]
 ) -> list[dict]:
-    """N Lottie position keyframes -> (N-1) `.comics` TranslateAnim JSON objects, chained per the
-    existing Anim model (each covers one [start,end] scroll-Y segment, value = the segment's end
-    point) -- see "TranslateAnim keyframe chaining" below."""
+    """N Lottie position keyframes -> N `.comics` TranslateAnim JSON objects: one zero-width seed
+    carrying the first authored value, followed by N-1 chained [start,end] segments whose values
+    are their endpoints -- see "TranslateAnim keyframe chaining" below."""
 
 def select_camera_reference_layer(layers: list[dict]) -> dict | None:
     """Ranks animated layers by (has_scale_keyframes, keyframe_count, total_displacement), returns
@@ -116,7 +116,7 @@ values (computed via `scroll_y(root_frame) = y_start + (root_frame - frame_start
 4913.16, 4620.38, 4392.67, 3954.76 for the six keyframes respectively). The final pipeline formula is
 therefore: `scroll_y(local_frame, precomp_st) = scroll_y_from_pan(precomp_st + local_frame)`.
 
-### A second, separate real problem: absolute canvas position, not yet resolved
+### Absolute canvas position — resolved by Plan Task 1.1
 
 The frame-axis calibration above answers "what `.comics` scroll-position does this Lottie frame
 correspond to." It does **not** by itself answer what a layer's **absolute `.comics` canvas
@@ -133,29 +133,33 @@ separate camera/viewport transform (per `flows/tdd-dot-comics-format`'s own conf
 layer's position is one absolute value on the scroll canvas) — so this compositing has to happen
 *before* export, producing one absolute Y per keyframe, not left as two separate numbers.
 
-**Proposed (not yet verified against a rendered frame)**: `absolute_y(frame) = pan_y(frame_start) −
-pan_y(root_frame) + local_y(root_frame)` — re-expresses everything relative to the pan's own starting
-position, so the *first* moment of the scene has every static layer sitting at its own local Y value
-(a sensible anchor: "top of scroll = local coordinates unchanged"), and later moments shift by however
-far the pan itself has moved. This is a reasonable, principled guess consistent with how AE/Lottie
-precomp nesting actually composites, but **it has not been checked against ground truth** — flagged
-as a real, load-bearing Open Design Question below, not asserted as verified. The worked numeric
-example in "Data Models" below is illustrative of the *keyframe-chaining shape*, not a claim that its
-exact numbers are final. Verification method (per Anton's explicit no-external-tooling constraint):
-cross-check against `flows/comics-editor/tdd-dot-lottie-import-export`'s own precomp/parent-chain
-resolution findings and `libs/flutter_comics`'s existing, tested Lottie parser — not a rendered pixel
-comparison via a newly-installed renderer.
+Plan Task 1.1 checked the real root anchors/positions and the already-tested Flutter import/export
+composition. The v1.1 guess `scroll + local` was wrong: it omitted anchors/parents and then added the
+root sweep a second time. The implemented, verified conversion is:
+
+```text
+screenMatrix(frame) = rootPrecompMatrix(rootFrame) × parentChain(frame) × layerMatrix(frame)
+screenTopLeft(frame) = screenMatrix(frame) × (0, 0)
+documentPosition(frame) = sceneOffset + (rootStartY - rootY(rootFrame))
+absoluteX = screenTopLeft.x
+absoluteY = screenTopLeft.y + documentPosition
+```
+
+Every transform matrix uses Lottie's `T(position) × R(rotation) × S(scale) × T(-anchor)` order.
+For the common real case where the root starts with `position == anchor`, has identity scale/
+rotation, and the layer has no parent, the root sweep cancels exactly once against viewer scroll;
+the layer's absolute position therefore remains its local top-left, as expected. A focused automated
+test evaluates the same layer at the sweep's start/end and proves both absolute positions are equal.
 
 ### TranslateAnim keyframe chaining
 
 `.comics`' existing `Anim` model (per `KeyframeInterpolator`, already implemented, unchanged by this
 flow) already chains multiple same-type `Anim`s: each one's `start`/`end` is a scroll-position
-window, its `x`/`y` is the value at `end`, and the value at `start` is implicitly the *previous*
-chained `Anim`'s own `x`/`y` (or the layer's static resting position if it's the first). N real
-Lottie position keyframes therefore become **N−1 `TranslateAnim` objects** (not N) — the real example
-layer's 6 position keyframes (frames 539, 851, 994, 1111, 1202, 1377) become 5 chained
-`TranslateAnim`s, each `start`/`end` from consecutive calibrated `scroll_y(frame)` pairs, each `x`/`y`
-the *later* keyframe's real Lottie position. This preserves the real, confirmed irregular timing
+window, and its `x`/`y` is the value at `end`. The shared `KeyframeInterpolator` does **not** use its
+fallback as the previous value once the first segment becomes active; without a seed it interpolates
+from `(0,0)`. Therefore N real Lottie position keyframes become **N `TranslateAnim` objects**: one
+zero-width seed (`start == end == first position`, carrying the first X/Y) plus N−1 segments. This is
+the exact pattern the existing tested Flutter Lottie importer already uses. It preserves irregular timing
 (deltas 312, 143, 117, 91, 175 frames → correspondingly irregular `scroll_y` deltas once calibrated)
 — the actual mechanism that makes the exported document's camera motion non-constant-speed, matching
 Requirements' Must-Have 1 without inventing a new keyframe/interpolation concept.
@@ -180,34 +184,37 @@ and export its own already-computed absolute trajectory (per "A second, separate
 — same compositing formula, no new math) as the scene's `cameraPath`, instead of (only) as that one
 layer's own `TranslateAnim`.
 
+The cross-flow format contract now gives this element a canonical point shape. Source pan Y runs
+downward as frames advance, so it is normalized to an increasing document scroll coordinate:
+
+```text
+position(rootFrame) = panY(frameStart) - panY(rootFrame)
+```
+
+For the real six-keyframe `comp_0` reference example, this yields approximately `1348.77`,
+`2129.50`, `2487.34`, `2780.12`, `3007.83`, and `3445.74`; serialized integer positions use the
+existing nearest-integer convention. The first camera coordinate is retained explicitly:
+
 ```json
-// New document-root (or per-scene, if Requirements' Open Question on 1-vs-3 files resolves that
-// way) field, sibling to `layers`/`sounds`:
 "cameraPath": [
-  {"start": 6052, "end": 5271, "x": 436.12, "y": 3449.613},
-  {"start": 5271, "end": 4913, "x": 417.329, "y": 3631.284},
-  {"start": 4913, "end": 4620, "x": 450.989, "y": 3945.418},
-  {"start": 4620, "end": 4393, "x": 201.029, "y": 4178.471},
-  {"start": 4393, "end": 3955, "x": 181.595, "y": 4566.756}
+  {"position": 1349, "x": 592.164, "y": 3231.145},
+  {"position": 2130, "x": 436.120, "y": 3449.613},
+  {"position": 2487, "x": 417.329, "y": 3631.284},
+  {"position": 2780, "x": 450.989, "y": 3945.418},
+  {"position": 3008, "x": 201.029, "y": 4178.471},
+  {"position": 3446, "x": 181.595, "y": 4566.756}
 ]
 ```
 
-Same keyframe-chaining shape as `TranslateAnim` (deliberately reused, not invented fresh — the values
-above are literally the same real numbers already shown in "TranslateAnim keyframe chaining" above,
-now also exported at the document level). The camera-reference layer itself is still written as an
-ordinary layer too (with its own `TranslateAnim`s and, per the ratio formula below, `zDepth = 0`,
-since it's the reference everything else is measured against) — `cameraPath` is an **additional**,
-derived, redundant-but-explicit copy for any consumer that wants "the path" without having to guess
-which layer was the reference.
+The X/Y values above still illustrate the real raw local trajectory; Task 1.1 must replace them with
+verified absolute document-space values if its compositing check changes them. The schema shape and
+increasing positions do not depend on that result. The camera-reference layer remains an ordinary
+layer too (with its own `TranslateAnim`s and `zDepth = 0`); `cameraPath` is additional explicit data,
+not endpoint-only `TranslateAnim`s whose first coordinate would be ambiguous.
 
-**This is a genuinely new `.comics` v2026 schema concept with no existing counterpart** (unlike
-`Layer.ZDepth`, which already had a home in `flows/tdd-dot-comics-format`) — this specification
-proposes it here, motivated by this flow's own real, concrete need, matching the established
-cross-flow pattern (`preferredViewportWidth` was proposed the same way, motivated by
-`tdd-dot-lottie-import-export`, then adopted into `tdd-dot-comics-format` proper). **Real,
-disclosed follow-up needed**: `tdd-dot-comics-format` should formally adopt `cameraPath` the same
-way, not leave it as a one-pipeline-only convention — not done as part of this flow, flagged as an
-Open Design Question below.
+This was proposed here from a real need and is now adopted by the approved
+`tdd-dot-comics-format` v0.11/v0.8 addendum. This producer must use that shared contract rather than
+a private one-pipeline-only alternative.
 
 ### Z-depth derivation
 
@@ -217,9 +224,9 @@ parallax reference, and the reason `cameraPath` must exist before z-depth can be
 
 1. **Scale animation present** (rarer, but the richest real example layer has it): `growth =
    final_scale_percent / initial_scale_percent` (real example: `111.95 / 78 ≈ 1.435`).
-   `zDepth = round((1 / growth - 1) × K, 3)` — growth > 1 (the layer visually approaches, matching
+   `zDepth = round(1 / growth - 1, 3)` — growth > 1 (the layer visually approaches, matching
    the classic 2.5D "objects scale up as camera nears" cue) → `zDepth < 0`; growth < 1 (recedes) →
-   `zDepth > 0`. Real example: `zDepth ≈ round((1/1.435 - 1) × K, 3) = round(-0.303 × K, 3)` — **this
+   `zDepth > 0`. Real example: `zDepth ≈ round(1/1.435 - 1, 3) = -0.303` — **this
    is the camera reference layer itself**, so its own `zDepth` should really be pinned to `0`
    (it *is* the reference plane by construction) rather than computed from its own formula, which
    would otherwise self-referentially report it as "closer than itself." Flagged as an implementation
@@ -228,18 +235,16 @@ parallax reference, and the reason `cameraPath` must exist before z-depth can be
    `layer_amplitude = |Δ(x,y)|` (Euclidean) across the layer's own real keyframes over the
    overlapping time window; `camera_amplitude = |Δ(cameraPath.x,y)|` over that same window (linearly
    interpolating `cameraPath` at the layer's own keyframe times where they don't line up exactly);
-   `ratio = layer_amplitude / camera_amplitude`; `zDepth = round((1/ratio − 1) × K, 3)` — moves more
+   `ratio = layer_amplitude / camera_amplitude`; `zDepth = round(1/ratio − 1, 3)` — moves more
    than the camera → closer/faster → negative; less → farther/slower → positive.
 3. **Fully static** (no position or scale keyframes — the real majority, 62–87% of layers per
    scene): `zDepth = 0.0` — matches `Layer.ZDepth`'s own documented default/no-offset value. A
    background element pinned to the world, panned past at the camera's own rate, is depth-neutral
    relative to the camera by definition.
 
-`K` (an overall scale constant converting a dimensionless ratio into `Layer.ZDepth`'s own units) is
-**not yet fixed** — `flows/tdd-dot-comics-format` itself has not decided `ZDepth`'s exact unit/range
-(see that flow's own Open Design Questions). This spec proposes `K = 1.0` as a working default
-(making `zDepth` numerically equal to `1/ratio - 1`, a small, sign-meaningful, unitless coefficient)
-but flags this as a real Open Design Question below, not a finalized constant.
+`K = 1` is the canonical definition in the approved `tdd-dot-comics-format` v0.11/v0.8 contract:
+`zDepth` is unitless and `motionRatio = 1 / (1 + zDepth)`. The valid authored domain is
+`zDepth > -1`; this importer falls back to `0` for degenerate or non-finite derivations.
 
 ### Data Models
 
@@ -248,32 +253,31 @@ but flags this as a real Open Design Question below, not a finalized constant.
   "images": [{}, {"file": "lottie_43_{0}_{1}_{2}.png", "width": 320, "height": 380}, {}],
   "animations": [
     {"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor",
-     "start": 6052, "end": 5271, "x": 436.12, "y": 3449.613},
+     "start": 1349, "end": 1349, "x": 592.164, "y": 3231.145},
     {"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor",
-     "start": 5271, "end": 4913, "x": 417.329, "y": 3631.284},
+     "start": 1349, "end": 2130, "x": 436.12, "y": 3449.613},
     {"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor",
-     "start": 4913, "end": 4620, "x": 450.989, "y": 3945.418},
+     "start": 2130, "end": 2487, "x": 417.329, "y": 3631.284},
     {"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor",
-     "start": 4620, "end": 4393, "x": 201.029, "y": 4178.471},
+     "start": 2487, "end": 2780, "x": 450.989, "y": 3945.418},
     {"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor",
-     "start": 4393, "end": 3955, "x": 181.595, "y": 4566.756}
+     "start": 2780, "end": 3008, "x": 201.029, "y": 4178.471},
+    {"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor",
+     "start": 3008, "end": 3446, "x": 181.595, "y": 4566.756}
   ],
-  "zDepth": -0.303,
+  "zDepth": 0.0,
   "kind": "art"
 }
 ```
 
-`start`/`end` above are the real, computed `scroll_y(root_frame)` values (rounded to integers, matching
-`Anim.start`/`end: int`) for the real 6-keyframe example layer — genuinely computed, not hand-picked.
+`start`/`end` above are the real frame positions normalized into increasing document scroll pixels
+and rounded to `Anim.start`/`end: int` for the real six-keyframe example — computed, not hand-picked.
 **`x`/`y` are the layer's raw local Lottie position values, unmodified** — per "A second, separate
 real problem" above, these still need the absolute-canvas compositing step resolved before they're
-correct `.comics` values; this example shows the correct **keyframe-chaining shape** (N Lottie
-keyframes → N−1 chained Anims, real irregular `start`/`end` spacing), not a claim that `436.12`/
-`3449.613` etc. are final. Note `start > end` numerically (scroll_y *decreases* as frame increases,
-since the pan's own Y decreases while scrolling proceeds) — `.comics`' `Anim` model doesn't require
-`start < end`, but every other real `.comics` file/other layer in this same document uses increasing
-ranges; **whether to negate/offset so this new content follows that convention too, or leave it
-inverted, is a real, undecided detail**, added to Open Design Questions below. `zDepth` is written as
+correct `.comics` values; this example shows the correct **keyframe-chaining shape** (one seed plus
+N−1 segments, real irregular `start`/`end` spacing), not a claim that `436.12`/
+`3449.613` etc. are final. The old v1.0 draft's decreasing ranges were incorrect for the real
+`KeyframeInterpolator`; v1.1 intentionally normalizes them. `zDepth` is written as
 a plain additional root-level key on the layer object, per `flows/tdd-dot-comics-format`'s own
 additive-field convention — omitted entirely (not written as `0`) for a static layer, matching that
 flow's "absent and explicit-0 are the same value" rule and keeping output byte-smaller for the ~70%
@@ -282,20 +286,13 @@ the document root (per "Reconstructed Camera-Path Element" above) — not per-la
 
 ### Open Design Questions
 
-- [ ] **Absolute canvas position compositing** — the proposed `absolute_y(frame) = pan_y(frame_start)
-      − pan_y(root_frame) + local_y(root_frame)` formula is a principled guess, not verified against
-      ground truth. Verifying it (per Anton's no-external-tooling constraint: cross-check against
-      `tdd-dot-lottie-import-export`/`libs/flutter_comics` findings, not a rendered pixel comparison)
-      is Plan Task 1.1.
-- [ ] **`scroll_y` decreasing vs. `.comics`' usual increasing convention** — whether to invert/offset
-      the sign so this content's `Anim.start < end` like every other real file, or leave it as the
-      pan's own natural decreasing direction (functionally equivalent either way, per
-      `KeyframeInterpolator`'s own math, but a real consistency question for whoever reviews the
-      output by eye).
-- [ ] **The `K` constant** in the z-depth formula (currently proposed `K = 1.0`) is a placeholder,
-      not calibrated against anything — `flows/tdd-dot-comics-format` itself hasn't fixed `Layer
-      .ZDepth`'s unit/range yet either, so this is a real, two-flow-spanning open question, not
-      something this flow can close unilaterally.
+- [x] Absolute canvas position compositing — resolved by Plan Task 1.1 with full affine
+      root/parent/layer composition plus exactly one document-scroll compensation; covered by an
+      executable regression test.
+- [x] Decreasing source pan vs. increasing `.comics` scroll — resolved in v1.1 by
+      `position = panY(frameStart) - panY(rootFrame)`. This is required by the actual shared
+      interpolator, not only a readability convention.
+- [x] `K` constant — resolved as `1` by the approved canonical format contract.
 - [ ] Whether the 3 scenes (`0_1`/`0_2`/`0_3`) export as 3 separate `.comics` files or one document
       with 3 internal regions — carried from Requirements' own Open Questions, restated here since it
       directly affects how `precomp_st` values are scoped per output file.
@@ -308,16 +305,11 @@ the document root (per "Reconstructed Camera-Path Element" above) — not per-la
 - [ ] **Single layer vs. blended reference**: this spec picks exactly one layer per scene; whether a
       weighted blend of the top-N richest layers would reconstruct a more faithful camera path is a
       real, unexplored alternative, not ruled out, just not the default.
-- [ ] **`cameraPath` × `Layer.ZDepth` composition at render time**: this spec defines how to *derive*
-      both values but not how a future renderer should *combine* them into an actual on-screen
-      parallax offset (e.g. `layer_offset = cameraPath(scroll) × f(layer.zDepth)` for some function
-      `f`) — that's `flows/tdd-dot-comics-format`'s own still-open "scroll-response formula" question
-      (see its Open Design Questions), now with a second free variable (`cameraPath` itself) that
-      flow hadn't previously needed to account for. Real, disclosed, two-flow-spanning gap.
-- [ ] **Cross-flow schema adoption**: `cameraPath` is proposed here, motivated by this flow's real
-      need, but not yet formally added to `flows/tdd-dot-comics-format`'s own Requirements/
-      Specifications the way `Layer.ZDepth`/`preferredViewportWidth` were — a real, disclosed,
-      not-yet-done follow-up.
+- [x] `cameraPath` × `Layer.ZDepth` render composition — specified in draft
+      `tdd-dot-comics-format` v0.11/v0.8 as the zero-preserving adjustment
+      `D(s) × (1/(1+zDepth) − 1)`; this importer only derives/persists values and does not render.
+- [x] Cross-flow schema adoption — approved in `tdd-dot-comics-format` v0.11/v0.8 and
+      `sdd-flutter-comics` v0.4.
 
 ### Edge Cases
 
@@ -333,14 +325,15 @@ the document root (per "Reconstructed Camera-Path Element" above) — not per-la
 
 - [ ] Unit: `scene_pan`/`frame_to_scroll_y` against the 3 real, hand-verified pan tuples in
       Requirements' table
-- [ ] Unit: `to_translate_anim_keyframes` against the real 6-keyframe example layer, asserting
-      exactly 5 output `TranslateAnim`s with the real Lottie `x`/`y` values and correctly-chained
+- [x] Unit: `to_translate_anim_keyframes` against the real 6-keyframe example layer, asserting
+      exactly 6 output `TranslateAnim`s (seed + 5 segments) with the real Lottie `x`/`y` values and correctly-chained
       `start`/`end`
 - [ ] Unit: `select_camera_reference_layer` against a synthetic scene with several candidate layers,
       asserting the scale+keyframe-count+displacement ranking picks the expected one; against the
       real `comp_0` data, asserting it picks the real `ind=43` layer specifically
-- [ ] Unit: `build_camera_path` produces the same keyframe values as `to_translate_anim_keyframes`
-      would for the selected reference layer — no drift between the two representations
+- [x] Unit: `build_camera_path` preserves all N source coordinates as N canonical camera points
+      (including the first), while `to_translate_anim_keyframes` produces N animations (seed + N−1 segments);
+      both use the same normalized increasing scroll positions and verified absolute X/Y values
 - [ ] Unit: `derive_z_depth` for all cases (scale-present, position-only, static, camera-reference-
       itself-pinned-to-0), including the division-by-zero guard
 - [ ] Integration: run `import_lottie.py` against the real file end-to-end, assert the real
@@ -358,3 +351,10 @@ the document root (per "Reconstructed Camera-Path Element" above) — not per-la
       before extraction.
 - [x] Notes: real open engineering questions remain (see Open Design Questions above), disclosed and
       unaffected by this extraction.
+
+### v1.1 review gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-09
+- [x] Notes: aligns this producer with the canonical format/shared-library contract, including
+      increasing scroll positions, point-shaped `cameraPath`, and unitless `zDepth` math.

@@ -1,9 +1,9 @@
 # Specifications: sdd-flutter-comics — shared `.comics` format library
 
-> Version: 0.3
+> Version: 0.4
 > Status: APPROVED
-> Last Updated: 2026-08-08
-> Requirements: [01-requirements.md](01-requirements.md) (v0.3, APPROVED)
+> Last Updated: 2026-08-09
+> Requirements: [01-requirements.md](01-requirements.md) (v0.4, APPROVED)
 
 ## Overview
 
@@ -25,6 +25,134 @@ Two changes of substance: (1) the Lottie files + interpolator are now in scope (
 `models_mapping_test.dart` and `dataset_backward_compat_test.dart` both test logic that stays in
 `apps/comics-editor` (`comicsFromCore`/`comicsToCore`, `DartIoCore`), so moving them would make the
 shared library depend backwards on the app that depends on it. Corrected below.
+
+## v0.4 Addendum: Camera Path + Z-Depth
+
+This addendum implements the contract proposed in `flows/tdd-dot-comics-format` v0.11/v0.8; it
+does not redefine the format. The exact shared-library surface is:
+
+```dart
+class CameraKeyframe {
+  CameraKeyframe({required this.position, required this.x, required this.y});
+  int position;
+  double x;
+  double y;
+  CameraKeyframe clone();
+}
+
+class CameraPath {
+  final List<CameraKeyframe> points = [];
+  CameraPath clone();
+}
+
+class EditorLayer {
+  // Existing fields...
+  double zDepth = 0.0;
+}
+
+class ComicsDoc {
+  // Existing fields...
+  CameraPath? cameraPath;
+}
+
+class CameraPathEvaluator {
+  /// Samples document-space camera coordinates. Null/0/1-point paths are inert.
+  static Offset sample(CameraPath? path, double scrollPosition);
+
+  /// Returns 1/(1+z). Invalid/non-finite z is normalized to 0 first.
+  static double responseForDepth(double zDepth);
+
+  /// Returns (sample(path,s) - firstPoint) * (responseForDepth(z) - 1).
+  static Offset parallaxAdjustment(
+    CameraPath? path,
+    double scrollPosition,
+    double zDepth,
+  );
+}
+```
+
+`CameraPathEvaluator` lives in a new `lib/src/camera_path.dart` and is exported from
+`lib/flutter_comics.dart`. It is analogous to `KeyframeInterpolator`: shared value math with no
+painting, gestures, widgets, device pixels, orientation, or platform APIs. The viewer applies its
+returned `Offset` after authored parent/scroll/time transforms and before viewport scaling.
+
+### Canonical JSON and Parsing
+
+```json
+{
+  "cameraPath": [
+    {"position": 0, "x": 592.164, "y": 3231.145},
+    {"position": 781, "x": 436.120, "y": 3449.613}
+  ],
+  "layers": [{"zDepth": 0.42}]
+}
+```
+
+- `ComicsArchiveReader` reads numeric `position` with the existing `_asInt` convention and numeric
+  X/Y as doubles; malformed points are dropped. It stable-sorts by position and collapses duplicate
+  positions with last-one-wins. Missing/non-list `cameraPath` becomes `null`.
+- Missing/non-numeric/non-finite `zDepth`, and values `<= -1`, normalize to `0.0`. An absent key and
+  explicit `0` remain indistinguishable at model/behavior level.
+- `ComicsDoc.clone()` deep-clones the camera path; `EditorLayer.clone()` copies `zDepth`.
+- `apps/comics-editor/lib/src/bridge/models_mapping.dart` reads the same normalized shapes and writes
+  canonical points in strictly increasing order. It omits `cameraPath` when null/empty and may omit
+  `zDepth` when zero; nonzero valid values must survive raw-JSON merge/save.
+
+### Sampling and Composition
+
+For valid points `P[i]` sorted by `position`, values before/after the range hold the first/last
+point. Inside `[P[i].position, P[i+1].position]`, X and Y use the same cubic ease-out factor as
+`KeyframeInterpolator`:
+
+```text
+t = (s - p0.position) / (p1.position - p0.position)
+eased = (t - 1)^3 + 1
+camera = p0.xy + (p1.xy - p0.xy) * eased
+delta = camera - points.first.xy
+adjustment = delta * (1 / (1 + zDepth) - 1)
+```
+
+Consequences are contract tests, not UI preferences: `z=0 → adjustment=0`, `z=1 → -0.5×delta`,
+`z=-0.5 → +1×delta`. `ParentId` never alters/inherits depth. Time-basis animation is composed into
+the authored layer translation normally; only the final camera adjustment is scroll-driven.
+
+### v0.4 Affected Systems
+
+| System | Change |
+|--------|--------|
+| `libs/flutter_comics/lib/src/models.dart` | Add `CameraKeyframe`, `CameraPath`, `EditorLayer.zDepth`, `ComicsDoc.cameraPath`, and deep-clone support |
+| `libs/flutter_comics/lib/src/camera_path.dart` | New pure sampler/response evaluator |
+| `libs/flutter_comics/lib/src/comics_reader.dart` | Parse and normalize `cameraPath`/`zDepth` |
+| `libs/flutter_comics/lib/flutter_comics.dart` | Export the new model/evaluator API |
+| `apps/comics-editor/lib/src/bridge/models_mapping.dart` | Preserve fields through native-core read/merge/save; no FFI/ZIP redesign |
+| `libs/flutter_comics/test/**` | Model, parser, clone, evaluator, malformed-input, and real-fixture coverage |
+| viewer surfaces | Not modified by this SDD addendum; downstream viewer flow consumes the evaluator |
+
+### v0.4 Edge Cases
+
+| Case | Required result |
+|------|-----------------|
+| null/empty/one-point path | `Offset.zero` adjustment |
+| out-of-order/duplicate points | stable sort, last duplicate wins |
+| invalid point | drop it; fewer than two valid points makes path inert |
+| invalid depth | normalize to `0`; never return non-finite values |
+| parent and child both have depth | evaluate each visual layer's own value once after parent transforms |
+| vertical vs. horizontal document | same XY sampler; only the caller's scroll-coordinate source differs |
+| different viewport/device sizes | identical document-space result; scaling is downstream |
+
+### v0.4 Testing Strategy
+
+- [ ] `models_test.dart`: defaults plus deep cloning of path and depth
+- [ ] `comics_reader_test.dart`: absent/explicit-zero/nonzero fields, canonical path, malformed and
+      duplicate points, invalid depth
+- [ ] `camera_path_test.dart`: endpoint holds, cubic midpoint, zero/near/far formulas, parenting
+      independence, and finite-output guarantees
+- [ ] editor `models_mapping_test.dart`: read/merge/save preservation without disturbing unknown raw
+      JSON keys
+- [ ] real-fixture contract from `sdd-comics-ai-bhagavadgita-from-lottie`: increasing path positions,
+      non-linear points, multiple distinct nonzero layer depths
+- [ ] regression: every existing `flutter_comics` and editor test remains green; legacy fixtures
+      produce zero camera adjustment
 
 ## Interaction Interface
 
@@ -185,6 +313,7 @@ export 'src/models.dart';                 // ComicsDoc, EditorLayer, Anim, AnimT
                                            // ScrollType, PreferredOrientation, DocType, RecentFile,
                                            // Lang, kLangs
 export 'src/keyframe_interpolator.dart';  // KeyframeInterpolator (NEW in v0.2)
+export 'src/camera_path.dart';             // CameraPathEvaluator (NEW in v0.4)
 export 'src/lottie/lottie_mapping.dart';  // LottieDocument/LottieLayer/LottieAsset/LottieMask/
                                            // LottieTransform/LottieProperty/LottieKeyframe/
                                            // LottieFormatException, parseLottieDocument/
@@ -222,7 +351,11 @@ reimplemented, since they already handle every current schema field correctly (u
 
 ### Schema Changes
 
-None — this flow moves code, it does not change the `.comics`/`.puzzle` on-disk schema.
+v0.1-v0.3: none — that baseline moved code without changing the on-disk schema.
+
+v0.4 adopts (does not independently redefine) the additive `cameraPath`/`zDepth` schema from
+`tdd-dot-comics-format` v0.11/v0.8. The shared library is the canonical Dart representation and
+portable reader/evaluator for those fields.
 
 ### Resolving Requirements' Open Question — editor-only fields on `EditorLayer`
 
@@ -434,3 +567,10 @@ simultaneous edit.
 - [x] Notes: Approved as drafted (v0.3) — including the corrected Affected Systems table, the
       Interaction Interface section, the resolved interpolator-location question, and the `.puzzle`
       decision. Proceeding to Plan.
+
+### v0.4 review gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-09
+- [x] Notes: v0.4 adds only the shared camera/depth model,
+      parsing, editor bridge preservation, and pure evaluator; renderer integration is downstream.

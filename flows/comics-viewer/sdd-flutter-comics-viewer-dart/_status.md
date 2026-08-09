@@ -2,8 +2,8 @@
 
 ## Current Phase
 
-IMPLEMENTATION — complete (7/8 tasks; Task 4.1 manual verification deferred). DOCUMENTATION phase not
-started.
+IMPLEMENTATION — complete; macOS example rendering/runtime verification complete. Task 4.1's final
+human audible-perception sign-off remains deferred. DOCUMENTATION phase not started.
 
 ## Phase Status
 
@@ -11,13 +11,13 @@ APPROVED
 
 ## Last Updated
 
-2026-08-08 by Claude
+2026-08-09 by Codex
 
 ## Blockers
 
-- None blocking. Task 4.1 (manual audible verification on a real device) remains — deferred, not
-  blocking, matching `flows/sdd-flutter-comics`'s own Task 5.5 precedent exactly; automated coverage
-  (4 real backend-level sound-wiring tests) already confirms the underlying logic works.
+- None blocking. The real macOS example now builds, launches, renders the bundled archive, scrolls,
+  and exercises a real MP3 range in a passing device-target integration test. Only a human listener's
+  audible confirmation remains outside automation.
 
 ## Progress
 
@@ -72,6 +72,13 @@ APPROVED
       `dependency_overrides` on `apps/comics-editor` after `flutter_comics` was genuinely published to
       pub.dev mid-flow) and the real `AudioPlayer` timeout mechanism traced and fixed
       (`SoundPlaybackTrack.callTimeout`).
+- [x] macOS example/runtime verification continued (2026-08-09) — the example now loads the real
+      bundled 18 MB `sample.comics` (177 layers, 2 MP3 sounds), renders through
+      `DartComicsViewerSurface`, and provides status/scroll/play/mute controls. Added 2 example widget
+      tests and 1 real macOS device-target integration test. `flutter build macos --debug`, integration
+      test, and `flutter run -d macos` all succeeded. The run exposed and fixed delayed-source
+      notification-during-build and Darwin BytesSource cache/MIME failures. Package suite is now
+      27/27; example widget suite 2/2; macOS integration 1/1; analysis clean.
 
 ## Context Notes
 
@@ -99,10 +106,9 @@ N/A — new flow. Supersedes the rendering-implementation half of
 
 ## Next Actions
 
-1. Task 4.1: manual verification on a real device/simulator — open a real dataset `.comics` file with
-   sound in the macOS-targeted `flutter_comics_viewer` example app (needs the example wired to load a
-   real file first, which it isn't today) and confirm audible playback/mute behavior. The only undone
-   item.
+1. Human auditory sign-off only: listen to the already-working macOS example and confirm subjective
+   audible start/stop/mute behavior. The example wiring, real archive rendering, platform audio-source
+   preparation, scrolling, and automated macOS runtime checks are complete.
 2. Android sound parity (`comics-viewer-android`'s `SoundManager.java`/`SoundAnim.java`) remains a
    real, non-blocking Open Design Question, unchanged since Specifications.
 3. This flow's own DOCUMENTATION phase (client-facing readme) hasn't been requested yet.

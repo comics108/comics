@@ -8,12 +8,13 @@
 | Task | Status | Notes |
 |------|--------|-------|
 | (ad hoc) Real `cameraPath` coordinates computed for all 3 scenes | Done | Per Anton's direct "Дай координаты кривой перемещения камеры сейчас" ask (2026-08-09) — computed ahead of the formal task sequence below, using the algorithm as currently specified (Task 1.1's verification not yet done, so these values may still need correction) |
-| 1.1 Verify compositing formula (no external renderer) | Not started | |
-| 1.2 `import_lottie.py` core | Not started | |
-| 1.3 Camera-reference selection + `cameraPath` | Not started | |
-| 1.4 Extend `package_comics.py` | Not started | |
-| 1.5 New pipeline entry point | Not started | |
-| 1.6 Manifest/report disclosure | Not started | |
+| (docs) Canonical camera/depth contract aligned across 3 flows | Done, approved | v1.1 changes the eventual serialized shape to N full `{position,x,y}` points with increasing positions; the historical N−1 decreasing segment tables below remain computation evidence, not final JSON |
+| 1.1 Verify compositing formula (no external renderer) | Done | v1.1 guess disproved; full affine chain + exactly one scroll compensation verified by test |
+| 1.2 `import_lottie.py` core | Done | 519 embedded image layers, parent-chain transforms, normalized scroll, scale/rotate/translate, unitless z-depth |
+| 1.3 Camera-reference selection + `cameraPath` | Done | Real references recovered for all 3 scenes; 19 canonical increasing points |
+| 1.4 Extend `package_comics.py` | Done | Optional animations/zDepth/cameraPath/viewport fields; old static path unchanged |
+| 1.5 New pipeline entry point | Done | `pipeline.py --lottie-source`; standalone output, not counted among 18 chapters |
+| 1.6 Manifest/report disclosure | Done | Dedicated manifest/report explicitly says current viewers do not render parallax |
 
 ## Session Log
 
@@ -43,6 +44,11 @@ with scale animation, consistent with the "camera dolly" hypothesis in Specifica
 **Real, computed `cameraPath` keyframes** (chained `start`/`end`/`x`/`y`, `x`/`y` using the proposed
 absolute-compositing formula — **caveat: Task 1.1 has not yet verified this formula**, so these
 values may be corrected once that task runs):
+
+> Historical computation representation: after the v1.1 documentation alignment, these tables are
+> not the canonical `.comics` JSON shape. Task 1.3 must regenerate each as N complete camera points
+> (including the initial point) with normalized increasing `position`; do not copy these decreasing
+> N−1 `start`/`end` segments directly into output.
 
 Scene `0_3` (5 segments):
 
@@ -87,6 +93,46 @@ this flow's Lottie extraction) — real element counts were reported directly to
 elements; `5_2.psd`: 32 nodes / 24 leaf layers across 3 sub-groups) but no design/implementation work
 was done here. Tracked in `sdd-comics-ai-bhagavadgita-generator`'s own `_status.md`, not this flow's.
 
+### Session 2026-08-09 — Codex (approved Plan v1.1 implementation)
+
+**Task 1.1 corrected the load-bearing formula.** Direct inspection of all three real root precomp
+transforms found their anchors equal (or nearly equal) their initial positions and scale/rotation are
+identity. Cross-checking `libs/flutter_comics`'s shipped Playback Viewport import/export established
+the same invariant: Lottie screen position is the composed root/parent/layer transform, while
+`.comics` displays `absoluteY - scrollPosition`. The old provisional `scroll + local` formula added
+scroll twice and ignored anchors/parent chains. Implemented full 2D affine composition
+`T(p)×R×S×T(-anchor)` through arbitrary parents and root, followed by exactly one document-scroll
+compensation. `test_root_sweep_is_cancelled_once_not_added_twice_to_absolute_y` proves a static
+layer has the same absolute Y at both ends of a 100px root sweep.
+
+**Second factual correction found during implementation:** endpoint-only N−1 `TranslateAnim`s lose
+the first X/Y because the real `KeyframeInterpolator` begins an active first segment from `(0,0)`,
+not its fallback. The exporter now writes N animations: one zero-width first-value seed plus N−1
+segments, matching the already-tested Flutter Lottie importer. Specifications advanced to v1.2 to
+record both Plan-authorized corrections.
+
+**Delivered code:**
+
+- New `scripts/import_lottie.py`: real JSON/image extraction, local→root frame mapping, complete
+  parent-chain affine transforms, increasing scroll normalization, camera reference ranking,
+  canonical N-point `cameraPath`, and per-layer unitless z-depth.
+- Extended `scripts/package_comics.py`: optional prebuilt animation lists, `zDepth`, root
+  `cameraPath`, preferred viewport fields, strict finite/domain/order validation; all pre-existing
+  callers retain their exact static defaults.
+- Extended `scripts/pipeline.py`: mutually exclusive `--lottie-source` entry point, deliberately
+  outside `--all` and the 18-chapter manifest.
+- Extended `scripts/report.py`: standalone Lottie report with the required not-yet-rendered
+  parallax disclosure.
+
+**Real output:** `work/bhagavadgita/mediation_of_the_bhagavat_gita.comics` (36 MB), SHA-256
+`5ff9054076c7a63751e8079091ac9b9bfd61b3e7635af40239615d78b394cbcd`; 3 scenes, 519 image layers,
+508 layers with world-space animation after parent composition, 19 strictly-increasing camera
+points, and 88 distinct non-zero z-depth values. ZIP integrity check reports no errors. Companion
+files: `work/bhagavadgita/lottie_manifest.json` and `lottie_report.md`.
+
+**Verification:** all 92 generator tests pass, including new synthetic affine/z-depth/schema tests
+and a real end-to-end 519-layer archive test; `python3 -m compileall -q scripts tests` passes.
+
 ## Learnings
 
 - When a user asks for a concrete deliverable ("give me the coordinates now") ahead of a Plan's own
@@ -94,3 +140,5 @@ was done here. Tracked in `sdd-comics-ai-bhagavadgita-generator`'s own `_status.
   written, *as long as the provisional nature is disclosed clearly* — the alternative (refusing until
   Task 1.1 completes) would have been unnecessarily rigid given the real, low cost of redoing the
   computation later if the formula changes.
+- A `.comics` chained animation needs an explicit zero-width seed for the first authored value;
+  “N keyframes → N−1 segments” is insufficient with the real legacy-compatible interpolator.

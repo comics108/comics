@@ -15,7 +15,7 @@
 | 3.1 Sound-byte extraction at `load()` | Done | |
 | 3.2 `_evaluateSounds` + real `setSoundEnabled`/`setMuted`/`dispose` | Done | Added `DartComicsViewerBackend.soundCallTimeout` (constructor param, defaults 5s) — not in the original Plan, needed once Task 2.3's timeout-based testability approach had to extend down to this level too |
 | 3.3 Extend `dart_comics_viewer_backend_test.dart` | Done | 4 new cases; added `@visibleForTesting soundTracksForTesting` getter (not in original Plan — the only way to observe sound-wiring state from outside the class) |
-| 4.1 Manual macOS verification | Deferred | Disclosed, not blocking — see Session Log |
+| 4.1 Manual macOS verification | Runtime verified; human audio sign-off pending | Real example/build/integration run completed 2026-08-09; rendered real tiles and exercised a real MP3 range without platform errors. Audible perception still requires a human listener. |
 | 4.2 Cross-reference `sdd-comics-viewer`'s `_status.md` | Done | Also incidentally resolved that flow's own stale compile-error Blocker |
 
 ## Session Log
@@ -174,6 +174,66 @@ verification across all three packages: `libs/flutter_comics` 97/97, `apps/comic
 clean (393/393 confirmed earlier in session, unaffected by Phase 2-4's viewer-only changes),
 `flutter_comics_viewer` 26/26 — all `flutter analyze` clean.
 
+### Session 2026-08-09 — Codex
+
+**Started at**: Phase 4, Task 4.1, resuming the previously deferred macOS example verification.
+
+#### Context re-read
+
+- Re-read this flow, `flows/sdd-flutter-comics`, and `flows/tdd-dot-comics-format` before acting.
+- Preserved the established boundary: `flutter_comics` owns the archive/model/interpolation values;
+  `flutter_comics_viewer` owns rendering, playback, and viewer state.
+- Used the existing `example/assets/sample.comics` fixture: a real 18 MB archive with 177 layers and
+  2 MP3 sound entries (`width=1080`, `height=12000`).
+
+#### Completed
+
+- Replaced the plugin-version boilerplate example with a real macOS-first viewer harness:
+  - loads bundled `sample.comics` through `ComicsViewerBytes`;
+  - renders through the public `ComicsViewer` API and `DartComicsViewerSurface`;
+  - exposes load/error status, scroll slider, play/pause, and mute/unmute controls.
+- Added two example widget tests with a renderable synthetic `.comics` archive:
+  - verifies the macOS Dart surface and decoded image are present;
+  - verifies viewer scroll-position control updates to 50%.
+- Replaced the placeholder integration test with a real macOS application test that loads the
+  bundled 18 MB archive, waits for `loaded`, asserts actual `Image` widgets, scrolls to 50%, and
+  asserts no viewer/framework error.
+- Ran the example as a real macOS application via `flutter run -d macos` and ran the integration
+  suite against the macOS device target.
+
+#### Runtime defects found and fixed
+
+1. **Delayed source notification during build**: the bundled asset becomes available after the first
+   frame. `ComicsViewer.didUpdateWidget` previously called `controller.load()` synchronously while
+   Flutter was building, causing `setState() or markNeedsBuild() called during build` in a sibling
+   `AnimatedBuilder`. Source loads are now scheduled after the frame. A package widget regression
+   test reproduces the delayed-source path.
+2. **Darwin `BytesSource` temporary-media failure**: `audioplayers` writes bytes under
+   `getTemporaryDirectory()` on macOS. The sandbox cache directory was absent on first use, and then
+   AVPlayer could not identify the extensionless temporary MP3 without MIME metadata. The viewer now
+   creates the cache directory and maps archive extensions to MIME types (`.mp3` → `audio/mpeg`, plus
+   m4a/mp4/aac/wav/ogg). The real macOS integration rerun exercised the MP3 range without the prior
+   `PathNotFoundException`/`DarwinAudioError`.
+
+#### Verification
+
+- `flutter_comics_viewer`: `flutter analyze` clean; 27/27 tests passed.
+- Example: `flutter analyze` clean; 2/2 widget tests passed.
+- `flutter build macos --debug`: passed; produced `viewer_example.app`.
+- `flutter test integration_test/plugin_integration_test.dart -d macos`: 1/1 passed against the real
+  bundled archive after both runtime fixes.
+- `flutter run -d macos`: application built and launched; Dart VM service attached.
+- `git diff --check`: clean.
+- Xcode emits a non-fatal warning about the plugin's generated `.swiftpm/xcode` folder reference;
+  it does not prevent build, launch, or integration-test success.
+
+#### Remaining manual observation
+
+- A human still needs to confirm that the produced audio is physically audible and subjectively
+  starts/stops at the intended moments. The executable path, real source preparation, MIME routing,
+  scroll gating, mute state, and platform call are now exercised; only human auditory perception is
+  outside automated verification.
+
 ## Deviations Summary
 
 | Planned | Actual | Reason |
@@ -183,6 +243,7 @@ clean (393/393 confirmed earlier in session, unaffected by Phase 2-4's viewer-on
 | Task 2.3: "a real audio byte payload... audioplayers is designed to be testable without a live output device" (Specifications' own assumption) | Real calls hang (30s, traced to `AudioPlayer.preparationTimeout`), not reject — added a real, injectable `callTimeout` to `SoundPlaybackTrack` (a genuine production robustness fix, not just a test workaround) and tests pass a short override | Specifications' assumption didn't hold in this environment; the Plan's own Risk Areas section had already flagged this as a real possibility. Root cause traced precisely (not guessed) before deciding the fix — same standard as every other finding in this flow. |
 | Task 3.2 not scoped to add any new constructor parameter | `DartComicsViewerBackend` gained `soundCallTimeout` (default 5s) | Direct consequence of the Task 2.3 finding — Task 3.3's tests need the same short-timeout escape hatch one layer up, or they'd hang the same way |
 | Task 3.3's "assert against `SoundPlaybackTrack`... via a lightweight fake/spy" (Plan's own Open Implementation Question) | Used a real `@visibleForTesting` getter (`soundTracksForTesting`) instead of a fake/spy | Simpler and more honest than a fake — asserts the real object's real state, not a stand-in's recorded calls; resolves that Plan's own flagged open question with the simpler of the two options it anticipated |
+| Task 4.1 originally assumed the example could simply open a real file | The example had to become a real harness, and two runtime defects needed fixes | The previous boilerplate could not render content; only a native macOS run exposed the build-phase notification and Darwin bytes-source failures. |
 
 ## Learnings
 
@@ -203,13 +264,19 @@ clean (393/393 confirmed earlier in session, unaffected by Phase 2-4's viewer-on
   *exact* mechanism of a test failure (which channel, which completer, which timeout) before choosing
   a fix produces a better fix than guessing — the eventual solution (`callTimeout`) was only obviously
   correct once the `AudioPlayer.preparationTimeout` connection was confirmed, not before.
+- A passing headless audio test cannot prove Darwin can prepare an actual byte source. A real macOS
+  run exposed both the missing cache-directory precondition and the need to preserve media type when
+  an archive entry becomes an extensionless temporary file.
+- Source updates initiated by a widget lifecycle method must not synchronously notify listeners that
+  may already be mounted elsewhere in the same build; post-frame scheduling keeps the public source
+  API safe for asynchronously loaded assets.
 
 ## Completion Checklist
 
-- [x] All tasks completed or explicitly deferred (7/8 done; Task 4.1 deferred, needs real
-      device/simulator access + a human's ears, matching the sibling flow's Task 5.5 precedent)
-- [x] Tests passing (`libs/flutter_comics` 97/97, `apps/comics-editor` analyze clean, 393/393 confirmed
-      earlier in session, `flutter_comics_viewer` 26/26 — all `flutter analyze` clean)
+- [x] All implementation and executable macOS verification work completed; only human audible
+      perception remains explicitly deferred within Task 4.1
+- [x] Tests passing (`flutter_comics_viewer` 27/27; example widget tests 2/2; real macOS integration
+      test 1/1; all relevant `flutter analyze` runs clean)
 - [x] No regressions (every pre-existing test in all three packages still passes)
 - [ ] Documentation updated if needed (this flow's own DOCUMENTATION phase not started — not requested
       yet)

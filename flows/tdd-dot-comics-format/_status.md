@@ -2,12 +2,14 @@
 
 ## Current Phase
 
-IMPLEMENTATION COMPLETE
+PLAN ADDENDUM NOT STARTED — `cameraPath` + completed `zDepth` Requirements/Specifications are
+approved. The previously-approved implementation baseline remains complete.
 
 ## Phase Status
 
-Requirements, Tests, Specifications, Visual, and Plan are all APPROVED (2026-08-07). **All 5 plan
-phases (20 tasks) are done and tested** — see `05-plan.md`'s "Implementation Notes & Corrections"
+v0.11 Requirements and v0.8 Specifications are APPROVED (2026-08-09). Tests, Visual, and the prior
+Plan retain their APPROVED status; a camera/depth Plan addendum has not been drafted. **All 5 prior
+plan phases (20 tasks) are done and tested** — see `05-plan.md`'s "Implementation Notes & Corrections"
 section for 16 disclosed corrections found while building. Most consequential:
 - Task 1.1's `clone()` was originally specified to generate a new id, which would have silently
   broken every `parentId` reference on every undo/redo (fixed to preserve identity instead, caught
@@ -57,9 +59,17 @@ applied at render time, and whether it composes through `ParentId` chains) is ex
 carried to Plan — **command scope was explicitly Requirements+Specifications only**, no code changes
 to `apps/comics-editor`.
 
+**Third NEW addition (2026-08-09), Requirements/Specifications approved**: motivated by
+the real `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie` producer, v0.11/v0.8 adopts an
+optional document-root `cameraPath` and closes the v0.10 depth questions: unitless `zDepth`, positive
+= farther/slower, valid domain `z > -1`, response `1/(1+z)`, zero-preserving camera adjustment,
+render-time application, and no `ParentId` depth inheritance. This supersedes the preceding
+paragraph's “left open” state; no code has changed.
+
 ## Last Updated
 
-2026-08-08 by Claude (added `Layer.ZDepth` parallax-depth field to Requirements/Specifications)
+2026-08-09 by Codex (drafted `cameraPath` and completed `Layer.ZDepth` semantics in Requirements/
+Specifications; no code changes)
 
 ## Correction (2026-08-07): the "MAJOR DISCOVERY" originally logged here was a different format, now split out
 
@@ -87,6 +97,8 @@ real classic-format file without error. This conclusion was never in doubt — t
 was a separate, unrelated file being briefly misread as if it were part of this same lineage.
 
 ## Blockers
+
+- Next gate: draft and review a camera/depth Tests/Plan addendum before implementation.
 
 - Waiting on Anton's direction on `02-tests.md`'s remaining Open Design Questions — most
   consequentially whether to fix the newly-found `scaleX`/`scaleY`/`alpha` JSON-default bug
@@ -182,6 +194,14 @@ was a separate, unrelated file being briefly misread as if it were part of this 
   the time) predicted the opposite conclusion.
 
 ## Progress
+
+- [x] `cameraPath` + completed `zDepth` Requirements addendum drafted (2026-08-09) — v0.11,
+      sourced from `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie`.
+- [x] Matching Specifications addendum drafted (2026-08-09) — v0.8; fixes sign,
+      unit/domain, zero-preserving response formula, `ParentId` composition, exact root JSON shape,
+      sampling, malformed-data policy, and cross-platform conformance tests.
+- [x] v0.11 Requirements approved (2026-08-09)
+- [x] v0.8 Specifications approved (2026-08-09)
 
 - [x] Requirements drafted (2026-08-01) — v0.1, consolidated verbatim from
       `vdd-comics-editor-timeline` and `sdd-comics-ai-positioning`
@@ -312,10 +332,7 @@ request: "вынеси из vdd-comics-editor-timeline и sdd-comics-ai-position
 
 ## Next Actions
 
-1. Anton reviews `01-requirements.md` v0.1 for faithfulness to the two source flows.
-2. Decide on the Open Question: extend this consolidation to the other flows known to hold real
-   format facts (`sdd-comics-ai-multimodal`, `sdd-comics-ai-baloons`, `sdd-comics-editor-questions`),
-   or leave this deliberately scoped to the two originally-named sources.
-3. Consider adding back-references from the two source flows to this new consolidated doc (not yet
-   done — mirrors the extraction pattern already used elsewhere this session, e.g.
-   `sdd-comics-editor-questions` → `sdd-comics-ai-script-context`).
+1. Draft the camera/depth Tests/Plan addendum for the shared model/evaluator and downstream viewer
+   rendering; approved Requirements/Specifications are not implementation authorization.
+3. Keep Task 5.4's separately-disclosed lifecycle-safe live-clock follow-up and the older format-test
+   questions independent from this camera/depth addendum.
