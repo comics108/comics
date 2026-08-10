@@ -1,6 +1,6 @@
 # Status: sdd-comics-viewer
 
-## Cross-reference (2026-08-08, disclosed, added by `flows/comics-viewer/sdd-flutter-comics-viewer-dart`)
+## Cross-reference (2026-08-08/10, disclosed, added by `flows/comics-viewer/sdd-flutter-comics-viewer-dart`)
 
 Two sibling flows modified files this flow owns (`libs/comics_viewer/flutter_comics_viewer`) after this
 flow's own status here was last updated (2026-08-05):
@@ -15,6 +15,11 @@ flow's own status here was last updated (2026-08-05):
   `setSoundEnabled`/`setMuted`/`dispose`) — previously no-ops. Also fixed an unrelated regression found
   along the way: this package's `pubspec.yaml` `flutter_comics` dependency was malformed, breaking
   `flutter pub get` outright.
+- The same Dart-viewer flow's v1.1 continuation now makes visual animation, sound, camera sampling,
+  and strip movement share one measured document-space scroll offset; applies shared z-depth camera
+  adjustment once per layer; verifies full v2012/v2026 fixtures; and updates the example to switch
+  between both archives. Package tests are 33/33, example widget tests 3/3, Web build passes, and the
+  macOS dual-fixture integration test passes. Native Android/iOS and Windows WPF code remain unchanged.
 
 Neither sibling flow's own Plan/Specifications attempted to reconcile this flow's broader,
 still-stale Progress/Blockers below (Android/iOS native-app integration, React Native wrapper, Phase 6
@@ -35,7 +40,6 @@ IN_PROGRESS
 ## Blockers
 
 - The iOS Swift Package regression is repaired and verified locally in `flows/sdd-comics-viewer-ios/`; authoritative Flutter iOS acceptance now waits for a separately authorized landing of that revision on the remote `main` branch consumed by SwiftPM.
-- The concurrently edited Flutter package has an independent Dart test compile error at `test/dart_comics_viewer_backend_test.dart:14` (`List<int>` returned where `Uint8List` is declared).
 - One item needs a human with real backend access: SplashActivity in mahabharata-mobile-java-v2026 blocks on a network call to comics.dev.ironwaterstudio.com before reaching any comics/puzzle screen, which isn't reachable from this sandbox — so the sound/language/puzzle behavior changes in 3.1 are verified by code inspection + clean build/boot, not by actually seeing/hearing them run.
 
 ## Progress
@@ -78,7 +82,7 @@ N/A - New SDD flow
 ## Next Actions
 
 1. Review and separately authorize landing the locally verified `sdd-comics-viewer-ios` package revision on its remote `main` branch.
-2. Complete main-plan tasks 4.3.3 and 5.3.3: build/run Flutter and React Native examples on iOS against that landed revision; first resolve the independent current Dart test compile error.
+2. Complete main-plan tasks 4.3.3 and 5.3.3: build/run Flutter and React Native examples on iOS against that landed revision.
 3. Complete Phase 3.2 manual Xcode steps for mahabharata-mobile-swift-v2026 (add SPM dependency, remove stale file references, build/run).
 4. Human verification of mahabharata-mobile-java-v2026 on a device/emulator with real backend access: confirm comics viewing, puzzle viewing, sound toggle, and language switching all still behave as before.
 5. Execute Phase 6.2.2 cross-platform validation once the platform-specific blockers above are cleared.

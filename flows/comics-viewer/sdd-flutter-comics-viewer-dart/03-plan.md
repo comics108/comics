@@ -1,9 +1,9 @@
-# Implementation Plan: sdd-flutter-comics-viewer-dart — sound playback for the Dart `.comics` viewer
+# Implementation Plan: sdd-flutter-comics-viewer-dart — sound, compatibility, camera, and depth
 
-> Version: 1.0
-> Status: DRAFT
-> Last Updated: 2026-08-08
-> Specifications: [02-specifications.md](02-specifications.md) (v0.1, APPROVED)
+> Version: 1.1 (v2012/v2026 camera-depth addendum)
+> Status: v1.0 SOUND BASELINE AND v1.1 ADDENDUM IMPLEMENTED
+> Last Updated: 2026-08-10
+> Specifications: [02-specifications.md](02-specifications.md) (v0.2, APPROVED)
 
 ## Summary
 
@@ -213,6 +213,217 @@ Phase 3 needs both complete first.
 
 ## Approval
 
-- [ ] Reviewed by: Anton Dodonov
-- [ ] Approved on:
-- [ ] Notes:
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-08
+- [x] Notes: v1.0 sound plan approved and implemented; its manual audible sign-off remains deferred.
+
+## v1.1 Addendum: v2012/v2026, Canonical Scroll Coordinate, Camera, and Depth
+
+The shared dependency is already complete: `flutter_comics` owns parsing, normalization, cloning,
+and camera/depth evaluation. This addendum only wires that contract into viewer layout, sound, and
+the example application. It does not add another JSON parser, camera formula, native-platform branch,
+horizontal renderer, or new interaction concept.
+
+### Phase 5: One document-space scroll coordinate
+
+#### Task 5.1: Retain the source document and reset safely on load
+
+- **Description**: Add optional `ComicsDoc? sourceDocument` to `DartComicsDocument` so existing
+  manually-created documents remain source-compatible while backend-created documents expose their
+  shared `cameraPath`. On successful archive replacement, pause autoplay, reset `_position` to zero,
+  rebuild the document with `sourceDocument: comicsDoc`, and report the reset through the existing
+  scroll callback. Do not rebuild or copy camera/depth fields into viewer-specific wrappers.
+- **Files**:
+  - `lib/src/dart_comics_viewer_backend.dart` — Modify
+  - `test/dart_comics_viewer_backend_test.dart` — Modify
+- **Dependencies**: Completed `sdd-flutter-comics` Phase 6.
+- **Verification**: Existing public constructor calls compile; loaded documents retain the exact
+  shared `ComicsDoc`; a second load resets position/playback and replaces the prior source.
+- **Complexity**: Medium
+
+#### Task 5.2: Store measured scroll travel in the backend
+
+- **Description**: Add finite, nonnegative `_documentScrollTravel`, a synchronous no-notify
+  `updateDocumentScrollTravel(double)` for the surface, and
+  `documentScrollOffsetFor(normalizedPosition)`. The conversion clamps normalized input and returns
+  document-space pixels. Layout measurement itself must not trigger sounds or notifications.
+- **Files**:
+  - `lib/src/dart_comics_viewer_backend.dart` — Modify
+  - `test/dart_comics_viewer_backend_test.dart` — Modify
+- **Dependencies**: Task 5.1
+- **Verification**: zero before layout; exact 0/50/100% results for known travel; negative,
+  non-finite, and out-of-range inputs remain finite and clamped.
+- **Complexity**: Low
+
+#### Task 5.3: Make sound gating consume the canonical offset
+
+- **Description**: Replace both `position * document.height` sound coordinates with
+  `documentScrollOffsetFor(position)`. Keep the established one-shot/range semantics and ensure a
+  viewport-travel update alone never evaluates or replays sound.
+- **Files**:
+  - `lib/src/dart_comics_viewer_backend.dart` — Modify
+  - `test/dart_comics_viewer_backend_test.dart` — Modify
+- **Dependencies**: Task 5.2
+- **Verification**: a synthetic sound gate fires at its document offset according to measured
+  travel rather than full document height; resize/travel changes alone produce no action.
+- **Complexity**: Medium
+
+**Phase 5 checkpoint**: backend tests pass with one axis-neutral document-space coordinate; no
+rendering change has landed yet.
+
+### Phase 6: Surface travel and per-layer camera/depth composition
+
+#### Task 6.1: Convert vertical layout to document-space travel
+
+- **Description**: In `LayoutBuilder`, calculate width-fit scale, viewport height in document
+  pixels, and `scrollTravelDoc = max(0, document.height - viewportHeightDoc)`. Store it through Task
+  5.2, use the resulting `documentScrollOffset` for the strip translation and every authored
+  `KeyframeInterpolator` call. Remove the old full-height `time` and device-pixel travel split.
+- **Files**:
+  - `lib/src/dart_comics_viewer_surface.dart` — Modify
+  - `test/dart_comics_viewer_surface_test.dart` — Create
+- **Dependencies**: Phase 5 checkpoint
+- **Verification**: known viewport constraints yield the specified scale/travel/strip offset;
+  content shorter than the viewport stays at offset zero; resize recomputes without accumulation.
+- **Complexity**: Medium
+
+#### Task 6.2: Apply one z-depth camera adjustment per layer
+
+- **Description**: `_DartLayer` receives the source camera path and canonical document offset. After
+  authored translation, call shared `CameraPathEvaluator.parallaxAdjustment` exactly once with the
+  layer's `zDepth`, add that document-space adjustment, then apply existing viewport scaling.
+  Rotation, scale, alpha, tile placement, and global strip translation retain their responsibilities;
+  no whole-scene camera translation or parent-transform reconstruction is added.
+- **Files**:
+  - `lib/src/dart_comics_viewer_surface.dart` — Modify
+  - `test/dart_comics_viewer_surface_test.dart` — Modify
+- **Dependencies**: Task 6.1
+- **Verification**: exact `Positioned.left/top` for `z=0`, `z=1`, and `z=-0.5`; no/one-point path is
+  inert; reference plane is not translated twice; all resulting values remain finite.
+- **Complexity**: Medium
+
+#### Task 6.3: Verify resize and real-format compatibility
+
+- **Description**: Add package-level coverage showing phone/tablet/desktop constraints evaluate the
+  same authored document position and differ only by final scale. Load both supplied real archives
+  through the existing backend: v2012 retains 177 classic layers/2 sounds with null path and zero
+  depth; v2026 retains 519 layers/19 path points/505 nonzero depth values. Large fixtures remain in
+  the example asset directory and are referenced in place, not copied.
+- **Files**:
+  - `test/dart_comics_viewer_backend_test.dart` — Modify
+  - `test/dart_comics_viewer_surface_test.dart` — Modify
+- **Dependencies**: Tasks 6.1-6.2
+- **Verification**: targeted fixture and widget tests pass without a separate v2012 rendering path.
+- **Complexity**: Medium
+
+**Phase 6 checkpoint**: the current vertical Dart surface renders additive v2026 camera/depth and
+keeps v2012 behavior inert. Future horizontal-strip support can reuse the backend evaluator by
+supplying horizontal document travel, but is not enabled here.
+
+### Phase 7: Two-fixture example and one-action switching
+
+#### Task 7.1: Replace the singular sample contract
+
+- **Description**: Introduce `SampleVersion { v2012, v2026 }`, default to v2026, and map each value to
+  its same-named asset. Replace the manifest's nonexistent singular entry with both files. The user
+  has already removed `assets/sample.comics`; do not recreate it or copy either large fixture.
+- **Files**:
+  - `example/lib/main.dart` — Modify
+  - `example/pubspec.yaml` — Modify
+- **Dependencies**: Phase 6 checkpoint
+- **Verification**: `flutter analyze` no longer reports the stale asset entry; v2026 loads by default;
+  both asset paths resolve.
+- **Complexity**: Low
+
+#### Task 7.2: Add the compact sample selector and accurate state text
+
+- **Description**: Add one `SegmentedButton<SampleVersion>` to the existing controls. One selection
+  action pauses playback and loads the chosen archive; backend load resets position. Status and
+  errors name the active file. Preserve test injection through `MyApp.source` and do not add a file
+  picker, preference, or second navigation surface.
+- **Files**:
+  - `example/lib/main.dart` — Modify
+  - `example/test/widget_test.dart` — Modify
+- **Dependencies**: Task 7.1
+- **Verification**: default selection, one-tap switch, filename, pause, reset, and injected-source
+  behavior all have widget coverage.
+- **Complexity**: Medium
+
+#### Task 7.3: Exercise both real archives on macOS
+
+- **Description**: Update the existing integration test to load/render/scroll v2026, switch once,
+  then load/render/scroll v2012. Assert a Dart surface and images are present and no viewer error is
+  reported. This is a runtime smoke test, not pixel-golden validation or subjective sound sign-off.
+- **Files**:
+  - `example/integration_test/plugin_integration_test.dart` — Modify
+- **Dependencies**: Task 7.2
+- **Verification**: real macOS integration test passes for both bundled fixtures.
+- **Complexity**: Medium (large real archives and platform runtime)
+
+### Phase 8: Regression, platform build evidence, and flow handoff
+
+#### Task 8.1: Full automated regression gate
+
+- **Description**: Format touched Dart files; run package and example analyzers/tests. Build Web to
+  compile the shared Dart route used by Web/Linux/macOS without changing native iOS/Android or the
+  Windows WPF backend. On this macOS host, Linux runtime execution is unavailable and must not be
+  represented as performed.
+- **Files**: No production changes expected.
+- **Dependencies**: Phases 5-7
+- **Verification**: `flutter analyze` and `flutter test` in the package; `flutter analyze` and
+  `flutter test` in the example; `flutter build web`; macOS integration result from Task 7.3.
+- **Complexity**: Low
+
+#### Task 8.2: Record implementation and cross-flow ownership
+
+- **Description**: Update this flow's implementation log/status with exact test/build counts and
+  deviations. Add the already-disclosed cross-reference to `sdd-comics-viewer/_status.md`, because
+  backend/surface files are shared ownership. Keep the separate deferred human audible sound check
+  explicit.
+- **Files**:
+  - `04-implementation-log.md` — Modify
+  - `_status.md` — Modify
+  - `../sdd-comics-viewer/_status.md` — Modify
+- **Dependencies**: Task 8.1
+- **Verification**: documentation matches observed commands; no unperformed platform claim.
+- **Complexity**: Low
+
+## v1.1 Dependency Graph
+
+```text
+5.1 -> 5.2 -> 5.3 -> 6.1 -> 6.2 -> 6.3 -> 7.1 -> 7.2 -> 7.3 -> 8.1 -> 8.2
+```
+
+The sequence is deliberate: first establish the coordinate contract without visual changes, then
+apply it to pixels, then expose the two real archives in the example. Each checkpoint leaves the
+package testable before the next responsibility is introduced.
+
+## v1.1 Risks and Mitigations
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Camera applied globally and per layer | Double movement | Surface test asserts `z=0` has zero adjustment and the strip receives scroll only |
+| Viewport resize changes animation/sound semantics | Cross-device drift or replay | One stored document travel; layout update has no notify/sound side effect; resize tests |
+| Backend evaluates sound before first layout | Incorrect early gate | Initial travel is zero; tests cover pre-layout behavior |
+| Large real fixtures make tests slow or memory-heavy | Flaky CI | Keep one copy in example assets, use targeted real-fixture smoke plus small synthetic math tests |
+| Web/Linux behavior diverges from macOS | Platform regression | Same Dart backend/surface, Web build evidence, analyzer/widget tests; do not claim unavailable Linux runtime |
+
+## v1.1 Rollback Strategy
+
+Camera/depth consumption is additive. If surface wiring regresses, revert Phases 5-6 together so
+sound and animation return to their prior shared coordinate; the already-compatible shared parser
+and model remain intact. The example asset/selector change is independent and can be rolled back
+without modifying archive contents. No native platform source or format migration is involved.
+
+## v1.1 Checkpoints
+
+- [x] Phase 5: backend coordinate and sound tests green
+- [x] Phase 6: synthetic camera/depth, resize, and both real-format tests green
+- [x] Phase 7: example widget and macOS dual-fixture integration tests green
+- [x] Phase 8: analyzers, package/example tests, Web build, and flow logs complete
+
+## v1.1 Approval Gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-10
+- [x] Notes: v1.1 implementation authorized by explicit `plan approved`.

@@ -1,9 +1,9 @@
-# Specifications: sdd-flutter-comics-viewer-dart — sound playback for the Dart `.comics` viewer
+# Specifications: sdd-flutter-comics-viewer-dart — sound, v2012 compatibility, camera, and depth
 
-> Version: 0.1
-> Status: DRAFT
-> Last Updated: 2026-08-08
-> Requirements: [01-requirements.md](01-requirements.md) (v0.3)
+> Version: 0.2 (camera/depth and v2012 compatibility addendum)
+> Status: SOUND BASELINE IMPLEMENTED; v0.2 ADDENDUM APPROVED
+> Last Updated: 2026-08-10
+> Requirements: [01-requirements.md](01-requirements.md) (v0.5, APPROVED)
 
 ## Overview
 
@@ -17,6 +17,187 @@ one-shot/range/no-replay-on-scroll-up rules independently derived from the Swift
 Requirements — a third source agreeing with the other two. `SoundGating` is already pure and portable
 (operates only on the shared `List<Anim>`, no `apps/comics-editor`-specific coupling) and moves into
 `libs/flutter_comics`, the same pattern already used for `KeyframeInterpolator`.
+
+## v0.2 Addendum: v2012 Compatibility + Camera Path + Z-Depth
+
+The approved shared-library Plan has now delivered `CameraPath`, `CameraKeyframe`,
+`EditorLayer.zDepth`, and `CameraPathEvaluator`. This viewer addendum consumes those types; it does
+not parse or reimplement their JSON/math.
+
+### Affected Systems
+
+| System | Change |
+|--------|--------|
+| `lib/src/dart_comics_viewer_backend.dart` | Retain the source `ComicsDoc` on `DartComicsDocument`; own the measured document scroll travel; evaluate sounds from the same document-space offset used by rendering; reset position when a new archive loads |
+| `lib/src/dart_comics_viewer_surface.dart` | Convert viewport constraints to document-space travel; apply one shared camera-depth adjustment after authored translation and before viewport scaling |
+| `test/dart_comics_viewer_backend_test.dart` | v2012 defaults, v2026 camera/depth propagation, scroll-coordinate and sound-coordinate tests |
+| `test/dart_comics_viewer_surface_test.dart` | Exact zero/far/near `Positioned` offsets and resize invariance |
+| `example/lib/main.dart` | Replace the stale singular sample path with a two-value sample selector; v2026 default, v2012 selectable in one action |
+| `example/pubspec.yaml` | Bundle `sample_v2012.comics` and `sample_v2026.comics`, no nonexistent `sample.comics` |
+| `example/test/widget_test.dart` | Verify label, one-action switch, reset, and synthetic camera/depth rendering |
+| `example/integration_test/plugin_integration_test.dart` | Real macOS load/render/scroll smoke for both supplied archives |
+
+Native Android/iOS sources and the Windows WPF route are unchanged by this addendum.
+
+### Data and ownership
+
+`RenderedLayer.editorLayer` already points at the shared `EditorLayer`, so `zDepth` needs no viewer
+wrapper field. `DartComicsDocument` gains an optional source-document reference without breaking its
+existing public constructor shape:
+
+```dart
+@immutable
+class DartComicsDocument {
+  const DartComicsDocument({
+    required this.width,
+    required this.height,
+    required this.layers,
+    this.sourceDocument,
+  });
+
+  final double width;
+  final double height;
+  final List<RenderedLayer> layers;
+  final ComicsDoc? sourceDocument; // backend always sets; null is legacy/manual inert fallback
+}
+```
+
+The backend remains the only archive owner. `_rebuild()` passes its already-parsed `_comicsDoc`
+into `sourceDocument`; the surface reads `sourceDocument?.cameraPath`. No second JSON peek is added
+for either camera or depth.
+
+### One canonical document-space scroll coordinate
+
+The normalized public controller position remains `[0,1]`. Layout converts it to the actual visible
+document offset:
+
+```text
+scale = viewportWidthPx / documentWidth
+viewportHeightDoc = viewportHeightPx / scale
+scrollTravelDoc = max(0, documentHeight - viewportHeightDoc)
+documentScrollOffset = normalizedPosition * scrollTravelDoc
+screenStripOffsetY = -documentScrollOffset * scale
+```
+
+`DartComicsViewerBackend` gains these internal/public-for-surface operations:
+
+```dart
+double _documentScrollTravel = 0;
+
+void updateDocumentScrollTravel(double value) {
+  _documentScrollTravel = value.isFinite && value > 0 ? value : 0;
+  // No notify and no sound trigger: layout itself is not a user scroll event.
+}
+
+double documentScrollOffsetFor(double normalizedPosition) =>
+    normalizedPosition.clamp(0.0, 1.0) * _documentScrollTravel;
+```
+
+During `LayoutBuilder`, the surface computes `scrollTravelDoc`, updates the backend synchronously
+without notifying, and then uses `documentScrollOffsetFor(backend.position)`. Subsequent controller
+scroll/autoplay events and `_evaluateSounds` use that same stored conversion. Before the first layout,
+travel is zero; this is preferable to firing sound at a guessed coordinate. A viewport resize updates
+travel but does not itself replay point sounds or enter/leave ranges; the next actual position event
+uses the new coordinate.
+
+This replaces both current `position * document.height` usages. It matches
+`tdd-dot-comics-format`'s raw document-pixel scroll domain and the native viewer's
+`contentOffset / zoomScale` semantics. The API name is axis-neutral so a future horizontal surface
+can supply width travel without introducing different camera math.
+
+### Layer composition
+
+For each rendered layer:
+
+```dart
+final authored = KeyframeInterpolator.translateAt(
+  layer.editorLayer.anims,
+  documentScrollOffset,
+  layer.editorLayer.translate,
+);
+final parallax = CameraPathEvaluator.parallaxAdjustment(
+  document.sourceDocument?.cameraPath,
+  documentScrollOffset,
+  layer.editorLayer.zDepth,
+);
+final effective = authored + parallax;
+
+// Existing rotate/scale/alpha composition remains unchanged.
+Positioned(left: effective.dx * scale, top: effective.dy * scale, ...);
+```
+
+The whole strip still receives only `-documentScrollOffset * scale`. `cameraPath` is never applied
+as an additional strip/global transform: the importer already persisted reference-plane motion in
+layer animations, and adding `C(s)` globally would double it. Parent metadata is likewise not
+resolved here because persisted animations are already absolute; each visual layer receives only
+its own `zDepth` adjustment once.
+
+### v2012 format behavior
+
+The two byte-identical authoritative v2012 fixtures are read through the same
+`ComicsArchiveReader`. Their absent additive fields resolve as:
+
+```text
+scrollType=vertical
+preferredOrientation=portrait
+preferredViewport=720x1600 (metadata default; actual viewer viewport still comes from constraints)
+Anim.basis=scroll
+cameraPath=null
+zDepth=0
+```
+
+Consequently the camera adjustment is exactly zero for all 177 layers. The four visual animation
+types continue through `KeyframeInterpolator`; the two sound entries continue through
+`SoundGating`, including the real negative range start. This is one current reader/surface path,
+not a `if (v2012)` compatibility renderer.
+
+### Example interaction
+
+The example defines `enum SampleVersion { v2012, v2026 }` and a single compact
+`SegmentedButton<SampleVersion>` labeled `v2012`/`v2026`. Selection defaults to v2026. Each segment
+maps directly to its same-named asset; selection loads new bytes with the asset path as
+`revisionKey`, pauses playback, and the backend's `load()` resets position to `0` before notifying.
+Status text always contains the active filename. No file picker or persistent preference is added.
+
+### Error and edge handling
+
+| Case | Result |
+|------|--------|
+| no/empty/one-point camera path | shared evaluator returns zero parallax |
+| invalid depth/path data | shared reader/evaluator normalization; viewer never sees a non-finite adjustment |
+| viewport wider/taller than content | travel clamps to zero; strip, animations, sound, and camera evaluate at zero |
+| resize at nonzero normalized position | recompute the one document offset; no accumulated transform and no resize-triggered sound |
+| source document absent on manually-created `DartComicsDocument` | inert camera fallback, preserving constructor compatibility |
+| switching example while playing | pause, load, reset to zero; old archive sound tracks are disposed by existing load logic |
+| positive/negative/zero depth | shared response applied once; final device-pixel multiplication happens afterward |
+
+### Testing strategy
+
+- Backend unit: the real v2012 archive parses 177 layers/2 sounds with all depths zero and null path;
+  real v2026 parses 519 layers/19 camera points/505 nonzero depths.
+- Coordinate unit: 50% position with a known viewport produces 50% of document scroll travel, not
+  50% of full document height; `_evaluateSounds` receives those same before/after values.
+- Surface widget: a synthetic path plus `z=0`, `z=1`, and `z=-0.5` layers yields exact expected
+  `Positioned.left/top` values after scaling; camera is not applied globally.
+- Resize widget: the same document-space target under phone/tablet/desktop constraints has equal
+  shared camera/parallax values and only final pixel scale differs.
+- Example widget: v2026 is selected initially; one tap switches to v2012, updates label/source, and
+  resets position.
+- macOS integration: each real asset loads, renders at least one image, reaches a nonzero position,
+  and reports no viewer error. Audible subjective sign-off remains the pre-existing deferred sound
+  item, not a new camera blocker.
+
+### Rollout
+
+The viewer change depends on the just-completed shared Phase 6 and must use its local package version
+during implementation. No migration is needed. v2012 behavior is guarded first, then v2026 camera
+rendering is added, then the example switches to the two real fixtures. A failure can be isolated by
+reverting the surface/backend consumption while leaving the additive shared parser/model intact.
+
+The original v0.1 sound sections below are retained as the implementation record. Wherever they
+describe `position * document.height`, this v0.2 addendum supersedes that coordinate with
+`documentScrollOffsetFor(position)` as defined above; camera, visual animation, and sound must share
+that one value.
 
 ## Affected Systems
 
@@ -295,6 +476,7 @@ established "one test at a time" discipline.
 
 ## Approval
 
-- [ ] Reviewed by: Anton Dodonov
-- [ ] Approved on:
-- [ ] Notes:
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-10
+- [x] Notes: v0.1 sound behavior is already implemented. This gate covers only the v0.2
+      compatibility/camera/depth/example addendum.

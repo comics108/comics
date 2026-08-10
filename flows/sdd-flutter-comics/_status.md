@@ -2,20 +2,19 @@
 
 ## Current Phase
 
-PLAN ADDENDUM NOT STARTED — camera path + z-depth Requirements/Specifications are approved. The
-v0.3 implementation remains complete (14/15 tasks; Task 5.5 deferred).
+IMPLEMENTATION COMPLETE — camera path + z-depth Requirements/Specifications and Plan v1.1 are
+approved; Phase 6 is implemented and verified. The v0.3 implementation remains complete (14/15
+tasks; Task 5.5 deferred).
 
 ## Phase Status
 
-Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; camera/depth Plan not drafted
+Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; Plan v1.1 APPROVED; Phase 6 IMPLEMENTED
 
 ## Last Updated
 
-2026-08-09 by Codex
+2026-08-10 by Codex
 
 ## Blockers
-
-- Next gate: draft and approve the v0.4 Plan addendum before implementing camera/depth support.
 
 - The v0.3 baseline has no blocker. Task 5.5 (manual verification on a real device/simulator)
   remains deferred, per `04-implementation-log.md`; automated coverage confirms the underlying fix.
@@ -34,6 +33,14 @@ Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; camera/depth Plan not 
 
 - [x] v0.4 camera/z-depth Requirements addendum approved (2026-08-09)
 - [x] v0.4 camera/z-depth Specifications addendum approved (2026-08-09)
+- [x] v1.1 camera/z-depth Plan addendum drafted (2026-08-09)
+- [x] v1.1 fixture verification corrected to treat `sample_v2012.comics` as the full mandatory
+      classic-format compatibility case per `tdd-dot-comics-format`, not merely an inert camera case
+      (2026-08-09)
+- [x] v1.1 camera/z-depth Plan addendum approved (2026-08-10)
+- [x] Phase 6 camera/depth model, reader, evaluator, editor round-trip, and fixture verification
+      implemented (2026-08-10): `libs/flutter_comics` 106/106; `apps/comics-editor` 396/396 with 3
+      expected skips; both analyzers clean.
 
 - [x] Codebase analysis done (2026-08-08) — read `apps/comics-editor/lib/src/ui/models.dart` +
       `lib/src/bridge/models_mapping.dart`, `libs/comics_viewer/flutter_comics_viewer/lib/src/
@@ -134,8 +141,8 @@ flow's own `_status.md` for the disclosed note.
 
 ## Next Actions
 
-1. Update `03-plan.md` for the shared camera/depth model, parser, editor bridge,
-   evaluator, and tests; viewer rendering remains downstream.
+1. Downstream `flows/comics-viewer/sdd-flutter-comics-viewer-dart` v0.2 Specifications await
+   approval; viewer rendering remains intentionally unimplemented until that gate passes.
 2. Task 5.5 from the v0.3 baseline: manual verification on a real device/simulator (open a real dataset `.comics` file
    with `solidColor`/`mask` set in the macOS-targeted `flutter_comics_viewer` example app, confirm
    those fields survive parsing) — the only undone item.

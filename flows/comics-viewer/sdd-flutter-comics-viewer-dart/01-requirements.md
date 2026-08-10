@@ -1,15 +1,19 @@
-# Requirements: sdd-flutter-comics-viewer-dart — cross-platform Dart `.comics` viewer (macOS-first)
+# Requirements: sdd-flutter-comics-viewer-dart — cross-platform Dart `.comics` viewer
 
-> Version: 0.3 (2026-08-08: **major correction, supersedes v0.2's already-approved AC #2/#3** — direct
+> Version: 0.5 (2026-08-09: corrected v2012 format compatibility + camera-path/z-depth rendering +
+> dual real example fixtures; v0.3 sound baseline remains implemented)
+>
+> Historical v0.3 correction: **superseded v0.2's already-approved AC #2/#3** — direct
 > evidence from the CURRENT, actively-shipped `libs/comics_viewer/comics-viewer-ios` shows `.comics`
 > viewing has always been fixed-zoom-to-content-width, with pinch-zoom/tile-LOD real only for a
 > different, unrelated content type (puzzle). Anton confirmed the redirect: match v2026 (the current
 > native reference libraries), not v2012; don't touch native code. Tile-LOD and pinch-zoom gestures are
 > dropped from scope — they were never a real `.comics` feature on any reference platform, current or
 > historical. Popup-image handling is also found unreferenced in either reference app's interaction
-> code and dropped from scope on the same evidence standard. Real remaining scope: sound playback.)
-> Status: DRAFT
-> Last Updated: 2026-08-08
+> code and dropped from scope on the same evidence standard. The real remaining v0.3 scope was sound
+> playback.
+> Status: APPROVED — v0.5 addendum
+> Last Updated: 2026-08-10
 
 ## Origin
 
@@ -19,17 +23,134 @@ comics-viewer-android для просмотра и на остальных оп�
 поскольку важно сейчас на дарт сделать поддержку на macos. Так же следующий источник истины —
 `legacy/mahabharata-mobile-java-v2012`."
 
-**Correction/redirect (2026-08-08, after v0.2's tile-LOD/gesture premise was found to be a misread —
+**Historical correction/redirect (2026-08-08, after v0.2's tile-LOD/gesture premise was found to be a misread —
 see "Codebase Analysis" below)**: Anton, in response: "flutter_comics_viewer на dart будет работать
 именно с v2026, обратная совместимость dart части с v2012 не нужна. Нативную часть не трогай в рамках
-этого скоупа." — the Dart viewer targets v2026 (current) behavior specifically; no need for the Dart
-side to preserve v2012-specific behavior; don't touch the native `comics-viewer-ios`/`comics-viewer-android`
-code within this flow's scope (read-only reference only). This **reinforces** rather than contradicts
+этого скоупа." — this remains the reason not to port obsolete v2012-only UI/platform quirks and not
+to modify native `comics-viewer-ios`/`comics-viewer-android` code within this flow's scope. This
+**reinforces** rather than contradicts
 the tile-LOD/gesture finding: the current v2026 `comics-viewer-ios` has the byte-identical
 fixed-zoom code as the 2012 original, so "match v2026" and "match 2012" agree on this specific point.
 `legacy/mahabharata-mobile-swift-v2012`/`-java-v2012` remain useful as historical/supporting evidence
-(e.g. the sound-gating logic below, confirmed identical in both eras) but are no longer the literal
-compatibility target.
+(e.g. the sound-gating logic below, confirmed identical in both eras).
+
+**Correction (2026-08-09, latest and authoritative for file compatibility)**: Anton clarified that
+`sample_v2012.comics` itself uses the v2012-compatible `.comics` format and directed this flow to
+`tdd-dot-comics-format`. That TDD's approved mandate is explicit compatibility across legacy v2012,
+v2.8, and modern v2026 readers: v2026 is an additive extension of the classic format, not a separate
+replacement format. Therefore the earlier “Dart backward compatibility is not needed” statement
+cannot be applied to file parsing/rendering. The Dart viewer **must read and render v2012-format
+archives**; it still need not reproduce unrelated superseded v2012 application UI quirks.
+
+**v0.5 continuation (2026-08-09)**: Anton asked to continue this flow together with
+`sdd-flutter-comics`, finish z-depth and camera position, and replaced the example's single archive
+with two explicit fixtures: `sample_v2012.comics` and `sample_v2026.comics`.
+
+## Addendum (v0.5): v2012 compatibility, camera position, z-depth, and two example archives
+
+### Verified current state
+
+- `sample_v2012.comics`: byte-identical to the authoritative fixture still stored at
+  `samples/sample_v2012.comics` (SHA-256
+  `b753bdbbd2c2a86f56120ca9ea0340a6cb2f37ddad34fde4c66cafcb380737b3`). Its root has exactly the
+  classic `width`/`height`/`layers`/`sounds` shape: 1080×12000, 177 layers, 2 sounds, four visual
+  animation types on layers, and `SoundAnim` only under sounds. It has none of the additive v2026
+  camera/depth/viewport/orientation fields. It is the required real v2012-format compatibility
+  fixture, not merely an inert camera test.
+- `sample_v2026.comics`: 720×41131, 519 layers, preferred viewport 720×1600, 19 strictly increasing
+  camera points, and 505 layers with nonzero depth spanning both near (`-1 < z < 0`) and far
+  (`z > 0`) planes. It is the real camera/parallax fixture, not synthetic demo data.
+- The current Dart surface computes animation time as `normalizedPosition × document.height`, but
+  translates the strip by `normalizedPosition × (contentExtent - viewportExtent)`. Those are
+  different document-space coordinates. Camera sampling must use the actual document-space scroll
+  offset represented by the viewport; otherwise camera points, authored scroll animations, and the
+  visible position drift apart as viewport height changes.
+
+### User Stories
+
+**As** a reader of a v2026 comic, **I want** camera movement and per-layer depth to be visible while
+scrolling, **so that** the authored 2.5D composition is rendered rather than silently flattened.
+
+**As** a reader of a v2012-format comic, **I want** the same archive to open through the current
+shared reader and render its classic layers, animations, and sounds, **so that** v2026 extensions do
+not split `.comics` into incompatible formats.
+
+**As** a package integrator, **I want** camera and animation evaluation to share the actual
+document-space viewport offset, **so that** phone, tablet, resized desktop window, and Web produce
+the same authored result at the same visible document position.
+
+**As** a developer running the example, **I want** one-action switching between the real v2012 and
+v2026 archives, **so that** compatibility and the new effect can be compared without replacing
+assets or editing code.
+
+### v0.5 rendering contract
+
+- The Dart surface consumes `ComicsDoc.cameraPath`, `EditorLayer.zDepth`, and
+  `CameraPathEvaluator` from `libs/flutter_comics`; it must not parse these fields or duplicate the
+  response formula locally.
+- For a vertical strip, `documentScrollOffset = normalizedPosition × max(0,
+  documentHeight - viewportHeightInDocumentPixels)`. The equivalent width/travel calculation is
+  used when a future horizontal Dart surface is enabled. This same document-space value drives
+  scroll-basis visual animations, sound gates, and camera sampling.
+- Each layer is evaluated in this order: authored scroll/time transforms → its own single
+  `parallaxAdjustment(cameraPath, documentScrollOffset, zDepth)` → viewport scaling/painting.
+- `cameraPath` is metadata reconstructing the already-authored reference-plane movement. It must
+  **not** translate the whole scene a second time. `zDepth == 0` therefore remains the reference
+  plane with zero additional adjustment; positive depth moves more slowly and valid negative depth
+  moves more quickly relative to that plane.
+- Camera/depth math is document-space and platform-independent. Re-layout or orientation change
+  recomputes the viewport extent and document scroll offset without accumulating transforms or
+  producing `NaN`/infinity.
+- The example uses only the two user-supplied asset names. A compact selector switches archives in
+  one action; v2026 is the default because it exercises the new feature, while v2012 remains directly
+  selectable as the regression case. This is a test harness control, not new viewer chrome/API.
+- The v2012 archive is parsed by the same `ComicsArchiveReader` and rendered by the same surface, not
+  by a version-specific fallback parser. Missing additive fields resolve to the approved classic
+  defaults: vertical scroll, portrait preference, 720×1600 preferred viewport metadata, scroll-basis
+  animations, null/inert camera path, and `zDepth=0`. Classic cubic ease-out, the separation between
+  layer visual anims and sound anims, and real negative sound starts remain supported.
+
+### Additional Must-Have Acceptance Criteria
+
+7. **Given** the byte-identical real `sample_v2012.comics` fixture, **when** it is loaded through the
+   current shared reader, **then** its 177 layers, 2 sounds, four layer visual animation types, and
+   sound animations parse without a version-specific parser or missing-field error.
+8. **Given** `sample_v2026.comics`, **when** it is loaded, **then** all 19 camera points and all valid
+   near/far layer depths reach the renderer through the shared model, with no viewer-local JSON
+   parser or duplicate formula.
+9. **Given** a viewport and normalized position, **when** the surface evaluates a frame, **then**
+   scroll animations, sounds, and camera sampling receive the actual document-space scroll offset
+   derived from scroll travel, not `position × fullDocumentExtent`.
+10. **Given** a depth-zero, positive-depth, and negative-depth layer at the same camera position,
+    **when** they render, **then** the zero layer gets no additional offset, the positive layer uses
+    the shared slower response, and the negative layer uses the shared faster response, each exactly
+    once before viewport scaling.
+11. **Given** any non-empty camera path, **when** the Dart surface renders it, **then** it does not
+    apply `C(s)` as a second global scene pan; only the per-layer shared adjustment is added.
+12. **Given** a phone-sized, tablet-sized, or resized desktop/Web viewport showing the same
+    document-space position, **when** the frame is evaluated, **then** the document-space camera and
+    depth results agree; only final device-pixel scaling differs.
+13. **Given** the example app, **when** the user switches its sample selector once, **then** the
+    viewer loads the other named archive, resets to its start position, and labels which version is
+    active. Automated widget/runtime tests exercise both archives.
+14. **Given** every v2026-only root/layer/anim field is absent in `sample_v2012.comics`, **when** the
+    current viewer evaluates it, **then** the approved `tdd-dot-comics-format` defaults apply and no
+    camera/depth-specific transform is introduced.
+15. **Given** representative scroll coordinates from the real v2012 fixture, including its negative
+    sound range start, **when** transforms and sound gates are evaluated, **then** cubic visual
+    interpolation and sound behavior match the classic-format semantics documented by
+    `tdd-dot-comics-format` A2/A4-A6 within floating-point tolerance.
+
+### v0.5 scope boundary
+
+- Included: v2012-format read/render compatibility; Dart backend/surface for platforms already
+  routed through it (macOS, Linux, Web); shared evaluator consumption; correct viewport-to-document
+  coordinate conversion; both example assets; a minimal example selector; and automated
+  parsing/rendering/math/regression tests.
+- Excluded: editing camera/depth, changing the schema or importer, modifying native Android/iOS
+  viewers, and changing the Windows WPF routing. Horizontal-scroll rendering remains future work;
+  this addendum must keep its coordinate conversion axis-neutral rather than hard-code a second
+  incompatible formula.
 
 ## Codebase Analysis (done before drafting; revised 2026-08-08 after the zoom/popup correction)
 
@@ -233,12 +354,11 @@ guess.
 
 ## Constraints
 
-- **Source of truth, corrected 2026-08-08 per Anton's explicit redirect**: the CURRENT, actively-shipped
-  `libs/comics_viewer/comics-viewer-ios` (primary, macOS priority) and `libs/comics_viewer/
-  comics-viewer-android` (secondary) — i.e. v2026 behavior — not `legacy/mahabharata-mobile-*-v2012`.
-  The legacy v2012 sources remain useful supporting/historical evidence (and, for every point checked
-  so far, agree exactly with the current libraries), but are no longer the compatibility target in
-  their own right, and no v2012-specific behavior needs preserving if it differs from v2026.
+- **Source of truth, corrected again 2026-08-09**: `tdd-dot-comics-format` defines the shared classic
+  file lineage and its additive v2026 extensions. The CURRENT `comics-viewer-ios`/`-android` remains
+  the primary behavioral reference for current UI/runtime behavior, while the real
+  `sample_v2012.comics` plus TDD cases A1-A6 are mandatory file/animation/sound compatibility
+  references. This does not require porting unrelated obsolete v2012 application UI behavior.
 - **Native code is read-only reference, not editable**: per Anton's explicit instruction, this flow
   must not modify `libs/comics_viewer/comics-viewer-ios`/`comics-viewer-android` — only read them to
   ground the Dart port's behavior.
@@ -301,8 +421,8 @@ guess.
 
 ## Approval
 
-- [ ] Reviewed by: Anton Dodonov
-- [ ] Approved on:
-- [ ] Notes: v0.1's premise was approved, then v0.2 revised for the resolved dependency; **this v0.3
-      is a substantive correction** (removes 2 of the original Must-Have criteria on new evidence) and
-      needs fresh approval, not an extension of the earlier approval.
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-10
+- [x] Notes: The sound baseline described by v0.3 is already implemented. This gate is specifically
+      for v0.5's corrected v2012-format compatibility plus camera/depth rendering, coordinate
+      correction, and dual-example scope above.

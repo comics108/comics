@@ -23,6 +23,11 @@
 | 4.4 Backward-compat re-verification | Done | 403/403 (+3 skipped) in `apps/comics-editor` |
 | 5.1-5.4 flutter_comics_viewer rewrite | Done | 15/15 passing; real schema fields confirmed no longer dropped |
 | 5.5 Manual verification | Deferred | Needs a real device/simulator session -- automated coverage (Task 5.4's new tests) already confirms solidColor/mask survive parsing end-to-end |
+| 6.1 Typed camera/depth model | Done | Deep-cloning `CameraPath`; inert `zDepth=0` default |
+| 6.2 Parse and normalize camera/depth | Done | Canonical last-point-wins path; invalid depth normalizes to zero; both real fixtures covered |
+| 6.3 Pure camera evaluator | Done | Cubic ease-out, endpoint holds, `1/(1+z)` response, finite guards |
+| 6.4 Editor bridge preservation | Done | Canonical read/clone/merge/save without dropping unknown raw keys |
+| 6.5 Cross-package regression gate | Done | Shared 106/106; editor 396/396 + 3 expected skips; analyzers clean |
 
 ## Session Log
 
@@ -160,6 +165,40 @@ task: plain filesystem relocation (no git commands — Anton does git by hand) a
 content (read the source file's exact bytes, write them at the destination, never retyped) —
 confirmed via `diff`/`cp` after each move, not just assumed.
 
+### Session 2026-08-10 - Codex
+
+**Started at**: v1.1 Phase 6 after explicit Plan approval.
+
+#### Completed (Phase 6)
+
+- Task 6.1: added `CameraKeyframe`, `CameraPath`, `ComicsDoc.cameraPath`, and
+  `EditorLayer.zDepth`; clone operations retain depth and deep-copy the camera point list.
+- Task 6.2: extended `ComicsArchiveReader` with finite-value validation, integer-position
+  normalization, increasing-order canonicalization, and last-point-wins duplicate handling.
+  Invalid or non-finite depth and every `zDepth <= -1` normalize to the inert value `0`.
+- Task 6.3: added and publicly exported `CameraPathEvaluator`. Sampling holds endpoints and uses the
+  repository's cubic ease-out convention; depth response is `1 / (1 + z)`; parallax is returned in
+  document coordinates with finite-output guards and is inert for paths shorter than two points.
+- Task 6.4: extended the editor JSON bridge to read, clone, and merge camera/depth data canonically.
+  Empty paths and zero/invalid depth omit the additive keys while unrelated raw JSON remains intact.
+- Task 6.5: recorded the downstream contract in the viewer v0.2 Specifications. No viewer painting
+  code was changed before that separate flow's Specifications approval.
+
+#### Real-fixture evidence
+
+- `sample_v2012.comics` is byte-identical to `samples/sample_v2012.comics` (SHA-256
+  `b753bdbbd2c2a86f56120ca9ea0340a6cb2f37ddad34fde4c66cafcb380737b3`), parses as the full classic
+  1080×12000 document with 177 layers and 2 sounds, and receives inert additive defaults.
+- `sample_v2026.comics` parses as 720×41131 with 519 layers, 19 canonical camera points, and 505
+  nonzero-depth layers spanning both near and far planes.
+
+#### Verification (Phase 6)
+
+- `libs/flutter_comics`: `flutter analyze` clean; 106/106 tests pass.
+- `apps/comics-editor`: `flutter analyze` clean; 396/396 tests pass, with 3 expected skips.
+- New coverage includes model clone independence, malformed input normalization, evaluator endpoints
+  and depth cases, real v2012/v2026 fixtures, and editor read/clone/save preservation.
+
 ---
 
 ## Deviations Summary
@@ -186,8 +225,11 @@ confirmed via `diff`/`cp` after each move, not just assumed.
 
 - [x] All tasks completed or explicitly deferred (14/15 done; Task 5.5 deferred, needs real
       device/simulator access)
-- [x] Tests passing (`libs/flutter_comics` 87/87, `apps/comics-editor` 403/403 +3 skipped,
-      `flutter_comics_viewer` 15/15 — all `flutter analyze` clean)
+- [x] Phase 6 tests passing (`libs/flutter_comics` 106/106, `apps/comics-editor` 396/396 +3 expected
+      skips — both `flutter analyze` clean). The downstream viewer's separate analysis currently
+      reports its known stale `assets/sample.comics` manifest entry after Anton replaced the asset;
+      its 27/27 package tests still pass, and its gated v0.2 implementation owns the two-fixture
+      update.
 - [x] No regressions (every pre-existing test in all three packages still passes; the one
       unrelated pre-existing failure found, `app_version_test.dart`, was a stale version-fallback
       constant, fixed same session)

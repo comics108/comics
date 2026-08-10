@@ -1,18 +1,19 @@
 # Implementation Plan: sdd-flutter-comics — shared `.comics` format library
 
-> Version: 1.0
-> Status: APPROVED
-> Last Updated: 2026-08-08
-> Specifications: [02-specifications.md](02-specifications.md) (v0.3, APPROVED)
+> Version: 1.1 (camera-path/z-depth addendum)
+> Status: BASELINE AND v1.1 ADDENDUM APPROVED AND IMPLEMENTED
+> Last Updated: 2026-08-10
+> Specifications: [02-specifications.md](02-specifications.md) (v0.4, APPROVED)
 
 ## Summary
 
 Relocates the `.comics`/`.puzzle` data model, the keyframe interpolator, and the portable Lottie
 parsing/import/export code from `apps/comics-editor` into a new standalone package
 `libs/flutter_comics`, then rewrites `flutter_comics_viewer`'s Dart backend to consume it instead of
-its own duplicate model. Five phases, sequenced so each is independently verifiable (full test suite
-green) before the next starts — matches this repo's "one test at a time" discipline and
-Specifications' own Migration/Rollout section.
+its own duplicate model. The implemented v1.0 baseline has five phases. The v1.1 addendum adds a
+sixth, independently gated phase for the approved camera/depth contract. Each phase is independently
+verifiable (full test suite green) before the next starts — matching this repo's "one test at a
+time" discipline and Specifications' own Migration/Rollout section.
 
 **Two standing execution constraints, from Anton directly this session, apply to every "Move" task
 below**: files are relocated via a plain local filesystem operation (read the existing file's exact
@@ -372,6 +373,90 @@ Lottie files specifically (the viewer doesn't consume Lottie import/export today
 | `libs/comics_viewer/flutter_comics_viewer/lib/src/dart_comics_viewer_backend.dart`, `dart_comics_viewer_surface.dart` | Modify (rewrite internals, not moved) | Delete duplicate model, consume shared model + reader + interpolator |
 | `libs/comics_viewer/flutter_comics_viewer/test/dart_comics_viewer_backend_test.dart` | Modify (rewrite in place, not moved) | Asserts against the full model; extended for previously-dropped fields |
 
+## v1.1 Addendum Task Breakdown
+
+### Phase 6: Camera-path and z-depth shared contract (v1.1 addendum)
+
+This phase is additive to the completed v1.0 work. It implements only the already-approved v0.4
+Requirements/Specifications; applying the result to pixels remains the downstream viewer flow's
+responsibility.
+
+#### Task 6.1: Add the typed camera/depth model and clone behavior
+
+- **Description**: Add `CameraKeyframe`, `CameraPath`, `ComicsDoc.cameraPath`, and
+  `EditorLayer.zDepth` exactly as specified. Extend clone operations so a document clone owns a
+  distinct point list and every layer retains its normalized depth.
+- **Files**:
+  - `libs/flutter_comics/lib/src/models.dart` — Modify
+  - `libs/flutter_comics/test/models_test.dart` — Modify
+- **Dependencies**: Completed v1.0 model extraction.
+- **Verification**: defaults are inert; deep-clone mutation cannot affect the source; positive and
+  valid negative depth survive cloning.
+- **Complexity**: Low
+
+#### Task 6.2: Parse and normalize `cameraPath`/`zDepth`
+
+- **Description**: Extend the one portable reader. Drop malformed camera points, stable-sort by
+  integer `position`, collapse duplicates last-one-wins, and normalize invalid/non-finite or
+  `<= -1` depth to `0`. Do not add a second parser in the viewer.
+- **Files**:
+  - `libs/flutter_comics/lib/src/comics_reader.dart` — Modify
+  - `libs/flutter_comics/test/comics_reader_test.dart` — Modify
+- **Dependencies**: Task 6.1
+- **Verification**: synthetic absent/zero/valid/malformed cases; direct contract read of the two
+  repository fixtures at `libs/comics_viewer/flutter_comics_viewer/example/assets/` proves
+  `sample_v2012.comics` is byte-identical to the authoritative `samples/` fixture and its complete
+  classic root/layer/image/animation/sound shape parses with all additive defaults, while
+  `sample_v2026.comics` yields 19 canonical camera points plus its non-uniform depths. Neither large
+  archive is copied into another package.
+- **Complexity**: Medium
+
+#### Task 6.3: Implement and export the pure camera evaluator
+
+- **Description**: Add `CameraPathEvaluator.sample`, `responseForDepth`, and
+  `parallaxAdjustment`. Use the existing cubic-ease-out convention, endpoint holds, finite-output
+  guards, and the exact `1 / (1 + z)` response. This code returns document-space values only: no
+  widgets, viewport/device math, global scene translation, or platform branching.
+- **Files**:
+  - `libs/flutter_comics/lib/src/camera_path.dart` — Create
+  - `libs/flutter_comics/lib/flutter_comics.dart` — Modify
+  - `libs/flutter_comics/test/camera_path_test.dart` — Create
+- **Dependencies**: Tasks 6.1-6.2
+- **Verification**: exact endpoints, cubic midpoint, before/after holds, `z=0`, `z=1`, `z=-0.5`,
+  invalid depth, path shorter than two points, and non-finite-output protection.
+- **Complexity**: Medium
+
+#### Task 6.4: Preserve camera/depth through the editor bridge
+
+- **Description**: Extend only the existing raw-JSON mapping/merge path. Read normalized values,
+  write canonical increasing camera points, preserve nonzero depths, and keep all unknown raw keys.
+  Do not redesign the native core, ZIP I/O, or editor UI.
+- **Files**:
+  - `apps/comics-editor/lib/src/bridge/models_mapping.dart` — Modify
+  - `apps/comics-editor/test/models_mapping_test.dart` — Modify
+- **Dependencies**: Tasks 6.1-6.2
+- **Verification**: open→clone/undo-shaped clone→merge/save round-trip preserves the path and every
+  nonzero depth while legacy input remains behaviorally inert.
+- **Complexity**: Medium
+
+#### Task 6.5: Cross-package regression gate and handoff
+
+- **Description**: Run shared-library and editor suites, analyzer, and formatter. Record the exact
+  public evaluator contract for the downstream Dart viewer Plan; do not implement viewer painting
+  under this task.
+- **Files**:
+  - `flows/sdd-flutter-comics/04-implementation-log.md` — Modify during implementation
+  - `flows/sdd-flutter-comics/_status.md` — Modify during implementation
+- **Dependencies**: Tasks 6.1-6.4
+- **Verification**: `flutter test` and `flutter analyze` in `libs/flutter_comics`; affected editor
+  tests and full editor regression suite green; `dart format --output=none --set-exit-if-changed`
+  for touched Dart files.
+- **Complexity**: Low
+
+**Phase 6 checkpoint**: the shared package can parse the full v2012-compatible fixture and parse,
+clone, sample, and evaluate the v2026 camera/depth fixture; it still owns no rendering or viewport
+policy.
+
 ## Risk Assessment
 
 | Risk | Likelihood | Impact | Mitigation |
@@ -400,6 +485,8 @@ After each phase, verify:
 - [ ] Phase 4: `libs/flutter_comics`'s full suite green (including the moved round-trip test);
       `apps/comics-editor`'s `dataset_backward_compat_test.dart`/`models_mapping_test.dart` still pass
 - [ ] Phase 5: `flutter_comics_viewer`'s full suite green; manual verification done
+- [x] Phase 6: camera/depth model, parser, evaluator, and editor round-trip tests green; both new
+      example archives parsed according to their contracts
 
 ## Open Implementation Questions
 
@@ -417,4 +504,11 @@ After each phase, verify:
 
 - [x] Reviewed by: Anton Dodonov
 - [x] Approved on: 2026-08-08
-- [x] Notes: Approved as drafted. Implementation starts at Task 1.1.
+- [x] Notes: v1.0 approved as drafted and implemented through Phase 5.
+
+### v1.1 camera/depth addendum gate
+
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-10
+- [x] Notes: Implements the already-approved Requirements/Specifications v0.4. Phase 6 completed
+      after explicit approval; viewer painting remains gated by its own v0.2 Specifications.

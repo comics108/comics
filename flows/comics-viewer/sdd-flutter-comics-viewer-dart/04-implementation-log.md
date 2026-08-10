@@ -17,6 +17,16 @@
 | 3.3 Extend `dart_comics_viewer_backend_test.dart` | Done | 4 new cases; added `@visibleForTesting soundTracksForTesting` getter (not in original Plan — the only way to observe sound-wiring state from outside the class) |
 | 4.1 Manual macOS verification | Runtime verified; human audio sign-off pending | Real example/build/integration run completed 2026-08-09; rendered real tiles and exercised a real MP3 range without platform errors. Audible perception still requires a human listener. |
 | 4.2 Cross-reference `sdd-comics-viewer`'s `_status.md` | Done | Also incidentally resolved that flow's own stale compile-error Blocker |
+| 5.1 Source document + load reset | Done | Optional public compatibility field; successful replacement pauses and resets to zero |
+| 5.2 Canonical document travel | Done | Finite/clamped backend conversion; layout updates are notification-free |
+| 5.3 Sound uses canonical offset | Done | Pre-layout and resize travel changes do not trigger sound |
+| 6.1 Surface document travel | Done | Width-fit viewport converted to document pixels; one offset drives strip and animations |
+| 6.2 Camera/depth composition | Done | Shared evaluator applied once per layer after authored translation |
+| 6.3 Compatibility/resize tests | Done | Real v2012/v2026 plus exact z=0/1/-0.5 and scale invariance |
+| 7.1-7.2 Dual-fixture example | Done | v2026 default; one-action v2012 switch; accurate filenames/reset |
+| 7.3 macOS integration | Done | Both large real archives load, render, and scroll |
+| 8.1 Regression/platform evidence | Done | Package 33/33; example 3/3; analyzers clean; Web build and macOS integration pass |
+| 8.2 Flow handoff | Done | Status/log and owning `sdd-comics-viewer` cross-reference updated |
 
 ## Session Log
 
@@ -234,6 +244,63 @@ clean (393/393 confirmed earlier in session, unaffected by Phase 2-4's viewer-on
   scroll gating, mute state, and platform call are now exercised; only human auditory perception is
   outside automated verification.
 
+### Session 2026-08-10 — Codex
+
+**Started at**: v1.1 Phase 5 after explicit Plan approval.
+
+#### Completed (Phases 5-6)
+
+- `DartComicsDocument` now retains its shared `ComicsDoc` without duplicating camera/depth fields.
+  Successful replacement pauses autoplay, resets normalized position and measured travel, and emits
+  the existing scroll callback at zero.
+- Backend owns one finite, axis-neutral document travel value. Surface layout converts its width-fit
+  viewport height back into document pixels; `documentScrollOffsetFor(position)` now drives authored
+  animations, sound gates, camera sampling, and strip movement.
+- The surface applies shared `CameraPathEvaluator.parallaxAdjustment` once per layer after authored
+  translation and before final viewport scale. It never applies camera movement globally, so the
+  reference plane does not move twice.
+- Added exact surface tests for `z=0`, `z=1`, and `z=-0.5`, inert paths/short content, strip offset,
+  and equal camera sampling under proportional phone/tablet/desktop-style resize.
+- Added backend tests against both real example archives: v2012 retains 177 source layers, 2 sounds,
+  null camera, and zero depth; v2026 retains 519 source layers, 19 camera points, and 505 nonzero
+  depth layers.
+
+#### Completed (Phases 7-8)
+
+- Example now bundles exactly `sample_v2012.comics` and `sample_v2026.comics`, defaults to v2026,
+  and exposes a compact `SegmentedButton` switch. One action pauses the current source, loads the
+  requested archive, and the backend reset returns position to zero. Status/error text names the
+  active archive.
+- Preserved injected-source widget testing and disabled sample switching until the viewer is ready,
+  avoiding a controller command before backend attachment.
+- Updated macOS integration to load/render/scroll v2026, switch, then load/render/scroll v2012.
+  Real fixture sounds are muted and asynchronous disposal is drained before teardown so
+  `audioplayers` leaves no scheduler callback behind.
+
+#### Implementation discoveries/deviations
+
+- The package's local `flutter_comics` override existed only as malformed commented YAML, so tests
+  initially resolved hosted `0.1.1`, which lacks the approved camera/depth API. Restored the proper
+  `dependency_overrides.flutter_comics.path` in both the package and example while retaining the
+  hosted dependency constraint for external consumers.
+- The first dual-fixture macOS integration run rendered both archives successfully but failed during
+  test teardown because a real sound left `audioplayers`' frame-position updater active. The test now
+  mutes and drains async disposal explicitly; the rerun passes. This does not change runtime sound
+  behavior.
+- Xcode continues to emit the pre-existing non-fatal generated `.swiftpm/xcode` folder-reference
+  warning; application build and integration execution both succeed.
+
+#### Verification
+
+- `flutter_comics_viewer`: `flutter analyze` clean; 33/33 tests pass.
+- Example: `flutter analyze` clean; 3/3 widget tests pass.
+- `flutter build web`: passed, including Wasm dry run.
+- `flutter test integration_test/plugin_integration_test.dart -d macos`: 1/1 passed with both real
+  archives.
+- Native Android/iOS and Windows WPF source were not modified. Linux runtime was not available on
+  this macOS host; its shared Dart route is covered by analyzer/widget tests and the Web compile, but
+  no Linux runtime claim is made.
+
 ## Deviations Summary
 
 | Planned | Actual | Reason |
@@ -244,6 +311,8 @@ clean (393/393 confirmed earlier in session, unaffected by Phase 2-4's viewer-on
 | Task 3.2 not scoped to add any new constructor parameter | `DartComicsViewerBackend` gained `soundCallTimeout` (default 5s) | Direct consequence of the Task 2.3 finding — Task 3.3's tests need the same short-timeout escape hatch one layer up, or they'd hang the same way |
 | Task 3.3's "assert against `SoundPlaybackTrack`... via a lightweight fake/spy" (Plan's own Open Implementation Question) | Used a real `@visibleForTesting` getter (`soundTracksForTesting`) instead of a fake/spy | Simpler and more honest than a fake — asserts the real object's real state, not a stand-in's recorded calls; resolves that Plan's own flagged open question with the simpler of the two options it anticipated |
 | Task 4.1 originally assumed the example could simply open a real file | The example had to become a real harness, and two runtime defects needed fixes | The previous boilerplate could not render content; only a native macOS run exposed the build-phase notification and Darwin bytes-source failures. |
+| v1.1 assumed the documented local `flutter_comics` override was active | It was commented and malformed; restored valid package/example overrides | Hosted 0.1.1 cannot compile the approved camera/depth API; hosted dependency constraints remain unchanged for consumers |
+| Dual-fixture integration ended immediately after the second scroll | Test now mutes and drains async disposal before teardown | Real audio left a frame-position scheduler callback active after the widget tree was removed; runtime behavior is unchanged |
 
 ## Learnings
 
@@ -275,7 +344,7 @@ clean (393/393 confirmed earlier in session, unaffected by Phase 2-4's viewer-on
 
 - [x] All implementation and executable macOS verification work completed; only human audible
       perception remains explicitly deferred within Task 4.1
-- [x] Tests passing (`flutter_comics_viewer` 27/27; example widget tests 2/2; real macOS integration
+- [x] Tests passing (`flutter_comics_viewer` 33/33; example widget tests 3/3; real macOS integration
       test 1/1; all relevant `flutter analyze` runs clean)
 - [x] No regressions (every pre-existing test in all three packages still passes)
 - [ ] Documentation updated if needed (this flow's own DOCUMENTATION phase not started — not requested
