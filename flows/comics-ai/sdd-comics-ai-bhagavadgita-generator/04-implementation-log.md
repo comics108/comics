@@ -57,7 +57,7 @@
   constructor failure before the source-root guard existed; final focused suite is **4/4 passing**
   (`test_production_models.py`, `test_production_store.py`).
 - Full application regression suite: **94 passed, 2 failed**. Both failures are pre-existing
-  real-fixture tests (`test_import_lottie.py`, `test_pipeline.py`) whose expected
+  real-fixture tests (`test_import_bodymovin.py`, `test_pipeline.py`) whose expected
   `dataset/.../unzip/1/.../Mediation of the Bhagavat Gita.json` file is absent in the current
   working tree. Task 10.1 focused tests pass and none of its code is on those failing paths.
 
@@ -67,7 +67,7 @@
 
 - Added `scripts/inventory_sources.py` with an explicit reviewed `SourceScopeRegistry`; it does no
   numeric filename inference. Both the historical `unzip/1` path and the current real
-  `vaishnav/bhagavadgita/lottie_unzip/...` path resolve to standalone nine-stanza Gita Dhyanam and
+  `vaishnav/bhagavadgita/bodymovin_unzip/...` path resolve to standalone nine-stanza Gita Dhyanam and
   therefore zero canonical chapters. `app_BG._chiba5.psd` alone maps to confirmed chapter 5 verses
   5.14-5.29; `5_1.psd` and `5_2.psd` remain non-canonical source components.
 - Implemented deterministic streaming SHA-256 inventory, stable path+content IDs, byte/media facts,
@@ -79,8 +79,8 @@
   `7eb0d371325e2882d68da3758d99c413f9951dddfb4eca779abd59fef2da3d7e`, proving source hashes did
   not change during the read-only operation. The second verification copy was removed afterward.
 - The inventory exposed a genuine dataset path drift behind Task 10.1's two full-suite failures.
-  Updated the stale Lottie source references in `scripts/pipeline.py` and
-  `tests/test_import_lottie.py` to the current real location; semantic classification still
+  Updated the stale Bodymovin source references in `scripts/pipeline.py` and
+  `tests/test_import_bodymovin.py` to the current real location; semantic classification still
   explicitly excludes this material from chapter 1.
 - Test-first evidence: missing-module/import failures were observed before semantic registry,
   walker, and writer implementation. Final Task 10.2 focused suite is **5/5 passing**; combined
@@ -101,7 +101,7 @@ worktree but not runnable or recorded as complete.
     recovers a selected pixel layer as RGBA plus a true alpha-derived bitmap mask;
   - `scripts/adapters/pdf.py` uses Poppler metadata to inventory embedded PDF image objects without
     rendering pages into enormous panorama canvases;
-  - `scripts/adapters/lottie.py` recovers native/precomposition layers, transforms/timing,
+  - `scripts/adapters/bodymovin.py` recovers native/precomposition layers, transforms/timing,
     referenced images, RU/EN translation files, audio provenance, the reviewed Gita Dhyanam scope,
     and explicitly labels camera/depth as derived evidence rather than gold truth.
 - The failing-first checkpoint was real: `tests/test_recovery_adapters.py` could not collect because
@@ -119,7 +119,7 @@ worktree but not runnable or recorded as complete.
     `app_BG._chiba5.psd = 419/92`, including ordered `text1…text15` groups and component groups;
   - a real separable PSD layer recovered as 309×228 RGBA and a byte-identical alpha bitmap mask;
   - 12 B&W and 6 colour PDF embedded-image records recovered without page rendering;
-  - Lottie recovered 514 referenced images, 9 EN + 9 RU overlays, both real audio files, native
+  - Bodymovin recovered 514 referenced images, 9 EN + 9 RU overlays, both real audio files, native
     transforms, and standalone-prologue semantic authority;
   - `chapter_05.comics` recovered 32 layers, Russian title slot 1, Translate `(72,72)`, and stitched
     the selected 936×200 RGBA tile set.

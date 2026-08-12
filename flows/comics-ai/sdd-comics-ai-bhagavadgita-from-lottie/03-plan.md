@@ -1,4 +1,4 @@
-# Implementation Plan: comics-ai-bhagavadgita-from-lottie
+# Implementation Plan: comics-ai-bhagavadgita-from-bodymovin
 
 > Version: 1.1
 > Status: APPROVED
@@ -14,21 +14,21 @@ compositing formula gets checked before any extraction code is built on it. Enti
 `package_comics.py`, which Task 1.4 extends rather than forks.
 
 **Standing execution constraints, carried from this session's other work**: filesystem-only moves
-where applicable, no git commands (Anton does git by hand); **no installing third-party Lottie
-rendering packages** (`python-lottie`, `lottie-web`, etc. — Anton's explicit instruction, 2026-08-09).
+where applicable, no git commands (Anton does git by hand); **no installing third-party Bodymovin
+rendering packages** (`python-bodymovin`, `bodymovin-web`, etc. — Anton's explicit instruction, 2026-08-09).
 
 ## Task Breakdown
 
 #### Task 1.1: Verify the absolute-position compositing formula — no external renderer
 - **Description**: `02-specifications.md`'s own section flags its `absolute_y(frame) =
   pan_y(frame_start) − pan_y(root_frame) + local_y(root_frame)` formula as an unverified, principled
-  guess. Per Anton's explicit constraint (2026-08-09): no installing third-party Lottie rendering
+  guess. Per Anton's explicit constraint (2026-08-09): no installing third-party Bodymovin rendering
   packages for this. Instead: (a) cross-check the compositing formula's *logic* against
-  `flows/comics-editor/tdd-dot-lottie-import-export`'s own precomp/parent-chain resolution findings
-  — that flow already investigated real Lottie parent-transform compositing in depth (its own
+  `flows/comics-editor/tdd-dot-bodymovin-import-export`'s own precomp/parent-chain resolution findings
+  — that flow already investigated real Bodymovin parent-transform compositing in depth (its own
   Specifications' "Precomp Handling"/`Layer.ParentId` sections) and may already have a
   confirmed-correct formula this can reuse rather than re-derive; (b) use `libs/flutter_comics`'s
-  existing, tested Lottie parser (`lib/src/lottie/lottie_mapping.dart`, built by that same flow,
+  existing, tested Bodymovin parser (`lib/src/bodymovin/bodymovin_mapping.dart`, built by that same flow,
   480/480 tests passing) to parse the real file and inspect whatever it already resolves for
   nested-layer transforms, as a second, code-grounded cross-check.
 - **Files**: None (verification/research task; may produce a small throwaway script under
@@ -38,11 +38,11 @@ rendering packages** (`python-lottie`, `lottie-web`, etc. — Anton's explicit i
   the full values; this task confirms or corrects the formula those values depend on, after the fact.
 - **Dependencies**: None
 - **Verification**: this task's own real output — the formula either confirmed against
-  `tdd-dot-lottie-import-export`'s/`libs/flutter_comics`'s own real findings, or corrected with a
+  `tdd-dot-bodymovin-import-export`'s/`libs/flutter_comics`'s own real findings, or corrected with a
   real, cited reason, documented in the implementation log either way
 - **Complexity**: Medium
 
-#### Task 1.2: `import_lottie.py` — frame calibration, keyframe extraction, z-depth derivation
+#### Task 1.2: `import_bodymovin.py` — frame calibration, keyframe extraction, z-depth derivation
 - **Description**: Implement `scene_pan`, replace the v1.0 draft's `frame_to_scroll_y` with
   `frame_to_scroll_position` (using the real, already-verified
   `st`/`sr`-based local→root frame conversion), normalize source pan into strictly increasing
@@ -51,7 +51,7 @@ rendering packages** (`python-lottie`, `lottie-web`, etc. — Anton's explicit i
   Specifications. `derive_z_depth` uses the approved unitless `K=1` relation and guards invalid/
   non-finite results to neutral `0`, using Task 1.1's confirmed (or corrected) compositing formula.
 - **Files**:
-  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_lottie.py` — Create
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_bodymovin.py` — Create
 - **Dependencies**: Task 1.1
 - **Verification**: unit tests against the real file's real numbers cited in Requirements/
   Specifications (the 3 scenes' real pan tuples; the real 6-keyframe example layer's exact keyframe
@@ -71,7 +71,7 @@ rendering packages** (`python-lottie`, `lottie-web`, etc. — Anton's explicit i
   refinement ("...именно эту ломанную кривую необходимо восстановить и сохранить в отдельный
   элемент — движение камеры") — the single most load-bearing piece of this flow.
 - **Files**:
-  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_lottie.py` — Modify (adds to
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_bodymovin.py` — Modify (adds to
     Task 1.2's file)
 - **Dependencies**: Task 1.2
 - **Verification**: unit test confirming `select_camera_reference_layer` picks the real `comp_0`
@@ -103,7 +103,7 @@ rendering packages** (`python-lottie`, `lottie-web`, etc. — Anton's explicit i
 #### Task 1.5: Wire into a new, separate pipeline entry point
 - **Description**: Per Requirements' constraint that this output doesn't count toward or replace any
   of `sdd-comics-ai-bhagavadgita-generator`'s 18 chapters, this should NOT run inside that flow's
-  `pipeline.py --all` loop — a new, separate CLI entry (e.g. `pipeline.py --lottie-source` or a
+  `pipeline.py --all` loop — a new, separate CLI entry (e.g. `pipeline.py --bodymovin-source` or a
   standalone script) producing one additional `.comics` file under `work/bhagavadgita/` (exact
   filename TBD — depends on Requirements' still-open chapter-mapping/scene-count questions).
 - **Files**:
@@ -137,7 +137,7 @@ rendering packages** (`python-lottie`, `lottie-web`, etc. — Anton's explicit i
 
 | File | Action | Reason |
 |---|---|---|
-| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_lottie.py` | Create | Camera-path/z-depth extraction (Tasks 1.1-1.3) |
+| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_bodymovin.py` | Create | Camera-path/z-depth extraction (Tasks 1.1-1.3) |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/package_comics.py` | Modify | Extend `PackagingAsset`/`_layer_json` for keyframe lists + `zDepth` + `cameraPath` (Task 1.4), backward-compatible |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/pipeline.py` | Modify | New, separate CLI entry (Task 1.5) |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/report.py` | Modify | Parallax-limitation disclosure (Task 1.6) |
@@ -148,12 +148,12 @@ rendering packages** (`python-lottie`, `lottie-web`, etc. — Anton's explicit i
 |---|---|---|---|
 | Task 1.1's compositing formula turns out wrong once cross-checked | Medium — it's an unverified guess, not a confirmed derivation | High (every downstream Task 1.2-1.6 output would need redoing) | Task 1.1 is deliberately sequenced first; after correction, regenerate both historical coordinate tables and canonical point fixtures rather than hand-patching either representation |
 | Source pan decreases while the shared `.comics` interpolator expects increasing scroll positions | Confirmed, not hypothetical | High if old v1.0 ranges are copied | Task 1.2 normalizes to increasing positions and tests the invariant; the old decreasing tables remain evidence only, never serialized output |
-| No external Lottie renderer allowed (Anton's explicit constraint) means verification is code/logic-level, not pixel-level | N/A — a real, accepted constraint, not a risk to mitigate away | Low | A code-level/logic cross-check against `tdd-dot-lottie-import-export`/`libs/flutter_comics` is real, if less direct, verification than a pixel comparison — the residual risk is that neither source happens to confirm the exact compositing formula this flow needs, in which case it stays a disclosed open question longer, not that the task is blocked outright |
+| No external Bodymovin renderer allowed (Anton's explicit constraint) means verification is code/logic-level, not pixel-level | N/A — a real, accepted constraint, not a risk to mitigate away | Low | A code-level/logic cross-check against `tdd-dot-bodymovin-import-export`/`libs/flutter_comics` is real, if less direct, verification than a pixel comparison — the residual risk is that neither source happens to confirm the exact compositing formula this flow needs, in which case it stays a disclosed open question longer, not that the task is blocked outright |
 | Modifying `sdd-comics-ai-bhagavadgita-generator`'s `package_comics.py`/`pipeline.py`/`report.py` (files that flow owns) | Low | Medium (cross-flow coordination) | Task 1.4's own design requirement (default to today's exact behavior when new optional fields are absent) means that flow's existing 18-chapter output is unaffected regardless; a cross-reference note should be added to that flow's own `_status.md` once Implementation starts here, matching this session's established practice for cross-flow file ownership |
 
 ## Rollback Strategy
 
-Deleting `import_lottie.py` and reverting the backward-compatible additions to
+Deleting `import_bodymovin.py` and reverting the backward-compatible additions to
 `package_comics.py`/`pipeline.py`/`report.py`. Task 1.4's own design requirement (default to today's
 exact single-static-keyframe behavior when the new optional fields are absent) means
 `sdd-comics-ai-bhagavadgita-generator`'s existing 18-chapter output is unaffected either way,
@@ -161,7 +161,7 @@ rollback or not. `dataset/bhagavadgita/` is never written to.
 
 ## Open Implementation Questions
 
-- [ ] Exact mechanism/depth for Task 1.1's cross-check against `tdd-dot-lottie-import-export`'s
+- [ ] Exact mechanism/depth for Task 1.1's cross-check against `tdd-dot-bodymovin-import-export`'s
       findings and `libs/flutter_comics`'s parser — not yet attempted, real work for Implementation.
 - [ ] Exact output filename(s) for Task 1.5's new CLI entry — depends on the still-open 1-file-vs-
       3-scenes question (see Requirements' Open Questions).

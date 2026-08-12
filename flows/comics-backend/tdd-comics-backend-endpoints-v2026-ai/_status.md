@@ -62,7 +62,7 @@ not invented out of phase: `flows/tdd.md` requires exhaustive cases-first `02-te
   proof of production-art quality.
 - Existing U-Net, Mask R-CNN, positioning, and animation artifacts are proposal candidates only;
   backend contracts must not encode them as winners.
-- The backend must support very large source files and native structure (PSD/PDF/Lottie/`.comics`)
+- The backend must support very large source files and native structure (PSD/PDF/Bodymovin/`.comics`)
   without moving blobs through JSON/base64.
 - Original datasets remain read-only; uploads/derivatives/releases require separately configured
   storage and retention.
@@ -76,7 +76,7 @@ mandatory behavioral cases. They are queued here now and will be expanded into f
 Given/When/Then/design-implication entries in `02-tests.md` immediately after this TDD's own
 Requirements approval:
 
-1. Native PSD/Lottie/`.comics` recovery is attempted before flattening/segmentation.
+1. Native PSD/Bodymovin/`.comics` recovery is attempted before flattening/segmentation.
 2. A foreground asset with bbox only cannot transition to `accepted`.
 3. Model promotion rejects crop/tile leakage across source/scene-disjoint splits.
 4. Accepted source/reusable/transformable coverage prevents an automatic paid generation call.

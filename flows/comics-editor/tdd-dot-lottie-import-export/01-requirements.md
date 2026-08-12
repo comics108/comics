@@ -1,4 +1,4 @@
-# Requirements: dot-lottie-import-export
+# Requirements: dot-bodymovin-import-export
 
 > Version: 0.3 (2026-08-08: NEW addition to already-approved v0.2 — two export/import modes, Full
 > Canvas vs. Playback Viewport, per Anton's direct specification. A disclosed re-opening of
@@ -9,31 +9,31 @@
 
 ## Origin
 
-`flows/tdd-dot-lottie-format` investigated real Lottie content (`samples/sample.lottie`,
-`dataset/mahabharata/boranko/mahabharata-dot-lottie`) and concluded, from direct inspection of real
-keyframe data: `.comics → .lottie` conversion is mechanically simple for the model `.comics`
-actually supports (flat image layers, position/rotation/scale/alpha keyframes); `.lottie → .comics`
-is simple *conditionally* — only for Lottie content that stays within the same subset (image
+`flows/tdd-dot-bodymovin-format` investigated real Bodymovin content (`samples/sample.Bodymovin`,
+`dataset/mahabharata/boranko/mahabharata-dot-bodymovin`) and concluded, from direct inspection of real
+keyframe data: `.comics → .Bodymovin` conversion is mechanically simple for the model `.comics`
+actually supports (flat image layers, position/rotation/scale/alpha keyframes); `.Bodymovin → .comics`
+is simple *conditionally* — only for Bodymovin content that stays within the same subset (image
 layers only, no shapes/masks/gradients/text, uniform or approximable easing). That flow found no
-existing reader/writer for Lottie anywhere in this repo. This flow is the real feature build: add
+existing reader/writer for Bodymovin anywhere in this repo. This flow is the real feature build: add
 that import/export capability to `apps/comics-editor` specifically.
 
 ## Problem Statement
 
-`apps/comics-editor` can only open/save `.comics`/`.puzzle` files. Real Lottie content already
-exists (produced by an external pipeline, per `tdd-dot-lottie-format`'s episode-set findings — 7
+`apps/comics-editor` can only open/save `.comics`/`.puzzle` files. Real Bodymovin content already
+exists (produced by an external pipeline, per `tdd-dot-bodymovin-format`'s episode-set findings — 7
 real chapters) with no tool anywhere in this repo that can bring it into the editor, and no way to
-export an existing `.comics` document as Lottie for use in a Lottie-based viewer (should one ever
-get built — `tdd-dot-lottie-format` found a vendored-but-unused Lottie engine in
+export an existing `.comics` document as Bodymovin for use in a Bodymovin-based viewer (should one ever
+get built — `tdd-dot-bodymovin-format` found a vendored-but-unused Bodymovin engine in
 `apps/mahabharata-mobile-swift-v2026`/`legacy/mahabharata-mobile-swift-v2012`, but no working
 reader). This flow closes that gap for the editor specifically — not for any mobile viewer.
 
-## What's already known (from `tdd-dot-lottie-format` — not re-derived here)
+## What's already known (from `tdd-dot-bodymovin-format` — not re-derived here)
 
-- Real Lottie top-level keys: `v, fr, ip, op, w, h, nm, ddd, assets, layers, markers, props`.
+- Real Bodymovin top-level keys: `v, fr, ip, op, w, h, nm, ddd, assets, layers, markers, props`.
   `fr` = framerate (60fps observed). `ip`/`op` = in/out point, in **frames**, not scroll-pixels.
 - Real content structure (verified for `ASHES.json`, not yet confirmed for the other 6 real
-  chapters — `tdd-dot-lottie-format`'s own open question): every layer is Lottie type `ty:2`
+  chapters — `tdd-dot-bodymovin-format`'s own open question): every layer is Bodymovin type `ty:2`
   (image layer) referencing a raster asset (`assets[]` entries: `id/w/h/u/p/e` — width, height,
   path, embedded flag). Zero shape (`ty:4`)/mask/text layers found in the one file inspected.
 - Real keyframe shape: `{i: {x,y}, o: {x,y}, t: <frame>, s: [<value>, ...]}` for each animated
@@ -46,40 +46,40 @@ reader). This flow closes that gap for the editor specifically — not for any m
   frames), interpolated via a **fixed** cubic ease-out `(t-1)^3+1` (`KeyframeInterpolator`,
   `vdd-comics-editor-vertical-scroll`), not arbitrary bezier curves.
 - Real precomps nest (a precomp layer's own `ip`/`op` can exceed its parent's — confirmed on real
-  data, not yet confirmed whether this is normal Lottie semantics or an authoring quirk —
-  `tdd-dot-lottie-format` Test Case L4, unresolved).
+  data, not yet confirmed whether this is normal Bodymovin semantics or an authoring quirk —
+  `tdd-dot-bodymovin-format` Test Case L4, unresolved).
 
 ## User Stories
 
 ### Primary
 
 **As** Anton (or a future editor user)
-**I want** to open a real `.lottie` file in `apps/comics-editor` and have its image layers and
+**I want** to open a real `.Bodymovin` file in `apps/comics-editor` and have its image layers and
 their position/rotation/scale/alpha keyframes become real, editable `EditorLayer`s
-**So that** existing Lottie-produced content can be brought into the same authoring/review
+**So that** existing Bodymovin-produced content can be brought into the same authoring/review
 workflow as classic `.comics` content, without hand-porting
 
 ### Secondary
 
-**As** Anton, preparing content for a future Lottie-based viewer
-**I want** to export a `.comics` document as a `.lottie` file
-**So that** the same authored content can be previewed/used somewhere that expects Lottie, without
+**As** Anton, preparing content for a future Bodymovin-based viewer
+**I want** to export a `.comics` document as a `.Bodymovin` file
+**So that** the same authored content can be previewed/used somewhere that expects Bodymovin, without
 a separate export tool
 
 ## Acceptance Criteria
 
 ### Must Have
 
-1. **Given** a real `.lottie` file whose layers are all Lottie image type (`ty:2`) with no shape/
-   mask/text layers, **when** imported into `apps/comics-editor`, **then** each Lottie image layer
+1. **Given** a real `.Bodymovin` file whose layers are all Bodymovin image type (`ty:2`) with no shape/
+   mask/text layers, **when** imported into `apps/comics-editor`, **then** each Bodymovin image layer
    becomes one `EditorLayer`, each animated transform property becomes the corresponding `Anim`
    type (`p`→translate, `r`→rotate, `s`→scale, `o`→alpha), and the imported document opens/renders
    correctly in the existing canvas.
-2. **Given** a `.comics` document open in the editor, **when** exported as `.lottie`, **then** the
-   output is valid Lottie JSON (parses, has the required top-level keys) that a generic Lottie
+2. **Given** a `.comics` document open in the editor, **when** exported as `.Bodymovin`, **then** the
+   output is valid Bodymovin JSON (parses, has the required top-level keys) that a generic Bodymovin
    viewer could play, with each `EditorLayer` becoming an image layer and each `Anim` becoming an
    equivalent keyframe (see Open Questions for the exact easing-curve mapping).
-3. **Given** a `.lottie` file containing any shape/mask/gradient/text layer, **when** imported,
+3. **Given** a `.Bodymovin` file containing any shape/mask/gradient/text layer, **when** imported,
    **then** the import does not silently drop or misrepresent it as something else — it's either
    rejected with a clear message, or flattened/rasterized with an explicit, disclosed
    quality/fidelity tradeoff (see Open Questions — which behavior is chosen is a real decision,
@@ -92,23 +92,23 @@ a separate export tool
 
 ### Should Have
 
-- Round-trip fidelity for the supported subset: import a `.lottie`, export it back out, and the
+- Round-trip fidelity for the supported subset: import a `.Bodymovin`, export it back out, and the
   result is behaviorally equivalent (same layer positions/keyframe timing within a reasonable
   tolerance) to the original — not necessarily byte-identical, given the easing-curve
-  approximation `tdd-dot-lottie-format` already flagged as inherently lossy in one direction.
+  approximation `tdd-dot-bodymovin-format` already flagged as inherently lossy in one direction.
 
 ### Won't Have (This Iteration)
 
-- No support for Lottie shape layers, masks, gradients, text layers, or precomp-of-precomp nesting
-  beyond a flat image-layer stack — explicitly out of scope, per `tdd-dot-lottie-format`'s own
+- No support for Bodymovin shape layers, masks, gradients, text layers, or precomp-of-precomp nesting
+  beyond a flat image-layer stack — explicitly out of scope, per `tdd-dot-bodymovin-format`'s own
   finding that this breaks the "simple math" premise entirely.
 - No changes to any mobile viewer (Android or iOS) — this is editor-only, matching this flow's own
   name/scope (`apps/comics-editor`).
-- No sound/music import or export — Lottie's real content packages audio as a separate
-  `<codename>_music/*.aac` folder outside the JSON entirely (`tdd-dot-lottie-format` Verified Fact
-  1), not as Lottie keyframe data; reconciling that with `.comics`'s `Sound`/`SoundAnim` model is a
+- No sound/music import or export — Bodymovin's real content packages audio as a separate
+  `<codename>_music/*.aac` folder outside the JSON entirely (`tdd-dot-bodymovin-format` Verified Fact
+  1), not as Bodymovin keyframe data; reconciling that with `.comics`'s `Sound`/`SoundAnim` model is a
   separate, unscoped problem.
-- No translation/multi-language import or export — same reasoning; Lottie's translations live in
+- No translation/multi-language import or export — same reasoning; Bodymovin's translations live in
   separate `_translations/*.json` files outside the animation JSON, a different mechanism from
   `.comics`'s inline `Layer.Translations`.
 
@@ -116,27 +116,27 @@ a separate export tool
 
 - **Technical**: must reuse the existing `KeyframeInterpolator`/`Anim` model
   (`vdd-comics-editor-vertical-scroll`) rather than inventing a parallel animation representation —
-  Lottie import should produce ordinary `Anim`s that the existing canvas/interpolation code already
-  knows how to render, not a special Lottie-only code path.
-- **Fidelity**: the easing-curve mismatch (Lottie's per-keyframe arbitrary bezier vs. `.comics`'s
-  one fixed cubic ease-out) is a genuine, disclosed lossy step in the `.lottie → .comics` direction
+  Bodymovin import should produce ordinary `Anim`s that the existing canvas/interpolation code already
+  knows how to render, not a special Bodymovin-only code path.
+- **Fidelity**: the easing-curve mismatch (Bodymovin's per-keyframe arbitrary bezier vs. `.comics`'s
+  one fixed cubic ease-out) is a genuine, disclosed lossy step in the `.Bodymovin → .comics` direction
   whenever the source curve isn't already a close match — not something to hide or claim is exact.
-- **Dependencies**: builds on `flows/tdd-dot-lottie-format`'s findings directly; if that flow's own
+- **Dependencies**: builds on `flows/tdd-dot-bodymovin-format`'s findings directly; if that flow's own
   open question (do the other 6 real chapters share `ASHES.json`'s simple structure) resolves
   negatively, this flow's Must-Have scope may need revisiting.
 
 ## Export/Import Modes — Full Canvas vs. Playback Viewport (NEW, 2026-08-08, Anton's direct spec)
 
 Both directions of this flow now come in **two distinct modes**, chosen explicitly (not inferred),
-because real Lottie content genuinely uses both shapes and they demand different math. Grounded
+because real Bodymovin content genuinely uses both shapes and they demand different math. Grounded
 directly in two real fixtures (checked byte-level, not assumed from the description):
 
 - `samples/sample_v2012.comics_unzip` — real classic `.comics`: **1080×41500** canvas (a genuinely
   tall page, not a viewport), 133 layers whose Y-keyframes span the *entire* height (538 to 40431)
   — this is what "Full Canvas" mode's assumptions describe exactly, using content this flow already
   had on hand.
-- `samples/sample_playback_viewport.lottie_unzip` (`ASHES_content/ASHES.json`, a **different, real**
-  file from `samples/sample.lottie` — confirmed by content hash, not a renamed duplicate) — a
+- `samples/sample_playback_viewport.Bodymovin_unzip` (`ASHES_content/ASHES.json`, a **different, real**
+  file from `samples/sample.Bodymovin` — confirmed by content hash, not a renamed duplicate) — a
   **720×1600** composition (phone-viewport-sized, not a tall canvas) with exactly **2 root-level
   precomp layers** ("All Objects1": frames 0-5220, "All Objects2": frames 3891-13491, deliberately
   overlapping — a crossfade handoff, not a hard cut), **each with one position keyframe pair**
@@ -150,14 +150,14 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
 
 ### Full Canvas mode
 
-- **Export**: the whole tall canvas is exported as one Lottie composition sized to the canvas
-  itself (not a viewport). Animation is **timeline-based** — Lottie's frame axis and `.comics`'s
+- **Export**: the whole tall canvas is exported as one Bodymovin composition sized to the canvas
+  itself (not a viewport). Animation is **timeline-based** — Bodymovin's frame axis and `.comics`'s
   scroll-pixel axis are the same axis, mapped 1:1 (this is exactly the existing "identity" time-base
   choice from the Open Questions below, now scoped specifically to this mode rather than being a
   generic global choice).
-- **Import**: the inverse assumption — a Lottie file imported in this mode is assumed to already be
+- **Import**: the inverse assumption — a Bodymovin file imported in this mode is assumed to already be
   one tall composition with scenes placed at fixed, non-moving absolute positions one after another
-  (exactly `sample_v2012.comics_unzip`'s real shape, just expressed as Lottie instead of `.comics`).
+  (exactly `sample_v2012.comics_unzip`'s real shape, just expressed as Bodymovin instead of `.comics`).
   No root-level "scene sweeps past a viewport" precomp structure is expected or looked for.
 - This mode requires **no new math** — it's what this flow's existing Interfaces/Specifications
   already assumed by default (identity ratio, direct absolute-position mapping). Naming it
@@ -167,7 +167,7 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
 
 - **Export**: exports the *viewport* (one scene's visible-area window, screen-sized — e.g. 720×1600
   real-world), not the full canvas. Scenes take turns filling that same viewport rectangle,
-  replacing each other — in Lottie terms, each scene is its own precomp, dragged past the fixed
+  replacing each other — in Bodymovin terms, each scene is its own precomp, dragged past the fixed
   viewport via one root-level position sweep (exactly `ASHES.json`'s real "All Objects1"/"All
   Objects2" structure above) — "они вплывают поочередно в область видимости" (they float into the
   viewport one after another), not an instant cut.
@@ -176,7 +176,7 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
   stand in for "the user scrolled through this scene," and it's the real, user-facing ratio
   parameter this mode needs (replacing the old generic "identity vs. custom ratio" framing —
   Full Canvas mode never needs this dialog at all, since it has no separate scroll-speed concept;
-  Playback Viewport mode always needs it, since Lottie's frame-time has no scroll concept of its
+  Playback Viewport mode always needs it, since Bodymovin's frame-time has no scroll concept of its
   own to recover without one).
 - Per-layer animation is then computed as **scroll-position-based** (the base motion, derived from
   the constant-speed assumption — i.e. today's existing `.comics` model, reused, not reinvented)
@@ -199,15 +199,15 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
 ### Real, concrete round-trip fixtures (per Anton's direct instruction)
 
 - `samples/sample_v2012.comics_unzip` anchors a **Full Canvas** round-trip. **CORRECTED (2026-08-08,
-  Anton: "из .lottie в .comics затем в .lottie")**: the round-trip itself must run
-  `.lottie → .comics → .lottie`, matching Playback Viewport's own direction below — not
-  `.comics → .lottie → .comics` as an earlier draft of this section had it. Since
-  `sample_v2012.comics_unzip` is a real `.comics` file, not a `.lottie` one, it's used as one-time
-  **fixture prep**: export it to `.lottie` (Full Canvas mode) once to produce a real, trusted
-  Full-Canvas-shaped `.lottie` file, then anchor the actual round-trip test on *that* derived file —
+  Anton: "из .Bodymovin в .comics затем в .Bodymovin")**: the round-trip itself must run
+  `.Bodymovin → .comics → .Bodymovin`, matching Playback Viewport's own direction below — not
+  `.comics → .Bodymovin → .comics` as an earlier draft of this section had it. Since
+  `sample_v2012.comics_unzip` is a real `.comics` file, not a `.Bodymovin` one, it's used as one-time
+  **fixture prep**: export it to `.Bodymovin` (Full Canvas mode) once to produce a real, trusted
+  Full-Canvas-shaped `.Bodymovin` file, then anchor the actual round-trip test on *that* derived file —
   import → re-export → compare, same direction as Playback Viewport, not the reverse.
-- `samples/sample_playback_viewport.lottie_unzip` anchors a **Playback Viewport** round-trip: real
-  `.lottie` → import (Playback Viewport mode) → export back to `.lottie` → compare, using this real
+- `samples/sample_playback_viewport.Bodymovin_unzip` anchors a **Playback Viewport** round-trip: real
+  `.Bodymovin` → import (Playback Viewport mode) → export back to `.Bodymovin` → compare, using this real
   file as ground truth for the direction that has real content to start from.
 
 ## Open Questions
@@ -218,15 +218,15 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
       export/import mode** (see the new Export/Import Modes section above): Full Canvas mode always
       uses identity (1 frame = 1 scroll-unit, no dialog needed — the mode's own definition already
       is "no real scroll concept, timeline-based"); Playback Viewport mode always needs a real
-      constant-scroll-speed value from the user (there's no "identity" option there — Lottie's
+      constant-scroll-speed value from the user (there's no "identity" option there — Bodymovin's
       frame-time has no scroll axis to be identical *to* without an assumed speed). The original
       "as-is is a real, honest choice" reasoning still holds, it's just now Full Canvas mode's own
       built-in behavior rather than one of several options in a mode-agnostic dialog.
 - [x] **Easing-curve mapping precision — DECIDED (2026-08-07, Anton)**: **also asked of the user,
       with real options presented**, not silently chosen by the tool. At minimum: "exact cubic
       ease-out match" (solvable curve-fitting, guarantees round-trip fidelity to `.comics`'s own
-      formula) vs. "AE Easy Ease approximation" (matches what real sampled Lottie content already
-      uses, better compatibility with hand-authored Lottie files that were never meant to round-trip
+      formula) vs. "AE Easy Ease approximation" (matches what real sampled Bodymovin content already
+      uses, better compatibility with hand-authored Bodymovin files that were never meant to round-trip
       through `.comics` at all). Exact wording/UI for this choice not yet designed — see Q3.
 - [x] **Unsupported-content policy — PARTIALLY DECIDED (2026-08-07, Anton)**: text/lettering is
       important enough to get first-class format support, not a reject-or-flatten case. Full
@@ -238,7 +238,7 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
 
 - [ ] **Mode selection UI** — an explicit choice the user makes (matching this flow's own
       established "never silently infer" pattern for the time-base/easing choices), or can it be
-      reliably auto-detected from the source file's own shape (a Lottie composition sized like a
+      reliably auto-detected from the source file's own shape (a Bodymovin composition sized like a
       viewport with root-level sweep precomps vs. one sized like a tall canvas with no such
       structure)? Leaning toward auto-detect-with-override (detect, show the user what was detected,
       let them correct it) rather than a cold blank choice, but not decided — ties into the same
@@ -256,7 +256,7 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
       the review screen, extending Category A's existing flag mechanism to a new flag type rather
       than a hard reject/accept. (a) is the safe default to ship first; (b)/(c) are real
       improvements deferred, not silently abandoned.
-- [x] **Is the assumed constant scroll speed a real Lottie-file-derivable value, or always a
+- [x] **Is the assumed constant scroll speed a real Bodymovin-file-derivable value, or always a
       user-provided number? — DECIDED (2026-08-08), grounded in exact computation on real data**:
       **yes, auto-derivable, with an editable override** — never silently applied without being
       shown. Computed precisely from `ASHES.json`'s two real root sweeps: "All Objects1" (frames
@@ -269,7 +269,7 @@ directly in two real fixtures (checked byte-level, not assumed from the descript
       speed per recognized root-sweep scene, shows it pre-filled in the review screen (not asked
       cold), and if multiple scenes agree closely (as here) presents one overall value the user can
       still edit — never blocks on "nothing to derive from" for files with the real sweep shape.
-      Files with no such structure (hand-crafted, or a Full Canvas-shaped Lottie opened in the
+      Files with no such structure (hand-crafted, or a Full Canvas-shaped Bodymovin opened in the
       wrong mode) have nothing to derive from and fall back to a plain user-entered value, per the
       flow's own "never silently derive without a real signal" philosophy. Supersedes/resolves the
       "not decided" framing this question originally had.
@@ -351,16 +351,16 @@ same capability as balloon-contained text.
 pure annotation metadata — it does not change how the layer's own (already fully rendered) image
 displays. A v2012 reader that has never heard of `TextRegion` renders the layer exactly as it does
 today; the field only matters to tooling that wants to know *where within this layer's image the
-lettering sits* (translation workflows, future AI processing, a future richer Lottie export that
-could choose to preserve a real Lottie text layer instead of a baked image where appropriate).
+lettering sits* (translation workflows, future AI processing, a future richer Bodymovin export that
+could choose to preserve a real Bodymovin text layer instead of a baked image where appropriate).
 
 **Why three shape types, not just mask (most precise) or just polygon (most compact)**: real
 hand-lettering can be organic enough that a simplified polygon loses real shape fidelity a mask
 wouldn't (matching Anton's explicit bitmap-mask requirement) — but a polygon is dramatically more
 compact for the common case of a clean rect-like or simple-curved region, and — a genuine added
-benefit — **polygon regions map directly onto Lottie's own mask model**, since Lottie masks are
+benefit — **polygon regions map directly onto Bodymovin's own mask model**, since Bodymovin masks are
 themselves vector bezier paths, never raster bitmaps. Choosing polygon-when-possible, mask-when-
-necessary gives better Lottie round-trip fidelity for free, not just a compactness tradeoff.
+necessary gives better Bodymovin round-trip fidelity for free, not just a compactness tradeoff.
 
 ### Proposed fix for the `comics-ai-baloons` gap itself (options, not a decision)
 
@@ -374,7 +374,7 @@ discarded), fixing it is mostly about *persistence*, not new algorithms:
    lettering's shape (not just the balloon interior) is wanted.
 2. **More complete**: expose both — `TextRegion.shape="polygon"` derived from `layout.py`'s
    interior-safe mask (the "where text is allowed to go" region) is probably the more useful
-   default (compact, Lottie-compatible), with `shape="mask"` reserved for cases a caller explicitly
+   default (compact, Bodymovin-compatible), with `shape="mask"` reserved for cases a caller explicitly
    requests pixel precision (e.g. a genuinely irregular hand-lettered scrawl a polygon
    under-approximates).
 3. **Not recommended without more data**: relying on `erase.py`'s glyph-shaped `text_mask` as the
@@ -402,13 +402,13 @@ discarded), fixing it is mostly about *persistence*, not new algorithms:
       "Material Intake" sketch (`02-visual.md`) treats bringing in *any* external, not-fully-
       understood source material as a **triage/review step** (per-item status: queued / needs
       review / ambiguous), never a silent one-shot conversion, precisely because real source
-      material doesn't cleanly decompose. Applied here: **`.lottie → .comics` import (the direction
+      material doesn't cleanly decompose. Applied here: **`.Bodymovin → .comics` import (the direction
       with real precision loss and unsupported-content risk) gets a small review screen** — after
       picking a file, show what was found (N layers converted cleanly, N flagged — unsupported
       shape/mask/text layers, ambiguous `TextRegion` guesses), surface the Q1/Q2 choices (time-base
       ratio, easing precision) right there rather than as a buried settings toggle, and require an
-      explicit "commit import" action — not import-and-hope. **`.comics → .lottie` export** (the
-      "easy direction," per `tdd-dot-lottie-format`'s conversion-feasibility research) can stay a
+      explicit "commit import" action — not import-and-hope. **`.comics → .Bodymovin` export** (the
+      "easy direction," per `tdd-dot-bodymovin-format`'s conversion-feasibility research) can stay a
       simpler one-shot menu action, closer to today's existing Export button's own pattern
       (`top_bar.dart:240-243`, though that button itself is a different, existing `.comics`-to-
       `.comics` Save-As mechanism and should not be repurposed) — export has materially lower risk
@@ -424,7 +424,7 @@ discarded), fixing it is mostly about *persistence*, not new algorithms:
       field in this format's history has been (`Kind`/`Style`/`Translations`): `GroupId` is
       **purely organizational/editor-side** (selection, move-together, expand/collapse in the
       layers panel) with **zero effect on rendering** — each layer's own `Anim` keyframes are
-      always the complete, absolute, final values, exactly as today. A Lottie precomp's own
+      always the complete, absolute, final values, exactly as today. A Bodymovin precomp's own
       transform (position/scale/rotation/opacity animated on the precomp layer itself, on top of
       its children) gets **baked/pre-multiplied into each child layer's own individual keyframes
       at import time** — the same "compile down to flat absolute values" step the format already
@@ -439,17 +439,17 @@ discarded), fixing it is mostly about *persistence*, not new algorithms:
 
 ## References
 
-- `flows/tdd-dot-lottie-format/01-requirements.md` — the conversion-feasibility analysis this flow
+- `flows/tdd-dot-bodymovin-format/01-requirements.md` — the conversion-feasibility analysis this flow
   builds directly on
 - `flows/tdd-dot-comics-format/02-tests.md` — the classic `.comics` schema/test catalog
 - `apps/comics-editor/lib/src/ui/models.dart` — `Anim`, `EditorLayer`, `ComicsDoc`
 - `apps/comics-editor/lib/src/bridge/models_mapping.dart` — existing JSON I/O, the pattern any new
-  Lottie I/O should follow
+  Bodymovin I/O should follow
 - `apps/comics-editor/lib/src/ui/anim/keyframe_interpolator.dart` — the interpolation engine new
   imports must produce compatible `Anim` data for
 - `apps/comics-editor/lib/src/ui/widgets/top_bar.dart:240-243,279-294` — the existing (unrelated)
   Export mechanism
-- `samples/sample.lottie`, `samples/sample.lottie_unzip` — the real reference sample
+- `samples/sample.Bodymovin`, `samples/sample.Bodymovin_unzip` — the real reference sample
 - `flows/_blamed/vdd-comics-editor-jhanava/01-requirements.md`, `02-visual.md` — Джанава's UI/UX
   vision, consulted directly for the UI-entry-point decision (the "Material Intake" triage/review
   pattern for handling not-fully-understood external source material)
@@ -457,9 +457,9 @@ discarded), fixing it is mostly about *persistence*, not new algorithms:
   persisting `TextRegion` geometry (added 2026-08-07, not just a cross-reference note)
 - `samples/sample_v2012.comics_unzip` — (NEW, 2026-08-08) real 1080×41500 classic `.comics`, anchors
   the Full Canvas round-trip test fixture
-- `samples/sample_playback_viewport.lottie_unzip` — (NEW, 2026-08-08) real 720×1600 Lottie
+- `samples/sample_playback_viewport.Bodymovin_unzip` — (NEW, 2026-08-08) real 720×1600 Bodymovin
   composition with root-level scene-sweep precomps, anchors the Playback Viewport round-trip test
-  fixture; confirmed a genuinely different file from `samples/sample.lottie` (content hash checked)
+  fixture; confirmed a genuinely different file from `samples/sample.Bodymovin` (content hash checked)
 - `flows/tdd-dot-comics-format/05-plan.md` — (NEW, 2026-08-08) `Anim.basis`/`scrollType` is now
   shipped in `apps/comics-editor` (Phases 2 and 5); Playback Viewport mode's scroll+time composition
   directly reuses this, not a parallel mechanism

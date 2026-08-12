@@ -51,18 +51,18 @@ Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; Plan v1.1 APPROVED; Ph
 - [x] **Full flow survey done (2026-08-08)** — read EVERY flow under `flows/` (Anton: "Прочитай
       каждый sdd, vdd, tdd флоу"), verified every candidate file's actual `import` statements
       directly rather than assuming (via grep + direct reads, not just flow-doc claims). Found: the
-      3 Lottie files + `keyframe_interpolator.dart` are portable and in scope (missed in the original
-      analysis because `tdd-dot-lottie-import-export` wasn't cataloged); 2 of the 3 originally-listed
+      3 Bodymovin files + `keyframe_interpolator.dart` are portable and in scope (missed in the original
+      analysis because `tdd-dot-bodymovin-import-export` wasn't cataloged); 2 of the 3 originally-listed
       test-file move candidates actually test logic that stays in `apps/comics-editor` (a real error
       in v0.1, corrected in v0.2); `sdd-flutter-comics-viewer-dart` is a hard, already-drafted
       downstream dependent, not just a related flow. Full results folded into `01-requirements.md`'s
       new Addendum + `02-specifications.md`'s corrected Affected Systems table and new Interaction
       Interface section.
-- [x] Requirements drafted (2026-08-08) — v0.1, revised to v0.2 (Lottie scope + survey), then v0.3
+- [x] Requirements drafted (2026-08-08) — v0.1, revised to v0.2 (Bodymovin scope + survey), then v0.3
       same day (`.puzzle` decided unconditionally; architecture-boundary re-verification with the
-      concrete `lottie_export.dart`→`KeyframeInterpolator` dependency as proof)
+      concrete `bodymovin_export.dart`→`KeyframeInterpolator` dependency as proof)
 - [x] Requirements approved (2026-08-08) — by Anton Dodonov ("specs and reqs approved")
-- [x] Specifications drafted (2026-08-08) — v0.1, revised to v0.2 (Lottie scope + survey, corrected
+- [x] Specifications drafted (2026-08-08) — v0.1, revised to v0.2 (Bodymovin scope + survey, corrected
       test-file placement, resolved the interpolator-location Open Design Question), then v0.3 same
       day (`.puzzle` DECIDED not just recommended; architecture-boundary verification section added)
 - [x] Specifications approved (2026-08-08) — by Anton Dodonov ("specs and reqs approved")
@@ -74,7 +74,7 @@ Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; Plan v1.1 APPROVED; Ph
 - [x] Implementation started (2026-08-08) — Phase 1, Task 1.1
 - [x] Implementation complete (2026-08-08) — 14/15 tasks; Task 5.5 (manual device verification)
       deferred, disclosed, not blocking. `libs/flutter_comics` created (model + interpolator +
-      Lottie import/export + new `ComicsArchiveReader`, 87/87 tests); `apps/comics-editor` migrated
+      Bodymovin import/export + new `ComicsArchiveReader`, 87/87 tests); `apps/comics-editor` migrated
       (403/403 tests, 3 skipped); `flutter_comics_viewer` rewritten to consume the shared library,
       its own duplicate model deleted (15/15 tests). See `04-implementation-log.md` for full detail,
       including 2 real gaps found beyond the original Plan (`canvas_view.dart`,
@@ -91,14 +91,14 @@ Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; Plan v1.1 APPROVED; Ph
   `Anim.basis`/`scrollType`/`preferredOrientation`/viewport-size — everything `tdd-dot-comics-format`
   has added). This flow moves the rich model + writes a new portable reader generalized from the
   viewer's existing working ZIP-open logic, eliminating both gaps at once.
-- **v0.2 addition**: the exact same portability gap exists a second time for `.lottie` — the real
-  Lottie parsing/import/export code (`lottie_mapping.dart`/`lottie_import.dart`/`lottie_export.dart`,
-  built by `flows/comics-editor/tdd-dot-lottie-import-export`, IMPLEMENTATION-complete,
+- **v0.2 addition**: the exact same portability gap exists a second time for `.Bodymovin` — the real
+  Bodymovin parsing/import/export code (`bodymovin_mapping.dart`/`bodymovin_import.dart`/`bodymovin_export.dart`,
+  built by `flows/comics-editor/tdd-dot-bodymovin-import-export`, IMPLEMENTATION-complete,
   480/480 tests) and the keyframe interpolator (`keyframe_interpolator.dart`, built by
   `vdd-comics-editor-scroll`, extended by `tdd-dot-comics-format`) are ALL confirmed portable (no
   `dart:io`, no FFI, no `EditorController` coupling — checked directly) and now move alongside the
-  `.comics` model. Only the UI glue around them (`lottie_import_dialog.dart`, `EditorController`'s
-  Lottie methods) stays behind, since that's genuinely `file_picker`/tempFolder-coupled.
+  `.comics` model. Only the UI glue around them (`bodymovin_import_dialog.dart`, `EditorController`'s
+  Bodymovin methods) stays behind, since that's genuinely `file_picker`/tempFolder-coupled.
 - This flow is a **hard prerequisite** for `flows/comics-viewer/sdd-flutter-comics-viewer-dart`
   (confirmed by reading that flow's own Requirements directly: it states it's blocked on this flow
   reaching at least Plan-approved, and its Acceptance Criterion #4 requires deleting
@@ -118,7 +118,7 @@ Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; Plan v1.1 APPROVED; Ph
   (widgets/canvas/gestures/tile-LOD/sound playback/viewer controller-state) stays entirely in
   `flutter_comics_viewer`; `flutter_comics` owns the file/model/interpolation-values/import-export.
   Found the concrete reason `KeyframeInterpolator` specifically must live in `flutter_comics` (not
-  just "feels right"): `lottie_export.dart` already has a hard, shipped dependency on it — keeping it
+  just "feels right"): `bodymovin_export.dart` already has a hard, shipped dependency on it — keeping it
   in `flutter_comics_viewer` would force a backwards library→plugin dependency or a duplicate copy.
   `dart_comics_viewer_backend.dart`'s own duplicate model is deleted, confirming "не будет двойного
   кода" once this flow lands — `flutter_comics_viewer` will have exactly one `.comics` parser
@@ -130,7 +130,7 @@ Requirements v0.4 APPROVED; Specifications v0.4 APPROVED; Plan v1.1 APPROVED; Ph
   coupling (narrowed to just `imageSlotFor`'s parameter type, 2 candidate fixes not yet chosen),
   exact package pubspec shape (Flutter vs. plain Dart package), whether
   `EditorMode`/`EditorWorkspace`/`PropertiesTab` move with the file, and the
-  `archive_io.dart`→`archive.dart` import narrowing in `lottie_mapping.dart`. Both the cubic-ease-out
+  `archive_io.dart`→`archive.dart` import narrowing in `bodymovin_mapping.dart`. Both the cubic-ease-out
   interpolator's location AND `.puzzle`'s scope are now **resolved/decided**, not just leaning.
 
 ## Fork History

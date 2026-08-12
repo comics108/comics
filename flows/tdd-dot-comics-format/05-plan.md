@@ -178,7 +178,7 @@ Plan," plus the one real UI gap (`preferredOrientation`'s third "Auto" tile does
 ### Phase 4: `Layer.Mask` / `Layer.SolidColor`
 
 #### Task 4.1: Add `EditorLayer.solidColor` and `EditorLayer.mask`
-- **Description**: Add nullable `String? solidColor` (hex, mirrors Lottie's `sc`) and a `LayerMask?
+- **Description**: Add nullable `String? solidColor` (hex, mirrors Bodymovin's `sc`) and a `LayerMask?
   mask` (small class: `shape` enum `rect|polygon|bitmap`, plus shape-specific fields — start with
   `rect` only, since all 6 real masks found are rectangles; `polygon`/`bitmap` fields can be added
   additively later without a migration). Resolve the open `solidColor`/`Images[]` precedence
@@ -196,7 +196,7 @@ Plan," plus the one real UI gap (`preferredOrientation`'s third "Auto" tile does
 - **Dependencies**: Task 4.1
 - **Verification**: Round-trip test; confirm `THE BROKEN TUSK`'s real solid layer
   (`sc:"#ffffff", sw:720, sh:27326`) imports and re-exports with the same color once
-  `tdd-dot-lottie-import-export` consumes this field (cross-flow dependency, not blocking this task
+  `tdd-dot-bodymovin-import-export` consumes this field (cross-flow dependency, not blocking this task
   itself).
 - **Complexity**: Low
 

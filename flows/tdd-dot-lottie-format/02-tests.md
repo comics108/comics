@@ -1,4 +1,4 @@
-# Test Cases: dot-lottie-format
+# Test Cases: dot-bodymovin-format
 
 > Version: 0.1 (seed draft — cases-first analysis is limited by design until Requirements' Open
 > Questions are answered; see below)
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Cases-first analysis for the Lottie content pipeline is genuinely constrained right now: there is
+Cases-first analysis for the Bodymovin content pipeline is genuinely constrained right now: there is
 no confirmed reader anywhere in this repo (`01-requirements.md`, Verified Fact 5), so rendering-
 behavior cases ("given this keyframe, when played, then this transform") can't be written against
 real code the way `tdd-dot-comics-format` could against the classic lineage. What *can* be defined
@@ -16,15 +16,15 @@ now is schema-validity and content-inventory cases — real, checkable today, wi
 
 ## Cases
 
-**L1 — A real Lottie content file parses as valid Lottie JSON**
-- Given: `samples/sample.lottie_unzip/ASHES_content/ASHES.json`, or any of the 7 real produced
-  chapters under `dataset/mahabharata/boranko/mahabharata-dot-lottie/unzip/`
-- When: parsed as JSON and checked for the standard Lottie top-level keys (`v`, `fr`, `ip`, `op`,
+**L1 — A real Bodymovin content file parses as valid Bodymovin JSON**
+- Given: `samples/sample.Bodymovin_unzip/ASHES_content/ASHES.json`, or any of the 7 real produced
+  chapters under `dataset/mahabharata/boranko/mahabharata-dot-bodymovin/unzip/`
+- When: parsed as JSON and checked for the standard Bodymovin top-level keys (`v`, `fr`, `ip`, `op`,
   `w`, `h`, `layers`, `assets`)
-- Then: all present, `v` matches a real Lottie/bodymovin version string, `fr` is a plausible
+- Then: all present, `v` matches a real Bodymovin/bodymovin version string, `fr` is a plausible
   framerate (e.g. 24-60), `op > ip`
 - Design implication: this is checkable with a generic JSON-schema validator today, no custom
-  parser needed — Lottie is a public, documented format
+  parser needed — Bodymovin is a public, documented format
 
 **L2 — Every produced chapter has all three companion folders (content/music/translations), not just some**
 - Given: each of the 7 real produced chapters (Requirements Verified Fact 6)
@@ -46,23 +46,23 @@ now is schema-validity and content-inventory cases — real, checkable today, wi
   op:13491`)
 - When: checked
 - Then: **currently this does NOT hold** — the precomp's own `op:13491` exceeds the root's
-  `op:11640`. Not yet confirmed whether this is (a) normal/expected Lottie semantics (a precomp's
+  `op:11640`. Not yet confirmed whether this is (a) normal/expected Bodymovin semantics (a precomp's
   `ip`/`op` describe its own internal trim, independent of whether the root ever actually reaches
-  that point — plausible, needs confirming against the Lottie spec, not assumed), or (b) a real
+  that point — plausible, needs confirming against the Bodymovin spec, not assumed), or (b) a real
   authoring inconsistency in this specific sample. **Flagged as an open finding, not a confirmed
-  bug** — needs someone with real Lottie/After-Effects authoring knowledge to confirm which.
+  bug** — needs someone with real Bodymovin/After-Effects authoring knowledge to confirm which.
 
-**L5 — No implementation in this repo currently crashes or misbehaves when handed a `.lottie` file (vacuous today, but worth stating)**
+**L5 — No implementation in this repo currently crashes or misbehaves when handed a `.Bodymovin` file (vacuous today, but worth stating)**
 - Given: any current `.comics`-aware code path (`models_mapping.dart`'s `comicsFromCore`, the C#
   editor, `comics-viewer-android`)
-- When: handed a `.lottie` file instead of a `.comics` file
+- When: handed a `.Bodymovin` file instead of a `.comics` file
 - Then: **not yet tested** — since nothing currently accepts arbitrary file selection into these
   paths without a `.comics`/`.puzzle` extension check (`comicsFromCore`'s `name.endsWith('.puzzle')`
   branch, `models.dart`), this is likely a non-issue by construction, but worth a real test once a
-  Lottie file-open path exists anywhere, so a future integration doesn't accidentally feed Lottie
+  Bodymovin file-open path exists anywhere, so a future integration doesn't accidentally feed Bodymovin
   JSON into the classic parser and get a confusing silent-wrong-result instead of a clear rejection
 
-**L6 (2026-08-07) — RESOLVED, NEGATIVELY (2026-08-07): a real Lottie content file's layers are all image type (`ty:2`), with no shapes/masks/text, for every produced chapter — not just the one already checked**
+**L6 (2026-08-07) — RESOLVED, NEGATIVELY (2026-08-07): a real Bodymovin content file's layers are all image type (`ty:2`), with no shapes/masks/text, for every produced chapter — not just the one already checked**
 - Given: each of the 7 real produced chapters' `<codename>.json`
 - When: every layer (including inside nested composition assets) is checked for `ty`, plus masks,
   null layers (`ty:3`), solid layers (`ty:1`), and the `parent` field (not originally part of this
@@ -77,7 +77,7 @@ now is schema-validity and content-inventory cases — real, checkable today, wi
   general** — most real chapters need real parent-chain resolution, not just a flat image-layer
   mapping, and one chapter needs mask handling this flow's original scope excluded. See
   `flows/tdd-dot-comics-format/01-requirements.md`'s animation-inventory section for the full table
-  and the consequence for `tdd-dot-lottie-import-export`'s Precomp Handling design.
+  and the consequence for `tdd-dot-bodymovin-import-export`'s Precomp Handling design.
 - Design implication (originally stated, now executed): the generic layer-`ty` census script was
   run for real, directly, against all 7 files — no player needed, confirmed.
 
@@ -98,7 +98,7 @@ now is schema-validity and content-inventory cases — real, checkable today, wi
       expansion (L3) each have a case.
 - [x] Edge cases identified — codename consistency (L2), the `ip`/`op` bounds question (L4).
 - [ ] Error scenarios defined — **deliberately incomplete**: without a real reader, "what happens
-      on malformed Lottie input" can't be answered against real code yet (L5 notes this explicitly
+      on malformed Bodymovin input" can't be answered against real code yet (L5 notes this explicitly
       rather than inventing an untested answer).
 - [x] Design implications extracted — L1 notes a generic validator suffices; L5 notes the
       file-extension-gating that already protects against cross-format confusion today.
@@ -115,7 +115,7 @@ even mean for this flow:
 - [ ] Is `mahabharata-mobile-swift-v2026`'s vendored engine meant to be the eventual reader? (Now
       known: the identical engine has been vendored, unused, since the 2012 Swift app too — see
       `01-requirements.md`'s correction.)
-- [ ] L4's `ip`/`op` bounds question — needs a real Lottie-authoring-knowledgeable answer, not a
+- [ ] L4's `ip`/`op` bounds question — needs a real Bodymovin-authoring-knowledgeable answer, not a
       guess.
 - [x] **L6 — RESOLVED, NEGATIVELY (2026-08-07)**: no, the other 6 chapters do NOT stay within
       `ASHES.json`'s simple subset. Masks (1/7), null layers (1/7), solid layers (1/7), and —most
@@ -123,7 +123,7 @@ even mean for this flow:
       confirmed complications. The conversion-feasibility conclusion in `01-requirements.md` was
       only ever true for `ASHES.json` specifically; it does not generalize to this content pipeline
       as a whole. See `flows/tdd-dot-comics-format/01-requirements.md`'s animation-inventory
-      section for the full table, and `flows/comics-editor/tdd-dot-lottie-import-export` for the
+      section for the full table, and `flows/comics-editor/tdd-dot-bodymovin-import-export` for the
       consequence (Precomp Handling needs to generalize to arbitrary parent chains).
 - [ ] **L7**: still open, narrower now — easing-handle consistency wasn't re-checked across all 7
       files during the L6 re-investigation (which focused on structural/layer-type census). Lower

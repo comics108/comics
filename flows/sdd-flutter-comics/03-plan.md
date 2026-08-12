@@ -7,7 +7,7 @@
 
 ## Summary
 
-Relocates the `.comics`/`.puzzle` data model, the keyframe interpolator, and the portable Lottie
+Relocates the `.comics`/`.puzzle` data model, the keyframe interpolator, and the portable Bodymovin
 parsing/import/export code from `apps/comics-editor` into a new standalone package
 `libs/flutter_comics`, then rewrites `flutter_comics_viewer`'s Dart backend to consume it instead of
 its own duplicate model. The implemented v1.0 baseline has five phases. The v1.1 addendum adds a
@@ -28,7 +28,7 @@ applied on top.
 
 #### Task 1.1: Create `libs/flutter_comics` package skeleton
 - **Description**: `pubspec.yaml` (Flutter package, not plain Dart — per Specifications' resolved
-  Open Design Question: `models.dart`/`lottie_import.dart` use `package:flutter/widgets.dart` for
+  Open Design Question: `models.dart`/`bodymovin_import.dart` use `package:flutter/widgets.dart` for
   `Offset`/`Color`, and "move, don't reinvent" means keeping that dependency rather than swapping to
   a Flutter-free geometry type), `analysis_options.yaml` (matching `apps/comics-editor`'s), `README
   .md` stub, `.gitignore`. `publish_to: 'none'`. `environment: sdk: ^3.12.2`, `flutter: sdk: flutter`.
@@ -113,11 +113,11 @@ applied on top.
   `models.dart`) into `libs/flutter_comics/test/`. Then update every real importer identified in
   Specifications' Affected Systems table: the 15 `lib/` files that import `models.dart` directly
   (`keyframe_interpolator.dart` already handled in 1.5; `sound_player.dart`, `controller.dart`,
-  `edit_history.dart`, `lottie_export.dart`, `lottie_import.dart`, `editor_screen.dart`,
+  `edit_history.dart`, `bodymovin_export.dart`, `bodymovin_import.dart`, `editor_screen.dart`,
   `balloon_editor_card.dart`, `balloon_rail.dart`, `dialogs.dart`, `properties_panel.dart`,
   `scene_panel.dart`, `timeline.dart`, `top_bar.dart`, `viewer_workspace.dart`) get
   `import '../ui/models.dart'`-style lines replaced with
-  `import 'package:flutter_comics/flutter_comics.dart';` (`lottie_import.dart`/`lottie_export.dart`
+  `import 'package:flutter_comics/flutter_comics.dart';` (`bodymovin_import.dart`/`bodymovin_export.dart`
   get their own dedicated move in Phase 3 instead — skip them here, they'll need this same fix
   applied at that point). The 3 files that additionally import `models_mapping.dart` directly
   (`controller.dart`, `balloon_editor_card.dart`, `cutting_canvas.dart`) are unaffected by this task
@@ -158,26 +158,26 @@ applied on top.
 - **Complexity**: Medium (mechanical volume, not logic — a single careful find/replace pass per file,
   verified by the full suite, not per-file manual reasoning)
 
-### Phase 3: Lottie files + their tests, editor Lottie-UI import fixups, verify editor suite green
+### Phase 3: Bodymovin files + their tests, editor Bodymovin-UI import fixups, verify editor suite green
 
-#### Task 3.1: Move the 3 Lottie files
-- **Description**: Relocate verbatim. `lottie_mapping.dart` gets one real edit on top of the move:
+#### Task 3.1: Move the 3 Bodymovin files
+- **Description**: Relocate verbatim. `bodymovin_mapping.dart` gets one real edit on top of the move:
   `import 'package:archive/archive_io.dart';` → `import 'package:archive/archive.dart';` (confirmed
   by grep: only `Archive`/`ZipDecoder`/`ArchiveFile`/`ZipEncoder` are used, none of `archive_io.dart`'s
   extra file-based IO helpers — the narrower import is genuinely more portable, per Specifications).
-  `lottie_import.dart`/`lottie_export.dart` move with no internal edits beyond their own relative
+  `bodymovin_import.dart`/`bodymovin_export.dart` move with no internal edits beyond their own relative
   imports of each other and of `models.dart`/`keyframe_interpolator.dart`, which change to match
-  their new sibling location inside `libs/flutter_comics/lib/src/lottie/`.
+  their new sibling location inside `libs/flutter_comics/lib/src/bodymovin/`.
 - **Files**:
-  - `apps/comics-editor/lib/src/bridge/lottie_mapping.dart` →
-    `libs/flutter_comics/lib/src/lottie/lottie_mapping.dart` — Move + one import edit
+  - `apps/comics-editor/lib/src/bridge/bodymovin_mapping.dart` →
+    `libs/flutter_comics/lib/src/bodymovin/bodymovin_mapping.dart` — Move + one import edit
     (`archive_io.dart` → `archive.dart`)
-  - `apps/comics-editor/lib/src/ui/lottie/lottie_import.dart` →
-    `libs/flutter_comics/lib/src/lottie/lottie_import.dart` — Move (relative imports updated to match
-    new location: `'../../bridge/lottie_mapping.dart'` → `'lottie_mapping.dart'`,
+  - `apps/comics-editor/lib/src/ui/bodymovin/bodymovin_import.dart` →
+    `libs/flutter_comics/lib/src/bodymovin/bodymovin_import.dart` — Move (relative imports updated to match
+    new location: `'../../bridge/bodymovin_mapping.dart'` → `'bodymovin_mapping.dart'`,
     `'../models.dart'` → `'../models.dart'` [unchanged shape, one directory up])
-  - `apps/comics-editor/lib/src/ui/lottie/lottie_export.dart` →
-    `libs/flutter_comics/lib/src/lottie/lottie_export.dart` — Move (same relative-import fixups, plus
+  - `apps/comics-editor/lib/src/ui/bodymovin/bodymovin_export.dart` →
+    `libs/flutter_comics/lib/src/bodymovin/bodymovin_export.dart` — Move (same relative-import fixups, plus
     `'../anim/keyframe_interpolator.dart'` → `'../keyframe_interpolator.dart'`)
   - `libs/flutter_comics/lib/flutter_comics.dart` — Modify (add 3 exports)
 - **Dependencies**: Task 1.5 (needs `keyframe_interpolator.dart` already in place)
@@ -185,32 +185,32 @@ applied on top.
 - **Complexity**: Medium (real import-path edits, but no logic changes — must not touch anything
   beyond import lines)
 
-#### Task 3.2: Move the 4 clean Lottie test files
-- **Description**: `lottie_mapping_test.dart`, `lottie_import_test.dart`, `lottie_export_test.dart`,
-  `lottie_commit_import_test.dart` — confirmed by their actual imports to depend only on the 3 files
-  just moved plus `models.dart`. `lottie_roundtrip_test.dart` is **not** in this task — it has the one
+#### Task 3.2: Move the 4 clean Bodymovin test files
+- **Description**: `bodymovin_mapping_test.dart`, `bodymovin_import_test.dart`, `bodymovin_export_test.dart`,
+  `bodymovin_commit_import_test.dart` — confirmed by their actual imports to depend only on the 3 files
+  just moved plus `models.dart`. `bodymovin_roundtrip_test.dart` is **not** in this task — it has the one
   contingent dependency on `comics_reader.dart` (Task 4.3 covers it).
 - **Files**:
-  - `apps/comics-editor/test/lottie_mapping_test.dart`,
-    `.../lottie_import_test.dart`, `.../lottie_export_test.dart`,
-    `.../lottie_commit_import_test.dart` → `libs/flutter_comics/test/` — Move (import paths updated
-    to the package + relative `lottie/` location, assertions unchanged)
+  - `apps/comics-editor/test/bodymovin_mapping_test.dart`,
+    `.../bodymovin_import_test.dart`, `.../bodymovin_export_test.dart`,
+    `.../bodymovin_commit_import_test.dart` → `libs/flutter_comics/test/` — Move (import paths updated
+    to the package + relative `bodymovin/` location, assertions unchanged)
 - **Dependencies**: Task 3.1
 - **Verification**: All 4 pass standalone inside `libs/flutter_comics`.
 - **Complexity**: Low
 
-#### Task 3.3: Fix up `apps/comics-editor`'s Lottie-UI import paths
-- **Description**: `lottie_import_dialog.dart` and `controller.dart`'s Lottie methods
-  (`pickLottieToImport`/`setLottieImportMode`/`setLottieScrollSpeed`/`setLottieEasingChoice`/
-  `cancelLottieImport`/`commitLottieImport`/`exportLottieWithDialog`) do **not** move (confirmed
+#### Task 3.3: Fix up `apps/comics-editor`'s Bodymovin-UI import paths
+- **Description**: `bodymovin_import_dialog.dart` and `controller.dart`'s Bodymovin methods
+  (`pickBodymovinToImport`/`setBodymovinImportMode`/`setBodymovinScrollSpeed`/`setBodymovinEasingChoice`/
+  `cancelBodymovinImport`/`commitBodymovinImport`/`exportBodymovinWithDialog`) do **not** move (confirmed
   `file_picker`/`EditorScope`/tempFolder-coupled) — only their
-  `import '../lottie/lottie_import.dart'`/`import '../../bridge/lottie_mapping.dart'`-style lines
-  change to the package import. `lottie_controller_test.dart` gets the same treatment (stays, import
+  `import '../bodymovin/bodymovin_import.dart'`/`import '../../bridge/bodymovin_mapping.dart'`-style lines
+  change to the package import. `bodymovin_controller_test.dart` gets the same treatment (stays, import
   path only).
 - **Files**:
-  - `apps/comics-editor/lib/src/ui/widgets/lottie_import_dialog.dart`,
+  - `apps/comics-editor/lib/src/ui/widgets/bodymovin_import_dialog.dart`,
     `.../ui/controller.dart` — Modify (import path only)
-  - `apps/comics-editor/test/lottie_controller_test.dart` — Modify (import path only)
+  - `apps/comics-editor/test/bodymovin_controller_test.dart` — Modify (import path only)
 - **Dependencies**: Task 3.1
 - **Verification**: `flutter test` in `apps/comics-editor` — full suite green again.
 - **Complexity**: Low
@@ -245,7 +245,7 @@ applied on top.
 - **Verification**: Test itself passes.
 - **Complexity**: Medium
 
-#### Task 4.3: Move `lottie_roundtrip_test.dart`, rewriting its one contingent dependency
+#### Task 4.3: Move `bodymovin_roundtrip_test.dart`, rewriting its one contingent dependency
 - **Description**: G3's fixture-prep step currently calls `comicsFromCore` (from
   `models_mapping.dart`, which stays in `apps/comics-editor`) to parse the real
   `sample_v2012.comics_unzip/data.json` fixture. Rewrite that one step to use
@@ -253,11 +253,11 @@ applied on top.
   directory already on disk in `samples/`, so this needs the directory's `data.json` re-zipped
   in-memory first (or `ComicsArchiveReader` gains a convenience for an already-decoded raw map — real
   design decision to make when writing this task, not pre-decided here). Once that one dependency is
-  gone, move the file; everything else in it (G6, E1) already only depends on the 3 Lottie files +
+  gone, move the file; everything else in it (G6, E1) already only depends on the 3 Bodymovin files +
   `models.dart`/`keyframe_interpolator.dart`, already moved.
 - **Files**:
-  - `apps/comics-editor/test/lottie_roundtrip_test.dart` → `libs/flutter_comics/test/
-    lottie_roundtrip_test.dart` — Move + one real rewrite (G3's fixture-prep step only)
+  - `apps/comics-editor/test/bodymovin_roundtrip_test.dart` → `libs/flutter_comics/test/
+    bodymovin_roundtrip_test.dart` — Move + one real rewrite (G3's fixture-prep step only)
 - **Dependencies**: Task 4.1, Task 3.2
 - **Verification**: All 3 cases (G3/G6/E1) pass inside `libs/flutter_comics`.
 - **Complexity**: Medium
@@ -347,10 +347,10 @@ applied on top.
 ```
 
 Phases 1-2 are strictly sequential (each later task needs the model already in place and importable).
-Phase 3 (Lottie) and Phase 4's `comics_reader.dart` (Task 4.1) can proceed in parallel once Phase 2 is
+Phase 3 (Bodymovin) and Phase 4's `comics_reader.dart` (Task 4.1) can proceed in parallel once Phase 2 is
 green, since neither depends on the other directly — but Task 4.3 (the contingent round-trip test)
 needs BOTH Task 3.2 and Task 4.1 done. Phase 5 needs Task 4.1 (the new reader) but not Phase 3's
-Lottie files specifically (the viewer doesn't consume Lottie import/export today).
+Bodymovin files specifically (the viewer doesn't consume Bodymovin import/export today).
 
 ## File Change Summary
 
@@ -358,17 +358,17 @@ Lottie files specifically (the viewer doesn't consume Lottie import/export today
 |------|--------|--------|
 | `libs/flutter_comics/pubspec.yaml`, `analysis_options.yaml`, `lib/flutter_comics.dart` | Create | New package skeleton |
 | `libs/flutter_comics/lib/src/models.dart` | Move (from `apps/comics-editor`) + 2 surgical cuts | The relocated `.comics`/`.puzzle` model, minus editor-UI-only enums and the `LanguageRegistry`-coupled method |
-| `libs/flutter_comics/lib/src/keyframe_interpolator.dart` | Move | Portable interpolation math; `lottie_export.dart` depends on it, forcing this location |
-| `libs/flutter_comics/lib/src/lottie/lottie_mapping.dart` | Move + 1 import edit | Portable `.lottie` ZIP+JSON; `archive_io.dart`→`archive.dart` for genuine Web-safety |
-| `libs/flutter_comics/lib/src/lottie/lottie_import.dart`, `lottie_export.dart` | Move | Portable Lottie import/export logic |
+| `libs/flutter_comics/lib/src/keyframe_interpolator.dart` | Move | Portable interpolation math; `bodymovin_export.dart` depends on it, forcing this location |
+| `libs/flutter_comics/lib/src/bodymovin/bodymovin_mapping.dart` | Move + 1 import edit | Portable `.Bodymovin` ZIP+JSON; `archive_io.dart`→`archive.dart` for genuine Web-safety |
+| `libs/flutter_comics/lib/src/bodymovin/bodymovin_import.dart`, `bodymovin_export.dart` | Move | Portable Bodymovin import/export logic |
 | `libs/flutter_comics/lib/src/comics_reader.dart` | Create | NEW — the portable `.comics`/`.puzzle` reader neither existing codebase had in full-schema form |
-| `libs/flutter_comics/test/models_test.dart`, `lottie_mapping_test.dart`, `lottie_import_test.dart`, `lottie_export_test.dart`, `lottie_commit_import_test.dart`, `lottie_roundtrip_test.dart` (contingent rewrite), `comics_reader_test.dart` (new) | Move / Create | Tests confirmed to exercise only relocated/new logic |
+| `libs/flutter_comics/test/models_test.dart`, `bodymovin_mapping_test.dart`, `bodymovin_import_test.dart`, `bodymovin_export_test.dart`, `bodymovin_commit_import_test.dart`, `bodymovin_roundtrip_test.dart` (contingent rewrite), `comics_reader_test.dart` (new) | Move / Create | Tests confirmed to exercise only relocated/new logic |
 | `apps/comics-editor/lib/src/ui/editor_mode.dart` | Create | New home for the 3 enums cut from `models.dart` |
 | `apps/comics-editor/lib/src/i18n/language_registry.dart` | Modify | Gains the `imageSlotFor` extension cut from `models.dart` |
 | `apps/comics-editor/lib/src/bridge/models_mapping.dart` | Modify | Import path only; `comicsFromCore`/`comicsToCore` unchanged |
 | `apps/comics-editor/lib/**` (12 files) + `apps/comics-editor/test/**` (47 files) | Modify | Import path updates only |
-| `apps/comics-editor/lib/src/ui/widgets/lottie_import_dialog.dart`, `.../ui/controller.dart` | Modify | Import path only; Lottie UI/tempFolder glue stays |
-| `apps/comics-editor/test/models_mapping_test.dart`, `dataset_backward_compat_test.dart`, `lottie_controller_test.dart` | Modify (stay, corrected from a naive full-relocation reading) | Test logic that stays in `apps/comics-editor` |
+| `apps/comics-editor/lib/src/ui/widgets/bodymovin_import_dialog.dart`, `.../ui/controller.dart` | Modify | Import path only; Bodymovin UI/tempFolder glue stays |
+| `apps/comics-editor/test/models_mapping_test.dart`, `dataset_backward_compat_test.dart`, `bodymovin_controller_test.dart` | Modify (stay, corrected from a naive full-relocation reading) | Test logic that stays in `apps/comics-editor` |
 | `libs/comics_viewer/flutter_comics_viewer/pubspec.yaml` | Modify | Add `flutter_comics` path dependency |
 | `libs/comics_viewer/flutter_comics_viewer/lib/src/dart_comics_viewer_backend.dart`, `dart_comics_viewer_surface.dart` | Modify (rewrite internals, not moved) | Delete duplicate model, consume shared model + reader + interpolator |
 | `libs/comics_viewer/flutter_comics_viewer/test/dart_comics_viewer_backend_test.dart` | Modify (rewrite in place, not moved) | Asserts against the full model; extended for previously-dropped fields |
@@ -480,7 +480,7 @@ After each phase, verify:
 
 - [ ] Phase 1: `libs/flutter_comics` compiles (`flutter analyze` clean)
 - [ ] Phase 2: `apps/comics-editor`'s full suite green (480/480 baseline, 3 skipped)
-- [ ] Phase 3: `apps/comics-editor`'s full suite green again; `libs/flutter_comics`'s Lottie tests
+- [ ] Phase 3: `apps/comics-editor`'s full suite green again; `libs/flutter_comics`'s Bodymovin tests
       pass standalone
 - [ ] Phase 4: `libs/flutter_comics`'s full suite green (including the moved round-trip test);
       `apps/comics-editor`'s `dataset_backward_compat_test.dart`/`models_mapping_test.dart` still pass

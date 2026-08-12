@@ -1,4 +1,4 @@
-# Requirements: comics-ai-bhagavadgita-from-lottie
+# Requirements: comics-ai-bhagavadgita-from-bodymovin
 
 > Version: 1.1
 > Status: APPROVED
@@ -8,9 +8,9 @@
 
 Originally drafted as an addition (v0.2-v0.3) to `flows/comics-ai/sdd-comics-ai-bhagavadgita-generator`
 — Anton: "В отрисованной вручную художниками серии комикса Бхагавад Гита
-`dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/unzip/1` присутствовала глубина z-depth и камера
+`dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/unzip/1` присутствовала глубина z-depth и камера
 перемещалась не с постоянной скоростью строго сверху вниз а по ломанной кривой. Комикс был
-экспортирован в формат Lottie. Необходимо найти точный путь перемещения камеры и найти z-dept для
+экспортирован в формат Bodymovin. Необходимо найти точный путь перемещения камеры и найти z-dept для
 каждого из layers (а не всех на одну глубину) и экспортировать в формат .comics v2026, включая
 данные перемещения камеры и глубины z-depth, чтобы восстановить просмотр с эффектом паралакс." — a
 hand-drawn artist source has real depth and a non-constant-speed, non-straight camera path; find
@@ -32,14 +32,14 @@ starts already partway toward Implementation in substance, even though its own P
 checkboxes below start unchecked, matching this repo's practice of not silently back-filling
 completed-looking checkboxes for work done outside the formal task sequence.
 
-## Lottie Camera-Path & Per-Layer Z-Depth Source
+## Bodymovin Camera-Path & Per-Layer Z-Depth Source
 
-**A real Lottie source exists in the dataset and had not been audited by
+**A real Bodymovin source exists in the dataset and had not been audited by
 `sdd-comics-ai-bhagavadgita-generator`'s original Dataset Findings** (that audit covered only
-CSV/PSD sources): `dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/unzip/1/Mediation of the
+CSV/PSD sources): `dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/unzip/1/Mediation of the
 Bhagavat Gita_content/Mediation of the Bhagavat Gita.json` (~19MB), plus sibling
-`_translations/{en,ru}.json` (caption overlay Lotties) and `_music/BG_items_frames.json` (audio
-timing). This is the **only** Lottie file anywhere under `dataset/bhagavadgita/` — there is exactly
+`_translations/{en,ru}.json` (caption overlay Bodymovins) and `_music/BG_items_frames.json` (audio
+timing). This is the **only** Bodymovin file anywhere under `dataset/bhagavadgita/` — there is exactly
 one, not one per chapter.
 
 **Open, unresolved**: the file is titled "Mediation of the Bhagavat Gita" and its content does not
@@ -50,14 +50,14 @@ not chapter-5 material alongside the existing PSDs. **This flow does not assume 
 replacement for or component of any of the parent flow's 18 chapter files, unless Anton says
 otherwise.
 
-**Direct inspection of the real file** (not assumed from general Lottie/After Effects knowledge):
+**Direct inspection of the real file** (not assumed from general Bodymovin/After Effects knowledge):
 
 - `w:720, h:1600` (top-level canvas) — matches this format's own `preferredViewportWidth`/
   `preferredViewportHeight` default (720×1600) decided the same day in
   `flows/tdd-dot-comics-format/01-requirements.md`, independent confirmation the two numbers weren't
   arbitrary.
 - `ddd: 0` — **not** a true 3D composition. There is **no explicit camera layer** anywhere in the
-  file (Lottie/Bodymovin's real camera layer type, `ty:13`, appears zero times; no layer name
+  file (Bodymovin/Bodymovin's real camera layer type, `ty:13`, appears zero times; no layer name
   contains "cam"/"depth"/"parallax" either). **There is no single monolithic "camera" object to
   extract** — this corrects the command's own framing ("найти точный путь перемещения камеры")
   before it becomes a Specifications assumption: what's real is per-layer motion, described next.
@@ -88,11 +88,11 @@ otherwise.
   camera" depth cue riding alongside its XY motion.
 
 **What this means for extraction, stated plainly, and confirmed/refined by Anton directly
-(2026-08-09, two messages)**: "Все относительно. С учетом того, что экспорт в .lottie был сделан
+(2026-08-09, two messages)**: "Все относительно. С учетом того, что экспорт в .Bodymovin был сделан
 верно, то строго математически камера двигается сверху вниз без кривой (и данные по камере
 отсутствуют), но человеческий глаз видит по-другому: если человеческий глаз смотрит относительно
 некоторых layers, то другие layers движутся относительно этих layers, которые кажутся статичными." —
-it's relative: assuming the Lottie export itself is correct, the "camera" (the top-level pan) really
+it's relative: assuming the Bodymovin export itself is correct, the "camera" (the top-level pan) really
 does move top-to-bottom without a curve, strictly mathematically — there is no camera data because
 there is no camera, matching this section's own direct finding (`ddd:0`, no `ty:13` layer). The
 perceived **non-constant-speed, broken curve** is a real but purely perceptual/relative effect: the
@@ -129,8 +129,8 @@ element and `Layer.ZDepth` compose at render time.
 
 ## Problem Statement
 
-The Bhagavad Gita dataset contains one real, hand-animated Lottie piece with genuine per-layer depth
-and motion cues that no current tooling extracts or preserves — today it exists only as a Lottie
+The Bhagavad Gita dataset contains one real, hand-animated Bodymovin piece with genuine per-layer depth
+and motion cues that no current tooling extracts or preserves — today it exists only as a Bodymovin
 JSON, unusable by any `.comics` viewer/editor. This flow exists to extract that real signal (camera
 path, per-layer z-depth, per-layer motion) faithfully and export it as a `.comics` v2026 document,
 without inventing data the source doesn't actually contain.
@@ -138,7 +138,7 @@ without inventing data the source doesn't actually contain.
 ## User Stories
 
 **As** Anton, validating fidelity, **I want** every extracted value (camera path, z-depth, per-layer
-keyframes) traced to a specific real number in the source Lottie file, not invented or approximated
+keyframes) traced to a specific real number in the source Bodymovin file, not invented or approximated
 without disclosure, **so that** the exported `.comics` document is provably faithful to what the
 artists actually made, not a plausible guess.
 
@@ -150,14 +150,14 @@ actual parallax rendering later has real ground-truth data to render, not just a
 
 ### Must Have
 
-1. **Real per-layer motion preserved**: every layer that has real Lottie position and/or scale
+1. **Real per-layer motion preserved**: every layer that has real Bodymovin position and/or scale
    keyframes is exported with that same keyframe structure (irregular timing preserved, not
    resampled to constant speed and not flattened to one static placement) — the concrete, testable
-   proof being that a layer with N real Lottie position keyframes produces an `Anim` list with N
+   proof being that a layer with N real Bodymovin position keyframes produces an `Anim` list with N
    real `TranslateAnim` keyframes at the corresponding scroll positions, not 1.
 2. **Non-uniform per-layer z-depth**: every layer in the document gets its own individually-derived
    `zDepth` value via a disclosed, reproducible formula (see `02-specifications.md`) grounded in
-   that layer's own real Lottie signals — **not** one constant value applied to every layer. The
+   that layer's own real Bodymovin signals — **not** one constant value applied to every layer. The
    concrete, testable proof: at least two layers in the real output have measurably different
    `zDepth` values.
 3. **Disclosed limitation, not oversold**: the manifest/report for this document states plainly that
@@ -172,32 +172,32 @@ actual parallax rendering later has real ground-truth data to render, not just a
    document — a real, separate, inspectable data structure, not solely implicit in the sum of
    individual layers' own `TranslateAnim` keyframes. The concrete, testable proof: the output
    document has an identifiable camera-path field/structure whose own keyframe values are NOT
-   identical to the trivial 2-keyframe linear pan found directly in the Lottie source (the table
+   identical to the trivial 2-keyframe linear pan found directly in the Bodymovin source (the table
    above) — i.e. it demonstrably captures the reconstructed curve, not just a copy of the boring
    input.
 
 ### Should Have
 
-- Reuse `flows/comics-editor/tdd-dot-lottie-import-export`'s own real, tested Lottie-parsing
-  precedent (`libs/flutter_comics/lib/src/lottie/lottie_mapping.dart`) as a cross-check where
-  applicable, rather than re-deriving Lottie-parsing logic independently from scratch.
+- Reuse `flows/comics-editor/tdd-dot-bodymovin-import-export`'s own real, tested Bodymovin-parsing
+  precedent (`libs/flutter_comics/lib/src/bodymovin/bodymovin_mapping.dart`) as a cross-check where
+  applicable, rather than re-deriving Bodymovin-parsing logic independently from scratch.
 
 ### Won't Have (This Iteration)
 
 - Claiming `Mediation of the Bhagavat Gita.json` maps to any specific one of
   `sdd-comics-ai-bhagavadgita-generator`'s 18 numbered chapters — that mapping is unconfirmed (see
-  the Lottie section above) and not assumed here.
+  the Bodymovin section above) and not assumed here.
 - Implementing the real parallax rendering (the actual scroll-response math that makes a `zDepth`
   value visually do anything) — that's `flows/tdd-dot-comics-format`'s / a future viewer flow's
   scope, not this one's. This flow only extracts and writes the data.
-- Installing third-party Lottie rendering packages (`python-lottie`, `lottie-web`, etc.) for any
+- Installing third-party Bodymovin rendering packages (`python-bodymovin`, `bodymovin-web`, etc.) for any
   verification purpose — per Anton's explicit constraint (2026-08-09): verification instead reuses
-  `flows/comics-editor/tdd-dot-lottie-import-export`'s own findings and `libs/flutter_comics`'s
-  existing, tested Lottie parser.
+  `flows/comics-editor/tdd-dot-bodymovin-import-export`'s own findings and `libs/flutter_comics`'s
+  existing, tested Bodymovin parser.
 
 ## Constraints
 
-- **Input**: `dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/`, read-only — same rule as the rest
+- **Input**: `dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/`, read-only — same rule as the rest
   of `dataset/`, never created, modified, renamed, or deleted by this flow.
 - **Output cardinality**: exactly one additional `.comics` document (or possibly 3, if the
   1-file-vs-3-scenes Open Question below resolves that way) — never counted toward or presented as
@@ -208,9 +208,9 @@ actual parallax rendering later has real ground-truth data to render, not just a
   (the same property every other forward-looking field in this format has had before its own
   implementation), and because Must-Have 3 requires disclosing this plainly rather than silently
   depending on it as if it already worked.
-- **No external Lottie tooling**: per Anton's explicit instruction, no `python-lottie`/`lottie-web`/
+- **No external Bodymovin tooling**: per Anton's explicit instruction, no `python-bodymovin`/`bodymovin-web`/
   similar third-party rendering package may be installed for verification — reuse
-  `tdd-dot-lottie-import-export`/`libs/flutter_comics` instead.
+  `tdd-dot-bodymovin-import-export`/`libs/flutter_comics` instead.
 - **Dirty worktree**: unrelated existing changes in the repository must be preserved (same standing
   rule as every other flow this session).
 
@@ -234,14 +234,14 @@ actual parallax rendering later has real ground-truth data to render, not just a
 
 ## References
 
-- `dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/unzip/1/Mediation of the Bhagavat Gita_content/
-  Mediation of the Bhagavat Gita.json` — the real Lottie source inspected directly for this flow
+- `dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/unzip/1/Mediation of the Bhagavat Gita_content/
+  Mediation of the Bhagavat Gita.json` — the real Bodymovin source inspected directly for this flow
 - `flows/tdd-dot-comics-format/01-requirements.md`, `03-specifications.md` — `Layer.ZDepth`'s own
   design (default 0, additive), source of the "not yet implemented anywhere" constraint, and the
   canonical adopted home of this flow's `cameraPath` proposal
-- `flows/comics-editor/tdd-dot-lottie-import-export/` — the general Lottie↔`.comics` mapping
+- `flows/comics-editor/tdd-dot-bodymovin-import-export/` — the general Bodymovin↔`.comics` mapping
   precedent (parent chains, precomp handling), and the source of `libs/flutter_comics`'s tested
-  Lottie parser this flow's verification work reuses instead of installing new tooling
+  Bodymovin parser this flow's verification work reuses instead of installing new tooling
 - `flows/comics-ai/sdd-comics-ai-bhagavadgita-generator/` — the parent flow this work was extracted
   from (2026-08-09); see that flow's own `_status.md` for the disclosed extraction note
 

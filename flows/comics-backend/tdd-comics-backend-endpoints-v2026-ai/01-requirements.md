@@ -59,7 +59,7 @@ draft external image-generation path. Their current outputs and interfaces are i
 production system:
 
 - segmentation persists bboxes while discarding computed masks;
-- existing PSD/Lottie structure is not represented as reusable backend assets;
+- existing PSD/Bodymovin structure is not represented as reusable backend assets;
 - characters, objects, art styles, poses, and art stages lack canonical identities;
 - chapter-to-art mapping is treated as file/page matching instead of story-beat coverage;
 - the learned positioner is known to underperform its rule baseline on held-out data;
@@ -87,7 +87,7 @@ The API must expose stable identifiers and versioned relationships for at least:
 
 - `Project`: owner, policy, default language, release gates, provider permissions.
 - `Book`: title, source language, optional edition/author/artist metadata.
-- `SourceItem`: immutable uploaded/imported manuscript, CSV, PSD, PDF, image, Lottie, audio,
+- `SourceItem`: immutable uploaded/imported manuscript, CSV, PSD, PDF, image, Bodymovin, audio,
   `.comics`, font/lettering sample, palette, character sheet, storyboard, or editorial note.
 - `SourceRevision`: checksum, media metadata, storage reference, parser result, lineage.
 - `Asset`: recoverable RGBA/blob representation, source coordinates, bitmap mask, optional contour,
@@ -126,11 +126,11 @@ language, project, or all source material is rejected.
 ### B. Source Ingestion and Inspection
 
 Register local/imported sources or upload supported files; compute checksums; deduplicate; inspect
-media; parse structure where available; retain immutable provenance. Native PSD/Lottie/`.comics`
+media; parse structure where available; retain immutable provenance. Native PSD/Bodymovin/`.comics`
 layers and alpha must be recoverable before any flattened-image fallback is proposed.
 
 Supported source classes must include structured text, plain manuscript, PSD, PDF, raster image,
-Lottie, audio, existing `.comics`, fonts/lettering references, palettes, and editorial metadata.
+Bodymovin, audio, existing `.comics`, fonts/lettering references, palettes, and editorial metadata.
 
 ### C. Asset Extraction and Restoration
 
@@ -227,7 +227,7 @@ failure, and reports per-item status. Jobs and events survive backend restarts.
 
 1. A project with only raw manuscript and/or art can be ingested without a pre-existing CSV schema,
    while a request with no real source material is rejected without fabricated placeholders.
-2. Native PSD/Lottie/`.comics` structure is extracted before flattened-image segmentation and the
+2. Native PSD/Bodymovin/`.comics` structure is extracted before flattened-image segmentation and the
    chosen fallback reason is recorded.
 3. Every accepted foreground asset has versioned provenance and a recoverable bitmap mask/RGBA
    representation; bbox-only output cannot pass the asset acceptance gate.
@@ -346,7 +346,7 @@ These questions must be answered from cases-first behavior in `02-tests.md`, the
 - `flows/comics-ai/sdd-comics-ai-baloons/`
 - `flows/comics-ai/sdd-comics-ai-animations/`
 - `flows/comics-ai/sdd-comics-ai-gpt-image-2/`
-- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`
+- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/`
 - `apps/comics-backend/node/src/docs/v2026-admin.yaml`
 - `apps/comics-backend/node/src/routes/v2026/admin/`
 

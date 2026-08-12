@@ -75,7 +75,7 @@ Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05
   ./pubspec_overrides.yaml)` and `flutter_comics_viewer 1.1.0 from path
   ../../libs/comics_viewer/flutter_comics_viewer (overridden in ./pubspec_overrides.yaml)`;
   `flutter analyze` shows 4 pre-existing unrelated style lints (`curly_braces_in_flow_control_structures`
-  in `process_cutting_client.dart`/`ffi_core.dart`/`cutting_canvas.dart`/`lottie_import_dialog.dart`)
+  in `process_cutting_client.dart`/`ffi_core.dart`/`cutting_canvas.dart`/`bodymovin_import_dialog.dart`)
   — not touched, out of scope for this request.
 - **Local build verification (2026-08-10)**: `flutter build ios --release --no-codesign` and
   `flutter build macos --release` both succeeded after the `pubspec_overrides.yaml` change; fast

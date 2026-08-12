@@ -94,23 +94,23 @@ controller/method-channel/widget plumbing, not format parsing — **not** candid
   Wrapper"). This flow's extraction work will modify files that flow owns — flagged as a real
   cross-flow dependency, not assumed away.
 
-## Addendum (v0.2, 2026-08-08): Lottie import/export scope + full flow survey
+## Addendum (v0.2, 2026-08-08): Bodymovin import/export scope + full flow survey
 
 Anton: "Прочитай каждый sdd, vdd, tdd флоу и проведи глубокий анализ. Дай интерфейс взаимодействия и
-полный список файлов который будешь перемещать. Так же включи в перемещение все связанное с lottie и
+полный список файлов который будешь перемещать. Так же включи в перемещение все связанное с bodymovin и
 импортом/экспортом" — read every flow, give the interaction interface and full file list, and
-explicitly include everything Lottie-related in the move.
+explicitly include everything Bodymovin-related in the move.
 
 **Every flow in `flows/` was read** (not just the ones already cited). Full survey results, including
 exact file paths, statuses, and cross-references, are folded into this document and
 `02-specifications.md` below. Two genuinely new things came out of this pass:
 
-1. **`apps/comics-editor/lib/src/bridge/lottie_mapping.dart`, `.../lib/src/ui/lottie/lottie_import.dart`,
-   `.../lib/src/ui/lottie/lottie_export.dart`, and `.../lib/src/ui/anim/keyframe_interpolator.dart` are
+1. **`apps/comics-editor/lib/src/bridge/bodymovin_mapping.dart`, `.../lib/src/ui/bodymovin/bodymovin_import.dart`,
+   `.../lib/src/ui/bodymovin/bodymovin_export.dart`, and `.../lib/src/ui/anim/keyframe_interpolator.dart` are
    now in scope for the move** — all four were checked directly against their real `import` statements
    and confirmed portable (no `dart:io`, no FFI, no `EditorController`/`file_picker` coupling). They
-   were missed in v0.1 because `flows/comics-editor/tdd-dot-lottie-import-export` (which created the
-   three Lottie files) wasn't in the original codebase analysis, and `keyframe_interpolator.dart` is
+   were missed in v0.1 because `flows/comics-editor/tdd-dot-bodymovin-import-export` (which created the
+   three Bodymovin files) wasn't in the original codebase analysis, and `keyframe_interpolator.dart` is
    the exact real answer to v0.1's own "where does DartViewerLayer's interpolation math end up" framing
    — it already exists, is already the tested, correct cubic-ease-out formula, and is already portable.
 2. **`flows/comics-viewer/sdd-flutter-comics-viewer-dart` is a real, already-drafted, hard *downstream*
@@ -121,12 +121,12 @@ exact file paths, statuses, and cross-references, are folded into this document 
 
 ### New User Story
 
-**As** the author of `flows/comics-editor/tdd-dot-lottie-import-export` (`.lottie` import/export, now
+**As** the author of `flows/comics-editor/tdd-dot-bodymovin-import-export` (`.Bodymovin` import/export, now
 IMPLEMENTATION-complete in `apps/comics-editor`)
-**I want** the portable Lottie parsing/import/export logic and the keyframe interpolator moved into
+**I want** the portable Bodymovin parsing/import/export logic and the keyframe interpolator moved into
 `libs/flutter_comics` alongside the `.comics` model
 **So that** any future Dart-based consumer (the viewer, a future macOS-native editor) gets real
-`.lottie` import/export and correct animation playback for free, instead of a third duplicate.
+`.Bodymovin` import/export and correct animation playback for free, instead of a third duplicate.
 
 New/revised acceptance criteria for this addendum are now numbered #7-9 in the main
 "## Acceptance Criteria" → "Must Have" list below, alongside the original #1-6 (kept together in one
@@ -139,10 +139,10 @@ clarification of what "the model" includes.
 Every flow under `flows/` was read for this pass. Summary of the ones with real bearing on this
 flow's scope (full per-flow detail is in the survey notes kept alongside this session):
 
-- **`flows/comics-editor/tdd-dot-lottie-import-export`** (IMPLEMENTATION complete, 480/480 tests) —
-  created the three Lottie files above and the `.comics` schema fields they depend on
+- **`flows/comics-editor/tdd-dot-bodymovin-import-export`** (IMPLEMENTATION complete, 480/480 tests) —
+  created the three Bodymovin files above and the `.comics` schema fields they depend on
   (`EditorLayer.groupId`, `.textRegion`/`TextRegion`, `ComicsDoc.preferredViewportWidth`/`Height`).
-  Not cited in v0.1's codebase analysis; now the direct source of the Lottie move-candidates.
+  Not cited in v0.1's codebase analysis; now the direct source of the Bodymovin move-candidates.
 - **`flows/comics-editor/vdd-comics-editor-scroll`** — created `keyframe_interpolator.dart` (scroll-
   basis). **`flows/tdd-dot-comics-format`** — extended it with time-basis composition, and added most
   of the schema fields currently on `EditorLayer`/`ComicsDoc` (`id`, `parentId`, `kind`, `scrollType`,
@@ -168,8 +168,8 @@ flow's scope (full per-flow detail is in the survey notes kept alongside this se
   reason to keep the public API consumer-agnostic (not editor- or single-viewer-specific) even though
   no active flow currently claims that dependency.
 - **`flows/comics-editor/sdd-comics-ai-baloons`** (a `comics-ai` flow, Python) — proposed the
-  `Layer.TextRegion` schema field explicitly designed to map onto Lottie's vector-mask model; already
-  implemented for real by `tdd-dot-lottie-import-export`, so no separate action needed here beyond
+  `Layer.TextRegion` schema field explicitly designed to map onto Bodymovin's vector-mask model; already
+  implemented for real by `tdd-dot-bodymovin-import-export`, so no separate action needed here beyond
   confirming `TextRegion` is included in the model move (it is — it's a class in `models.dart`).
 - All `flows/comics-ai/*` and `flows/comics-backend/*` flows are Python/Node backend or AI-pipeline
   work that reads `.comics` output or the native C# model as read-only ground truth — none touch, move,
@@ -216,16 +216,16 @@ that changes *internally* (deletes its own duplicate model, calls the shared rea
 become part of `flutter_comics`, it stays a `flutter_comics_viewer` file that *depends on* the library.
 
 **`flutter_comics` handles the file itself, its representations, and import/export — confirmed, with
-one concrete dependency that makes this non-negotiable, not just a style preference**: `lottie_export
+one concrete dependency that makes this non-negotiable, not just a style preference**: `bodymovin_export
 .dart` (explicitly named by Anton as import/export work that belongs here) **already has a real, hard,
-shipped dependency on `KeyframeInterpolator`** — `_localPositionAt`/`_sceneMemberToLottie` call
+shipped dependency on `KeyframeInterpolator`** — `_localPositionAt`/`_sceneMemberToBodymovin` call
 `KeyframeInterpolator.translateAt` to sample a layer's true absolute position at export time (checked
-directly: `lottie_export.dart`'s own `import '../anim/keyframe_interpolator.dart'`). If the
+directly: `bodymovin_export.dart`'s own `import '../anim/keyframe_interpolator.dart'`). If the
 interpolator stayed in `flutter_comics_viewer` instead, one of two bad things would happen: either
 `flutter_comics` (the format/import-export library) would need to depend on
 `flutter_comics_viewer` (the rendering *plugin*, pulling in platform channels/widgets a headless
 import/export consumer has no use for) — backwards from every other dependency arrow in this design —
-or `lottie_export.dart` would need its own second copy of the interpolation formula, recreating the
+or `bodymovin_export.dart` would need its own second copy of the interpolation formula, recreating the
 exact kind of duplication this whole flow exists to eliminate. `KeyframeInterpolator` itself is a pure
 `List<Anim>` → position/scale/rotation/alpha **value** function — it computes what a layer's current
 *representation* is at a given scroll/time position, it does not paint anything, subscribe to
@@ -256,7 +256,7 @@ concrete algorithm to adapt if/when real Dart-side `.comics` *writing* is ever n
 
 The implemented v0.3 library predates the now-concrete camera contract: its current
 `EditorLayer` has no `zDepth`, `ComicsDoc` has no `cameraPath`, and `ComicsArchiveReader` parses
-neither. `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie` now supplies a real producer and
+neither. `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin` now supplies a real producer and
 real non-uniform source data; `flows/tdd-dot-comics-format` v0.11/v0.8 defines the portable schema
 and response math. The shared model must adopt that contract so editor/viewer code does not create
 new duplicate camera models or platform-specific formulas.
@@ -277,7 +277,7 @@ parallax convention.
 **so that** upgrading `flutter_comics` cannot move a single existing layer.
 
 **As** an import pipeline, **I want** one deterministic camera sampler and depth-response function,
-**so that** a Lottie-derived path can be validated before any viewer UI is involved.
+**so that** a Bodymovin-derived path can be validated before any viewer UI is involved.
 
 ### v0.4 Acceptance Criteria (additional Must Haves)
 
@@ -304,7 +304,7 @@ parallax convention.
 - Included: shared types, clone behavior, portable read support, editor bridge round-trip, public
   exports, pure sampling/response math, and automated contract tests.
 - Excluded: applying the result in a viewer widget, editor controls/visualization for camera/depth,
-  reconstructing a path from Lottie, and changing platform orientation/scroll UX. Those belong to
+  reconstructing a path from Bodymovin, and changing platform orientation/scroll UX. Those belong to
   their respective viewer, VDD, and importer flows.
 
 ## Problem Statement
@@ -354,7 +354,7 @@ relocated — no behavior change to the editor's native-core-backed save/load pa
    this flow's Plan executes, **then** exactly the ones confirmed portable by their own real imports
    move into `libs/flutter_comics/test/` (updated only for import paths, continue passing); the ones
    confirmed to test logic that stays in `apps/comics-editor` (`models_mapping_test.dart`,
-   `dataset_backward_compat_test.dart`, `lottie_controller_test.dart`) stay there too — moving them
+   `dataset_backward_compat_test.dart`, `bodymovin_controller_test.dart`) stay there too — moving them
    would make the shared library depend backwards on the app.
 4. **Given** `flutter_comics_viewer`'s `DartComicsViewerBackend`, **when** this work completes,
    **then** it consumes the shared library's model/reader instead of its own
@@ -370,15 +370,15 @@ relocated — no behavior change to the editor's native-core-backed save/load pa
    `preferredViewportWidth`/`Height`, `Anim.basis`), **when** it's opened through the shared
    library's own ZIP+JSON reader (the new, portable one — see Open Questions), **then** every field
    round-trips, unlike today's `flutter_comics_viewer` parser which silently drops all of them.
-7. **Given** `apps/comics-editor/lib/src/bridge/lottie_mapping.dart`,
-   `.../lib/src/ui/lottie/lottie_import.dart`, `.../lib/src/ui/lottie/lottie_export.dart`, **when**
-   they move into `libs/flutter_comics`, **then** they move as-is — `lottie_import_dialog.dart` and
-   `EditorController`'s Lottie methods do **not** move (`file_picker`/tempFolder-coupled UI glue, not
+7. **Given** `apps/comics-editor/lib/src/bridge/bodymovin_mapping.dart`,
+   `.../lib/src/ui/bodymovin/bodymovin_import.dart`, `.../lib/src/ui/bodymovin/bodymovin_export.dart`, **when**
+   they move into `libs/flutter_comics`, **then** they move as-is — `bodymovin_import_dialog.dart` and
+   `EditorController`'s Bodymovin methods do **not** move (`file_picker`/tempFolder-coupled UI glue, not
    portable format logic; would violate criterion #1).
 8. **Given** `apps/comics-editor/lib/src/ui/anim/keyframe_interpolator.dart`, **when** it moves into
    `libs/flutter_comics`, **then** it resolves both this flow's own interpolator-location question
    and `sdd-flutter-comics-viewer-dart`'s deferred one — and, per the v0.3 Addendum's concrete
-   dependency check, it is architecturally required here anyway, since `lottie_export.dart` already
+   dependency check, it is architecturally required here anyway, since `bodymovin_export.dart` already
    depends on it and moving it to `flutter_comics_viewer` instead would create a backwards
    library→plugin dependency or a duplicate copy.
 9. **Given** `apps/comics-editor/test/models_mapping_test.dart` and
@@ -476,15 +476,15 @@ relocated — no behavior change to the editor's native-core-backed save/load pa
 
 - `apps/comics-editor/lib/src/ui/models.dart`, `apps/comics-editor/lib/src/bridge/models_mapping.dart`,
   `apps/comics-editor/lib/src/ui/anim/keyframe_interpolator.dart`
-- `apps/comics-editor/lib/src/bridge/lottie_mapping.dart`, `.../lib/src/ui/lottie/lottie_import.dart`,
-  `.../lottie_export.dart` (NEW in v0.2 — see Addendum above)
+- `apps/comics-editor/lib/src/bridge/bodymovin_mapping.dart`, `.../lib/src/ui/bodymovin/bodymovin_import.dart`,
+  `.../bodymovin_export.dart` (NEW in v0.2 — see Addendum above)
 - `libs/comics_viewer/flutter_comics_viewer/lib/src/dart_comics_viewer_backend.dart`,
   `dart_comics_viewer_surface.dart`, `comics_viewer.dart`
 - `flows/tdd-dot-comics-format/` — the schema decisions this library must stay synced with going
   forward (whoever adds a new field should now only need to touch this library)
-- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/` — v0.4's real producer/source of
+- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/` — v0.4's real producer/source of
   non-uniform depth and reconstructed camera-path fixtures
-- `flows/comics-editor/tdd-dot-lottie-import-export/` — NEW in v0.2: the flow that created the Lottie
+- `flows/comics-editor/tdd-dot-bodymovin-import-export/` — NEW in v0.2: the flow that created the Bodymovin
   files now in scope, and the schema fields (`groupId`/`textRegion`/`preferredViewportWidth`/`Height`)
   they depend on
 - `flows/comics-editor/vdd-comics-editor-scroll/` — NEW in v0.2: created `keyframe_interpolator.dart`
@@ -505,7 +505,7 @@ relocated — no behavior change to the editor's native-core-backed save/load pa
 
 - [x] Reviewed by: Anton Dodonov
 - [x] Approved on: 2026-08-08
-- [x] Notes: Approved as drafted (v0.3) — v0.1's original content plus the v0.2 (Lottie/interpolator
+- [x] Notes: Approved as drafted (v0.3) — v0.1's original content plus the v0.2 (Bodymovin/interpolator
       scope, full flow survey) and v0.3 (`.puzzle` decided, architecture-boundary verification)
       addenda all approved together ("specs and reqs approved").
 

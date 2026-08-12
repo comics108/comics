@@ -1,7 +1,7 @@
 # Requirements: dot-comics-format (TDD)
 
 > Version: 0.11 (2026-08-09: completed `Layer.ZDepth` semantics and added the document-level
-> `cameraPath` contract, derived from the real Bhagavad Gita Lottie extraction flow.)
+> `cameraPath` contract, derived from the real Bhagavad Gita Bodymovin extraction flow.)
 > Status: APPROVED
 > Last Updated: 2026-08-09
 
@@ -130,10 +130,10 @@ preferd phone-viewport-sized с дефолтом 720×1600 там же где Or
 a reading viewport this document is authored/intended for — independent of both `scrollType`
 (which axis scrolls) and `preferredOrientation` (which way is "up"); this axis is about *scale/
 extent* of the viewing window, not direction. Motivated directly by
-`flows/comics-editor/tdd-dot-lottie-import-export`'s real "Playback Viewport" Lottie export/import
+`flows/comics-editor/tdd-dot-bodymovin-import-export`'s real "Playback Viewport" Bodymovin export/import
 mode (`01-requirements.md`'s Export/Import Modes section, 2026-08-08): that mode needs a real
 viewport rectangle to compose each scene's sweep against, and `samples/sample_playback_viewport
-.lottie_unzip`'s real Lottie composition is confirmed **720×1600** (checked byte-level: `w`/`h`
+.Bodymovin_unzip`'s real Bodymovin composition is confirmed **720×1600** (checked byte-level: `w`/`h`
 top-level keys) — a genuine, already-produced value, not an arbitrary round number.
 
 **Naming (chosen by Claude, per Anton's explicit delegation — "Правильный нейминг сделай
@@ -149,7 +149,7 @@ of JSON nesting for no real benefit here, and breaks the parallel with `width`/`
 
 **Defaults**: `preferredViewportWidth` → **720**, `preferredViewportHeight` → **1600**, absent →
 both defaults apply — matching the real value found in `samples/sample_playback_viewport
-.lottie_unzip` exactly, and (same backward-compat reasoning as every other addition in this
+.Bodymovin_unzip` exactly, and (same backward-compat reasoning as every other addition in this
 document) representing today's implicit, only-ever-exercised assumption for any document that
 predates this field, not a behavior change.
 
@@ -163,7 +163,7 @@ reader — this is a forward-looking schema decision, matching this format's est
 way, engine work deferred to a later Plan). No corresponding UI decision is proposed here — unlike
 `scrollType`/`preferredOrientation`, which got New Document dialog tiles
 (`flows/tdd-dot-comics-format/04-visual.md` Screens/`05-plan.md` Phase 2, shipped), this field's
-primary real motivation so far is the Lottie Playback Viewport export/import path specifically, not
+primary real motivation so far is the Bodymovin Playback Viewport export/import path specifically, not
 a general editor-UI concern — whether it eventually gets its own New Document dialog control is an
 open question for whoever picks up that work, not decided here.
 
@@ -224,14 +224,14 @@ Test Case D4 for the cases-first behavioral shape of this addition, and `03-spec
 the (early, D4-scoped) schema/interface design. **Not implemented anywhere yet** — this is a
 decided direction, not a claim about current behavior.
 
-### Complete animation-type inventory, and Lottie-import coverage (added 2026-08-07)
+### Complete animation-type inventory, and Bodymovin-import coverage (added 2026-08-07)
 
 Per Anton's request: the full, exhaustive list of every animation type `.comics` supports today,
-and whether that list covers what `.lottie` import (`flows/comics-editor/tdd-dot-lottie-import-
-export`) actually needs. **Answer: no — real, already-produced Lottie content uses several
+and whether that list covers what `.Bodymovin` import (`flows/comics-editor/tdd-dot-bodymovin-import-
+export`) actually needs. **Answer: no — real, already-produced Bodymovin content uses several
 features `.comics` has no representation for, confirmed against all 7 real produced chapters, not
 just the one file (`ASHES.json`) earlier research sampled.** This corrects and narrows
-`flows/tdd-dot-lottie-format`'s own open question (L6/L7: "does `ASHES.json`'s simple structure
+`flows/tdd-dot-bodymovin-format`'s own open question (L6/L7: "does `ASHES.json`'s simple structure
 generalize to the other 6 chapters?") — investigated directly for this addition, answer is **no,
 it does not generalize**.
 
@@ -253,11 +253,11 @@ for the new, additional time-basis option). There is no 6th type, no per-vertex/
 color animation, no skew — confirmed by the same `diff -rq`/cross-platform enum comparison already
 established in `02-tests.md` Part 2.
 
-**Real Lottie content's actual property usage — investigated directly against all 7 real produced
-chapters** (`dataset/mahabharata/boranko/mahabharata-dot-lottie/unzip/.../*_content/*.json`, not
+**Real Bodymovin content's actual property usage — investigated directly against all 7 real produced
+chapters** (`dataset/mahabharata/boranko/mahabharata-dot-bodymovin/unzip/.../*_content/*.json`, not
 just the one sample used in earlier research):
 
-| Lottie feature | Found in real content? | `.comics` equivalent? | Verdict |
+| Bodymovin feature | Found in real content? | `.comics` equivalent? | Verdict |
 |---|---|---|---|
 | `p` (position) | Yes, all 7 files | Translate | Covered |
 | `s` (scale, 2D) | Yes, all 7 files | Scale | Covered |
@@ -274,8 +274,8 @@ just the one sample used in earlier research):
 | **Solid color layers (`ty:1`)** | **YES — 1/7 files** (`THE BROKEN TUSK`, "White Solid 1": `sc:"#ffffff"`, `sw:720`, `sh:27326`) | None — no flat-color-fill layer type — **decided**: a new `Layer.SolidColor` field (see "Masks & Solid Colors" below), **not** a `Kind` value (see rationale) | **Real, confirmed gap, addressed** |
 | **Layer parenting (`parent` field — one layer's transform relative to another's)** | **YES — 5/7 files**, and **heavily** in `THE BROKEN TUSK` (190 of 295 layers, 64%) | None — every `.comics` `Anim` is an absolute value; the format has zero parent-relative transform concept | **The single most consequential real gap** — affects the majority of layers in at least one real, already-produced chapter |
 
-**Why this matters beyond a checklist**: `tdd-dot-lottie-format`'s original conversion-feasibility
-conclusion ("`.comics → .lottie` is simple math; `.lottie → .comics` is simple *conditionally*, for
+**Why this matters beyond a checklist**: `tdd-dot-bodymovin-format`'s original conversion-feasibility
+conclusion ("`.comics → .Bodymovin` is simple math; `.Bodymovin → .comics` is simple *conditionally*, for
 content staying within a simple image-layer-only subset") was based on `ASHES.json` alone and
 explicitly flagged this as unconfirmed for the other 6 chapters (L6/L7). **It's now confirmed
 negative for the majority of real chapters**: `THE BROKEN TUSK` alone has 64% of its layers using
@@ -283,11 +283,11 @@ parent-relative transforms — a real character rig built from many named anatom
 "голова"/head, "руки сложен"/folded arms, "предплечье"/forearm — confirmed real layer names)
 parented to each other, not a flat stack of independent layers. The already-decided "bake
 absolute values at import time" mechanism (for precomp nesting, per
-`tdd-dot-lottie-import-export/01-requirements.md`'s Precomp Handling decision) needs to
+`tdd-dot-bodymovin-import-export/01-requirements.md`'s Precomp Handling decision) needs to
 **generalize to resolving the full parent chain per layer**, not just precomp-child relationships —
 a real, larger implementation task than that flow's Specifications currently scope. Masks, null
 layers, and solid layers are each confirmed in at least one real file too, meaning the "no shape/
-mask/text Lottie support" Won't-Have in that same flow excludes real, already-produced content, not
+mask/text Bodymovin support" Won't-Have in that same flow excludes real, already-produced content, not
 just hypothetical edge cases — worth Anton's explicit acknowledgment, not a silent scope gap.
 
 ### Layer parenting & organizational layers — new v2026 schema concepts (added 2026-08-07)
@@ -297,14 +297,14 @@ every layer's position has always been an independent, absolute `TranslateAnim.X
 `Group` matches repo-wide" (see "Layer & animation model" above, `sdd-comics-ai-positioning/
 01-requirements.md`). This was true for every real file checked, v2012 through today.
 
-**Forward decision (Anton, 2026-08-07)**: following directly from the real, confirmed Lottie
+**Forward decision (Anton, 2026-08-07)**: following directly from the real, confirmed Bodymovin
 findings above (layer parenting in 5/7 real chapters, up to 64% of one file's layers; null/
 organizational layers in 1/7), `.comics` v2026 gains two new, additive schema concepts:
 
 1. **`Layer.ParentId`** (new, optional, nullable string) — references another layer's stable
    identity within the same document. When present, that layer's authored transform is
    **conceptually relative to its parent** during editing (move the parent, children visually
-   follow — matching how Lottie's own `parent` field and every mainstream design/animation tool's
+   follow — matching how Bodymovin's own `parent` field and every mainstream design/animation tool's
    parenting behaves), but **the file always persists each layer's fully resolved, absolute `Anim`
    keyframes** — the exact same backward-compatibility mechanism already established for `GroupId`
    ("bake absolute values, `ParentId` is editor-side/live-authoring metadata only"). A v2012 reader
@@ -314,7 +314,7 @@ organizational layers in 1/7), `.comics` v2026 gains two new, additive schema co
    `"anchor"` — exact string not yet finalized), extending the existing **open-string** `Kind`
    field (`background`/`character`/`balloon`/`sound`/`art`, per `sdd-comics-editor-questions`) —
    no new field needed, matching that field's own design philosophy of being open-ended precisely
-   so new values could be added without a schema migration. Represents Lottie's `ty:3` null-layer
+   so new values could be added without a schema migration. Represents Bodymovin's `ty:3` null-layer
    equivalent: a layer that exists purely to be a parent/organizational anchor for other layers,
    carrying no visual content of its own. **Design implication needing verification, not
    assumed**: does every current reader already skip rendering a layer with zero populated image
@@ -325,7 +325,7 @@ organizational layers in 1/7), `.comics` v2026 gains two new, additive schema co
 **Real-world motivation, restated plainly**: this isn't a speculative feature — `THE BROKEN TUSK`
 (a real, already-produced chapter) is a genuine character rig built from named anatomical parts
 ("голова"/head, "руки сложен"/folded arms, "предплечье"/forearm) parented to each other via
-Lottie's own mechanism. Without `ParentId`, importing this content into `.comics` can only ever
+Bodymovin's own mechanism. Without `ParentId`, importing this content into `.comics` can only ever
 flatten it into independent absolute-keyframe layers with no memory of the original hierarchy —
 `GroupId` alone (a flat, symmetric "these belong together" tag) cannot express *who is parented to
 whom*, only *that a set of layers are related*. `ParentId` is the more fundamental mechanism this
@@ -342,9 +342,9 @@ role (a shared ancestor implies grouping, so the layers panel's "collapse as one
 derived from parent chains instead of a separate flat tag), or do the two coexist for different
 cases (e.g. `GroupId` for simple, non-hierarchical precomp-flattening; `ParentId` for real,
 multi-level rigs)? Not resolved here — flagged as a real design question for whoever picks up
-`flows/comics-editor/tdd-dot-lottie-import-export`'s Precomp Handling work next, since that flow's
+`flows/comics-editor/tdd-dot-bodymovin-import-export`'s Precomp Handling work next, since that flow's
 own Specifications now needs updating to know `ParentId` exists as a cleaner mapping target for
-Lottie's `parent` field than baking-and-discarding.
+Bodymovin's `parent` field than baking-and-discarding.
 
 ### Masks & Solid Colors — DECIDED (2026-08-07, Anton: "используем твою рекомендацию")
 
@@ -366,9 +366,9 @@ raster image.
 
 **Proposed alternative — two new, separate additive fields** (not `Kind` values):
 
-- **`Layer.SolidColor`** (nullable hex color string, e.g. `"#ffffff"` — mirrors Lottie's own `sc`
+- **`Layer.SolidColor`** (nullable hex color string, e.g. `"#ffffff"` — mirrors Bodymovin's own `sc`
   field exactly). When set, the layer renders as a flat color fill instead of a raster image;
-  mutually exclusive with populated `Images[]` slots. `sw`/`sh` (Lottie's solid width/height) map
+  mutually exclusive with populated `Images[]` slots. `sw`/`sh` (Bodymovin's solid width/height) map
   onto the layer's own existing size representation, no new field needed there.
 - **`Layer.Mask`** — same `rect`/`polygon`/`mask` shape vocabulary already designed for
   `TextRegion`, but a **genuinely separate field**: `TextRegion` answers "where does lettering go
@@ -391,7 +391,7 @@ along a notional Z axis, purely to drive a **parallax** effect: as the reader sc
 "back" appear to move less per unit of scroll than layers further "forward," faking depth on a format
 that is otherwise, and remains, a genuinely flat 2D scroll strip. This doesn't contradict the earlier
 animation-inventory finding that real content never uses true 3D transforms (`ddd:1`/`rx`/`ry`/`rz` —
-**0 of 7** real produced Lottie chapters) — `ZDepth` never introduces an actual 3D
+**0 of 7** real produced Bodymovin chapters) — `ZDepth` never introduces an actual 3D
 transform/projection, only a per-layer scroll-response scaling.
 
 **Decided (2026-08-08, Anton's direct instruction)**: `Layer.ZDepth`, a numeric field, **defaults to
@@ -427,7 +427,7 @@ The document may declare one optional root-level `cameraPath`: a scroll-position
 camera coordinates in the same authored pixel coordinate system as layer translation. It represents
 the camera's **additional non-linear XY movement relative to its first point**; the ordinary viewer
 scroll still supplies the base vertical/horizontal traversal. This distinction is required by the
-real Bhagavad Gita Lottie source: its top-level traversal is a simple linear vertical pan, while the
+real Bhagavad Gita Bodymovin source: its top-level traversal is a simple linear vertical pan, while the
 perceived broken camera curve has to be reconstructed from relative layer motion.
 
 `cameraPath` and `Layer.zDepth` are complementary but independently optional:
@@ -473,7 +473,7 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
    flow's own text, **then** it matches (verbatim quote or faithful paraphrase) — this document does
    not introduce new claims beyond what its two named sources already established.
 3. **Given** the new scroll-vs-time animation-dimension decision (2026-08-07) and the animation-type/
-   Lottie-coverage inventory, **when** either is checked against real code/real files, **then** every
+   Bodymovin-coverage inventory, **when** either is checked against real code/real files, **then** every
    claim is cited to a specific source (a real file investigated directly, or a named prior flow's
    own finding) — no claim in either new section is asserted from general knowledge alone.
 4. **Given** `Layer.ParentId` and the new organizational-layer `Kind` value (2026-08-07), **when**
@@ -540,15 +540,15 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
 - `flows/vdd-comics-editor-timeline/01-requirements.md` (Discoveries #3), `flows/comics-editor/
   vdd-comics-editor-vertical-scroll` — the "leg-swing" gap this flow's new time-basis dimension
   directly closes
-- `flows/tdd-dot-lottie-format/01-requirements.md` — the original conversion-feasibility analysis
+- `flows/tdd-dot-bodymovin-format/01-requirements.md` — the original conversion-feasibility analysis
   (based on `ASHES.json` alone) that this flow's animation-inventory section corrects/narrows
-- `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md`, `03-specifications.md` —
+- `flows/comics-editor/tdd-dot-bodymovin-import-export/01-requirements.md`, `03-specifications.md` —
   the Precomp Handling decision this flow's parenting finding says needs to generalize
-- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/01-requirements.md`,
+- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/01-requirements.md`,
   `02-specifications.md`, `04-implementation-log.md` — real source and motivating producer for the
   `cameraPath` contract and the non-uniform per-layer `zDepth` semantics
-- `dataset/mahabharata/boranko/mahabharata-dot-lottie/unzip/.../*_content/*.json` — all 7 real
-  produced Lottie chapters, inspected directly (not just the one previously-sampled file) for the
+- `dataset/mahabharata/boranko/mahabharata-dot-bodymovin/unzip/.../*_content/*.json` — all 7 real
+  produced Bodymovin chapters, inspected directly (not just the one previously-sampled file) for the
   animation-inventory/coverage table
 
 ---
@@ -561,11 +561,11 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
       directly specified the field's purpose (parallax), name (`z-depth`), and default (`0`,
       identical whether absent or explicit, for v2012 compatibility), per this document's established
       pattern of folding in narrow, directly-dictated decisions without a separate re-approval round
-      (unlike the broader, still-open Export/Import Modes addition in the sibling `tdd-dot-lottie-
+      (unlike the broader, still-open Export/Import Modes addition in the sibling `tdd-dot-bodymovin-
       import-export` flow, which was left pending re-review as a larger design space).
 - [x] Notes: Approved as drafted, including all schema decisions (time-basis, `ParentId`/
       organizational layers, `Mask`/`SolidColor`, `scrollType`/`preferredOrientation`,
-      `preferredViewportWidth`/`Height`, `Layer.ZDepth`) and the Lottie-coverage gap analysis. This
+      `preferredViewportWidth`/`Height`, `Layer.ZDepth`) and the Bodymovin-coverage gap analysis. This
       supersedes the original "not seeking approval" framing — this document has grown well beyond a
       passive reference consolidation into a real set of approved schema decisions. `Layer.ZDepth`'s
       exact math (sign, formula, `ParentId` composition) is explicitly carried forward as open, same

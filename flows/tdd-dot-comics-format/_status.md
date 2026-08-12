@@ -38,7 +38,7 @@ images regenerated for intentional layout changes, zero regressions to any pre-e
 **NEW addition (2026-08-08), Requirements/Specifications only, not yet implemented**: a third
 independent document field, `preferredViewportWidth`/`preferredViewportHeight` (default 720×1600),
 added alongside `scrollType`/`preferredOrientation` per Anton's direct instruction (naming chosen
-by Claude, as delegated). Motivated by `flows/comics-editor/tdd-dot-lottie-import-export`'s
+by Claude, as delegated). Motivated by `flows/comics-editor/tdd-dot-bodymovin-import-export`'s
 Playback Viewport export/import mode — `01-requirements.md` v0.9, `03-specifications.md` v0.6, both
 approved same-session (narrow, directly-dictated addition, same treatment as the earlier masks/
 scrollType/orientation decisions). **Scope of this addition was explicitly Requirements+
@@ -60,7 +60,7 @@ carried to Plan — **command scope was explicitly Requirements+Specifications o
 to `apps/comics-editor`.
 
 **Third NEW addition (2026-08-09), Requirements/Specifications approved**: motivated by
-the real `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie` producer, v0.11/v0.8 adopts an
+the real `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin` producer, v0.11/v0.8 adopts an
 optional document-root `cameraPath` and closes the v0.10 depth questions: unitless `zDepth`, positive
 = farther/slower, valid domain `z > -1`, response `1/(1+z)`, zero-preserving camera adjustment,
 render-time application, and no `ParentId` depth inheritance. This supersedes the preceding
@@ -74,13 +74,13 @@ Specifications; no code changes)
 ## Correction (2026-08-07): the "MAJOR DISCOVERY" originally logged here was a different format, now split out
 
 A comparison of `samples/sample_v2012.comics_unzip` vs. what was then `samples/
-sample_v2026.comics_unzip` surfaced content that turned out to be genuine **Lottie/Bodymovin JSON**
+sample_v2026.comics_unzip` surfaced content that turned out to be genuine **Bodymovin/Bodymovin JSON**
 (Adobe After Effects' animation export format), not an extension of this flow's classic
 `Comics.Editor.Models` schema — the file was mislabeled as a `.comics` version. Anton confirmed
-this and renamed the fixtures (`samples/sample.lottie`, `dataset/mahabharata/boranko/
-mahabharata-dot-lottie`) so they stop implying it's a `.comics` version, and asked for the whole
-investigation to move to its own flow: **`flows/tdd-dot-lottie-format/`**. Everything about Lottie's
-schema, the vendored-but-unused Lottie engine found in `apps/mahabharata-mobile-swift-v2026`, and
+this and renamed the fixtures (`samples/sample.Bodymovin`, `dataset/mahabharata/boranko/
+mahabharata-dot-bodymovin`) so they stop implying it's a `.comics` version, and asked for the whole
+investigation to move to its own flow: **`flows/tdd-dot-bodymovin-format/`**. Everything about Bodymovin's
+schema, the vendored-but-unused Bodymovin engine found in `apps/mahabharata-mobile-swift-v2026`, and
 the 7-of-43-produced episode comparison now lives there. Nothing else in this flow's own research
 (Parts 1-3, `02-tests.md`) was affected — that was always scoped to the classic lineage only and
 remains accurate.
@@ -93,7 +93,7 @@ research, Discoveries 1-2 below), and the current v2026 `.comics`-consuming stac
 comics-viewer-android`) remains backward compatible with it — confirmed by `diff -rq` showing the
 model files byte-identical since 2012/v2.8 (only the additive `Kind`/`Style`/`Translations` fields
 differ), and by `apps/comics-editor/test/dataset_backward_compat_test.dart` actually opening every
-real classic-format file without error. This conclusion was never in doubt — the Lottie confusion
+real classic-format file without error. This conclusion was never in doubt — the Bodymovin confusion
 was a separate, unrelated file being briefly misread as if it were part of this same lineage.
 
 ## Blockers
@@ -109,13 +109,13 @@ was a separate, unrelated file being briefly misread as if it were part of this 
   `Layer.GroupId` field (purely organizational, zero rendering effect, backward-compatible with
   v2012 by construction) has been decided in
   `flows/comics-editor/vdd-comics-editor-systematization-uiux/01-requirements.md` (Layer Grouping
-  section, 2026-08-07), motivated by `flows/comics-editor/tdd-dot-lottie-import-export`'s precomp-
+  section, 2026-08-07), motivated by `flows/comics-editor/tdd-dot-bodymovin-import-export`'s precomp-
   handling question. Once that design is approved/implemented, this flow's own consolidated format
   facts should get a new entry for it — not done yet, flagged here so it isn't lost.
 - **Second pending schema addition (2026-08-07)**: a new `Layer.TextRegion` field (`shape:
   "rect"|"polygon"|"mask"`, not gated by `Kind=="balloon"` — applies to any layer, per Anton's
   explicit "text isn't only inside a balloon" clarification), decided in the same
-  `tdd-dot-lottie-import-export/01-requirements.md` while resolving that flow's unsupported-
+  `tdd-dot-bodymovin-import-export/01-requirements.md` while resolving that flow's unsupported-
   content-policy question. Grounded in a real, confirmed gap in `comics-ai-baloons` (computes
   precise masks twice, discards both, never persists any non-rectangular geometry). Also not yet
   reflected in this flow's own format facts.
@@ -133,28 +133,28 @@ was a separate, unrelated file being briefly misread as if it were part of this 
 - **Escalated to `01-requirements.md`/`03-specifications.md` (2026-08-07)**: per Anton's explicit
   request, both this time-dimension decision AND a full animation-type inventory now live in the
   main Requirements/Specifications docs, not only Tests. The inventory work surfaced a **major,
-  real correction**: direct inspection of all 7 real produced Lottie chapters (not just the one
+  real correction**: direct inspection of all 7 real produced Bodymovin chapters (not just the one
   `ASHES.json` sample earlier research used) found masks (1/7), null layers (1/7), solid layers
   (1/7), and — most consequentially — **layer parenting in 5/7 files, up to 64% of layers in one
-  chapter (`THE BROKEN TUSK`)**. This negatively resolves `tdd-dot-lottie-format`'s L6/L7 open
+  chapter (`THE BROKEN TUSK`)**. This negatively resolves `tdd-dot-bodymovin-format`'s L6/L7 open
   question (does `ASHES.json`'s simple structure generalize? — **no**) and means
-  `tdd-dot-lottie-import-export`'s Precomp Handling design needs to generalize from
+  `tdd-dot-bodymovin-import-export`'s Precomp Handling design needs to generalize from
   "precomp-children only" to "arbitrary parent chains" — flagged back to both flows.
 - **Fourth schema addition (2026-08-07, per Anton's explicit follow-up — "мы же говорили про
   organizational layers и layer parenting, сохрани их в reqs и specs")**: `.comics` v2026 gains a
   real `Layer.ParentId` mechanism (hierarchical, editor-side live-relative positioning) plus a new
   `Layer.Id` (stable identity, a real prerequisite this surfaces) and a new organizational/
-  non-content `Kind` value (Lottie `ty:3` null-layer equivalent). Backward compat via the same
+  non-content `Kind` value (Bodymovin `ty:3` null-layer equivalent). Backward compat via the same
   "always persist fully-resolved absolute `Anim` values" pattern as `GroupId` — old readers never
   need to understand `ParentId` to render correctly. This **supersedes** the earlier "just bake and
-  discard the parent chain" recommendation for `tdd-dot-lottie-import-export` with a real,
+  discard the parent chain" recommendation for `tdd-dot-bodymovin-import-export` with a real,
   persisted mapping target. Full design in `03-specifications.md`'s new "`Layer.ParentId` &
   Organizational Layers" section. Genuinely open: `Layer.Id` generation scheme, the exact
   organizational `Kind` string, orphan policy on parent deletion, and whether `ParentId` subsumes
   or coexists with `GroupId`.
 - **Fifth addition — DECIDED (2026-08-07, Anton asked directly: "могут ли masks и solid colors
   быть типами kind?", then confirmed "используем твою рекомендацию")**: answered **no** —
-  `Layer.SolidColor` (hex string, mirrors Lottie's `sc`) and `Layer.Mask` (rect/polygon/mask, a
+  `Layer.SolidColor` (hex string, mirrors Bodymovin's `sc`) and `Layer.Mask` (rect/polygon/mask, a
   general compositing clip, deliberately separate from the lettering-scoped `TextRegion`) are two
   new additive fields, NOT `Kind` values, since role (`Kind`) and content-source/compositing are
   orthogonal — a solid-color layer can still *be* a background; cramming that into one `Kind`
@@ -196,7 +196,7 @@ was a separate, unrelated file being briefly misread as if it were part of this 
 ## Progress
 
 - [x] `cameraPath` + completed `zDepth` Requirements addendum drafted (2026-08-09) — v0.11,
-      sourced from `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie`.
+      sourced from `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin`.
 - [x] Matching Specifications addendum drafted (2026-08-09) — v0.8; fixes sign,
       unit/domain, zero-preserving response formula, `ParentId` composition, exact root JSON shape,
       sampling, malformed-data policy, and cross-platform conformance tests.
@@ -208,7 +208,7 @@ was a separate, unrelated file being briefly misread as if it were part of this 
 - [x] Requirements revised (2026-08-02) — v0.2, promoted to TDD scope, both prior Open Questions
       resolved (unit-mismatch risk closed by a sibling flow; flow sweep now done)
 - [x] Requirements revised (2026-08-07) — v0.3, added the scroll-vs-time dimension decision + the
-      full animation-type/Lottie-coverage inventory (with the real parenting/mask/null/solid finding)
+      full animation-type/Bodymovin-coverage inventory (with the real parenting/mask/null/solid finding)
 - [x] Requirements revised (2026-08-07) — v0.6-0.8, masks/solid-colors decision, scrollType/
       preferredOrientation escalation + correction (device orientation now a real `.comics` field,
       3 values including "auto")

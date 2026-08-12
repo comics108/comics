@@ -58,7 +58,7 @@ The chapter count is not an estimate: the dataset contains **18 logical chapters
 - The dataset contains no actual audio media despite populated audio-path fields.
 - The first-audited editable visual sources were three large PSDs under `vaishnav/drawing/`:
   `5_1.psd`, `5_2.psd`, and `app_BG._chiba5.psd`. Later inspection found the panorama PDFs and the
-  Lottie package described below, so filenames alone are not a complete source inventory.
+  Bodymovin package described below, so filenames alone are not a complete source inventory.
 - `dataset/bhagavadgita/` is an immutable input. It must never be modified by the generator.
 
 The 18 Russian chapter titles, in dataset order, are:
@@ -82,9 +82,9 @@ The 18 Russian chapter titles, in dataset order, are:
 17. Три вида веры
 18. Йога освобождения
 
-**Note (2026-08-09)**: a real Lottie source also exists in the dataset
-(`dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/`), investigated and specified here 2026-08-09
-then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`, per
+**Note (2026-08-09)**: a real Bodymovin source also exists in the dataset
+(`dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/`), investigated and specified here 2026-08-09
+then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/`, per
 Anton's explicit instruction — see that flow for the full findings (camera-path/z-depth extraction),
 not duplicated here.
 
@@ -95,9 +95,9 @@ PSD text layers, establishes the following classifications. Folder/file numberin
 metadata and must never be interpreted as scripture chapter/verse numbering without content
 evidence:
 
-- `bhagavadgita_lottie/unzip/1/` is **not Bhagavad Gita chapter 1**. It is the complete standalone
+- `bhagavadgita_bodymovin/unzip/1/` is **not Bhagavad Gita chapter 1**. It is the complete standalone
   **Gita Dhyanam** prologue/meditation: all 9 traditional invocatory stanzas are present in both RU
-  and EN overlay Lotties. The source title's `Mediation` spelling, directory `1`, and cover token
+  and EN overlay Bodymovins. The source title's `Mediation` spelling, directory `1`, and cover token
   `S3_B1_C1` are package/course identifiers, not canonical chapter semantics. Its art/timing may be
   reused as reviewed style or motion evidence, but its text and scenes cannot satisfy coverage for
   any of the 18 canonical chapters.
@@ -134,7 +134,7 @@ direct visual review of rendered page previews, not assumed from filenames**:
 - **Each page is one continuous, densely-packed hand-drawn illustrated frieze** — not a grid of
   discrete panels, not a cover/placeholder. Real, rich linework (ink-drawing style) filling the
   entire page width, packed with dozens of distinct mythological figures per page (deities, warriors,
-  animals, architecture). This is genuinely the same caliber of hand-drawn artwork the Lottie
+  animals, architecture). This is genuinely the same caliber of hand-drawn artwork the Bodymovin
   investigation referenced ("отрисованной вручную художниками"), not limited to chapter 5.
 - **Pages are visually distinct from each other**, not repeats or variations of one composition —
   direct visual review of pages 1, 2, 3, and 12 found four clearly different scenes:
@@ -186,7 +186,7 @@ The real source inventory already includes more structure than v0.6 used:
   `5_2.psd`: 32 descendants/6 groups; `app_BG._chiba5.psd`: 419 descendants/92 groups);
 - 12 B&W and 6 coloured panoramic raster compositions, including six potential paired
   line-art/colour supervision examples after geometric registration;
-- a Lottie package with source assets, transforms/timing, music, and RU/EN translations;
+- a Bodymovin package with source assets, transforms/timing, music, and RU/EN translations;
 - existing Bhagavad Gita `.comics` as format baselines and Mahabharata `.comics`/AI outputs as
   external training/evaluation evidence, never as automatic proof of Gita-domain quality.
 
@@ -348,7 +348,7 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
 10. **Real completion proof**: The final implementation report lists all 18 output files and their
     validation status, and includes at least one real editor/viewer open test rather than relying
     only on unit tests of the generator.
-11. **Asset-first source recovery**: PSD hierarchy/alpha, Lottie assets/transforms, paired PDF
+11. **Asset-first source recovery**: PSD hierarchy/alpha, Bodymovin assets/transforms, paired PDF
     compositions, and existing `.comics` layers are extracted before flattened-image segmentation
     or generation is attempted. The manifest records why each lower-fidelity fallback was used.
 12. **Canonical asset graph**: every accepted visual asset has stable identity, provenance,
@@ -403,7 +403,7 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
 - Preserve editable ink/flats/shadows/highlights as separate derived assets where source or model
   output makes this practical.
 - Rank generative candidates automatically by identity/style/palette similarity before review.
-- Reuse Lottie timing/camera/depth evidence through its separate approved flow without coupling the
+- Reuse Bodymovin timing/camera/depth evidence through its separate approved flow without coupling the
   production path to unverified ad hoc formulas.
 - Support local and external generation providers behind the same asset-task/review contract.
 - Produce a human-readable report summarizing chapter coverage, source use, fallbacks, AI warnings,
@@ -504,8 +504,8 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
 - `flows/tdd-dot-comics-format/`
 - `apps/comics-ai/comics-ai-multimodal/scripts/package.py`
 - `dataset/bhagavadgita/`
-- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/` — the extracted Lottie camera-path/
-  z-depth flow (2026-08-09), see that flow's own docs for the real Lottie-source findings
+- `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/` — the extracted Bodymovin camera-path/
+  z-depth flow (2026-08-09), see that flow's own docs for the real Bodymovin-source findings
 - `dataset/bhagavadgita/vaishnav/drawing/All_Black-n-White.pdf`, `All_Coloured.pdf` — the real
   panorama PDFs inspected directly for this addition (2026-08-09)
 
@@ -513,9 +513,9 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
 
 - [x] Reviewed by user
 - [x] Requirements approved on 2026-08-05 (`requirements approved`) — v0.1 baseline
-- [x] v0.4 (2026-08-09): the Lottie camera-path/z-depth addition (v0.2-v0.3) was approved same-day
+- [x] v0.4 (2026-08-09): the Bodymovin camera-path/z-depth addition (v0.2-v0.3) was approved same-day
       ("reqs,specs and plan approved"), then extracted into its own flow per Anton's explicit
-      instruction — see `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/` for that content's
+      instruction — see `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/` for that content's
       own approval record, carried over unchanged.
 - [x] v0.6 panorama cut/arrange/animate draft rejected/superseded by the later production-art pivot;
       it must not be implemented as written.

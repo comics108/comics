@@ -1,4 +1,4 @@
-# Status: comics-ai-bhagavadgita-from-lottie
+# Status: comics-ai-bhagavadgita-from-bodymovin
 
 ## Current Phase
 
@@ -43,7 +43,7 @@ COMPLETE — all Tasks 1.1-1.6 implemented and verified
       sequence — per Anton's direct request. See `04-implementation-log.md` for full values and the
       disclosed caveat that they depend on Task 1.1's not-yet-verified compositing formula.
 - [x] Task 1.1 (verify/correct compositing formula)
-- [x] Task 1.2 (`import_lottie.py` core)
+- [x] Task 1.2 (`import_bodymovin.py` core)
 - [x] Task 1.3 (camera-reference selection + `cameraPath`)
 - [x] Task 1.4 (extend `package_comics.py`)
 - [x] Task 1.5 (new pipeline entry point)
@@ -55,9 +55,9 @@ COMPLETE — all Tasks 1.1-1.6 implemented and verified
 - This flow's implementation lives inside `apps/comics-ai/comics-ai-bhagavadgita-generator/` (the
   parent flow's own Python app) as new/modified files — it does not create a separate app. It
   produces a separate, additional `.comics` output, never counted as one of that flow's 18 chapters.
-- **No third-party Lottie rendering tooling** (`python-lottie`, `lottie-web`, etc.) may be installed
+- **No third-party Bodymovin rendering tooling** (`python-bodymovin`, `bodymovin-web`, etc.) may be installed
   — Anton's explicit constraint. Verification reuses `flows/comics-editor/
-  tdd-dot-lottie-import-export`'s findings and `libs/flutter_comics`'s existing, tested Lottie
+  tdd-dot-bodymovin-import-export`'s findings and `libs/flutter_comics`'s existing, tested Bodymovin
   parser instead.
 - Cross-flow follow-up is now approved: `flows/tdd-dot-comics-format` v0.11/v0.8 formally adopts
   `cameraPath` and completes `zDepth`; `flows/sdd-flutter-comics` v0.4 assigns the shared Dart model,

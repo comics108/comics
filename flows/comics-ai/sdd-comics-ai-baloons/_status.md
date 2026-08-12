@@ -87,7 +87,7 @@ N/A — new flow.
 ## Follow-on Task: persist `TextRegion` geometry (added 2026-08-07, real scoped work, not just a note)
 
 **Status: proposed, not yet started.** Discovered while designing a new `Layer.TextRegion` schema
-concept in `flows/comics-editor/tdd-dot-lottie-import-export/01-requirements.md` (that flow needs
+concept in `flows/comics-editor/tdd-dot-bodymovin-import-export/01-requirements.md` (that flow needs
 real text-region data to exist somewhere; this pipeline is the only place it's ever computed).
 Anton's explicit instruction (2026-08-07): update this flow directly with a real, actionable task,
 not just a cross-reference note.
@@ -115,7 +115,7 @@ this — this task is purely about *also* persisting geometry that's already bei
    rect-only call sites (`render_latin.py:43`, `render_shaped.py:125` keep working unmodified).
 2. **A new conversion step**: mask → polygon, via `cv2.findContours` + `cv2.approxPolyDP` (contour
    simplification) on the returned mask — polygon is the recommended default representation per
-   `tdd-dot-lottie-import-export`'s own reasoning (compact, and maps directly onto Lottie's own
+   `tdd-dot-bodymovin-import-export`'s own reasoning (compact, and maps directly onto Bodymovin's own
    vector-mask model for future export compatibility), with the raw mask kept available as a
    fallback for organic hand-lettered shapes a polygon would under-approximate.
 3. **`package.py`**: when writing a balloon's image slot (`package.py:194`), also write the new
@@ -123,7 +123,7 @@ this — this task is purely about *also* persisting geometry that's already bei
    ...}`) alongside the existing `{"file","width","height"}` — additive, matches this format's
    established backward-compat pattern (old readers ignore the new key entirely).
 4. **`erase.py`'s `text_mask`** is a secondary, lower-priority source (describes the *old* text's
-   shape, not necessarily where *new* text should go) — `tdd-dot-lottie-import-export` explicitly
+   shape, not necessarily where *new* text should go) — `tdd-dot-bodymovin-import-export` explicitly
    recommends `layout.py`'s interior mask as the primary source, not this one; only worth revisiting
    if the interior-mask-derived polygon proves insufficient for some real balloon shape.
 

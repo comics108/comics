@@ -1,4 +1,4 @@
-# Specifications: comics-ai-bhagavadgita-from-lottie
+# Specifications: comics-ai-bhagavadgita-from-bodymovin
 
 > Version: 1.2 (implementation-verified compositing + seed-keyframe correction)
 > Status: APPROVED
@@ -8,9 +8,9 @@
 ## Overview
 
 Extract real per-layer motion, per-layer z-depth, and a reconstructed camera path from
-`Mediation of the Bhagavat Gita.json` (the one real Lottie source in the Bhagavad Gita dataset) and
+`Mediation of the Bhagavat Gita.json` (the one real Bodymovin source in the Bhagavad Gita dataset) and
 export them into a new `.comics` v2026 document. Moved verbatim (renumbered, not re-derived) from
-`flows/comics-ai/sdd-comics-ai-bhagavadgita-generator/02-specifications.md`'s v0.4 "Lottie
+`flows/comics-ai/sdd-comics-ai-bhagavadgita-generator/02-specifications.md`'s v0.4 "Bodymovin
 Camera-Path & Per-Layer Z-Depth Extraction" section, per Anton's explicit extraction instruction
 (2026-08-09).
 
@@ -24,37 +24,37 @@ stays a distinct output.
 
 | System | Impact | Notes |
 |--------|--------|-------|
-| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_lottie.py` (new) | Create | Frame calibration, keyframe extraction, camera-path reconstruction, z-depth derivation |
+| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_bodymovin.py` (new) | Create | Frame calibration, keyframe extraction, camera-path reconstruction, z-depth derivation |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/package_comics.py` | Modify | Extend `PackagingAsset`/`_layer_json`/`build_data_json` for keyframe lists, `zDepth`, document-root `cameraPath` — backward-compatible, existing 18-chapter path unaffected |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/pipeline.py` | Modify | New, separate CLI entry point, not part of `--all`'s 18-chapter loop |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/report.py` | Modify | Parallax-limitation disclosure text for this specific document |
 | `flows/tdd-dot-comics-format/` | Cross-flow, not modified by this flow | Real, disclosed follow-up: `cameraPath` should eventually be formally adopted there, matching how `Layer.ZDepth`/`preferredViewportWidth` were each proposed by a motivating flow and later adopted — not done as part of this flow |
 
-## Source: the Real Lottie File
+## Source: the Real Bodymovin File
 
-`dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/unzip/1/Mediation of the Bhagavat Gita_content/
+`dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/unzip/1/Mediation of the Bhagavat Gita_content/
 Mediation of the Bhagavat Gita.json` — real structure confirmed in Requirements: 3 precomp "scenes",
 each with a 2-keyframe top-level pan and a real minority of individually-animated layers.
 
 ### Module boundary
 
-A new `scripts/import_lottie.py`, parallel to the existing `import_psd.py` (chapter-5 adapter) —
+A new `scripts/import_bodymovin.py`, parallel to the existing `import_psd.py` (chapter-5 adapter) —
 same pattern: a dedicated adapter for one specific external source, producing the same
 `PackagingAsset`-shaped output the rest of the pipeline (`layout_chapter.py`, `package_comics.py`)
 already consumes, not a parallel packaging path.
 
 ```python
-# scripts/import_lottie.py -- NEW
+# scripts/import_bodymovin.py -- NEW
 
 @dataclass(frozen=True)
-class LottieKeyframe:
+class BodymovinKeyframe:
     frame: int
     x: float
     y: float
 
 @dataclass(frozen=True)
-class LottieLayerMotion:
-    position_keyframes: list[LottieKeyframe]  # empty if the layer is static
+class BodymovinLayerMotion:
+    position_keyframes: list[BodymovinKeyframe]  # empty if the layer is static
     scale_keyframes: list[tuple[int, float]]   # (frame, scale_percent); empty if static
 
 def scene_pan(precomp_layer: dict) -> tuple[int, float, int, float]:
@@ -63,15 +63,15 @@ def scene_pan(precomp_layer: dict) -> tuple[int, float, int, float]:
 
 def frame_to_scroll_y(frame: int, pan: tuple[int, float, int, float]) -> float:
     """Linear interpolation through `pan` -- the same calibration `.comics`' own scroll-driven model
-    needs: Lottie's frame axis IS this scene's scroll-progress axis, since the top-level pan is what
+    needs: Bodymovin's frame axis IS this scene's scroll-progress axis, since the top-level pan is what
     makes the scene readable top-to-bottom in the first place."""
 
-def extract_layer_motion(layer: dict) -> LottieLayerMotion: ...
+def extract_layer_motion(layer: dict) -> BodymovinLayerMotion: ...
 
 def to_translate_anim_keyframes(
-    motion: LottieLayerMotion, pan: tuple[int, float, int, float]
+    motion: BodymovinLayerMotion, pan: tuple[int, float, int, float]
 ) -> list[dict]:
-    """N Lottie position keyframes -> N `.comics` TranslateAnim JSON objects: one zero-width seed
+    """N Bodymovin position keyframes -> N `.comics` TranslateAnim JSON objects: one zero-width seed
     carrying the first authored value, followed by N-1 chained [start,end] segments whose values
     are their endpoints -- see "TranslateAnim keyframe chaining" below."""
 
@@ -85,7 +85,7 @@ def build_camera_path(reference_layer: dict, pan: tuple[int, float, int, float])
     layer -- the resulting list IS the scene's `cameraPath`, not a separately-derived structure."""
 
 def derive_z_depth(
-    motion: LottieLayerMotion, camera_path: list[dict], is_camera_reference: bool
+    motion: BodymovinLayerMotion, camera_path: list[dict], is_camera_reference: bool
 ) -> float:
     """See "Z-depth derivation" below. Returns 0.0 for a fully static layer OR the camera-reference
     layer itself."""
@@ -94,7 +94,7 @@ def derive_z_depth(
 ### Frame-to-scroll-Y calibration
 
 `.comics` `Anim.start`/`end` live in the same raw-pixel coordinate space as scroll position (per
-`flows/tdd-dot-comics-format`'s confirmed finding, "Layer & animation model"). Lottie's `t` (frame)
+`flows/tdd-dot-comics-format`'s confirmed finding, "Layer & animation model"). Bodymovin's `t` (frame)
 axis has no native pixel meaning — but each scene's own top-level precomp layer already has a real,
 confirmed 2-keyframe position animation whose Y values ARE meant to represent scroll-through-content
 (that's what makes the panned-past art visible over the read). Using that same pan as the
@@ -107,7 +107,7 @@ own keyframes belong to the *root*-timeline layer (`0_3`) that references `comp_
 two are not directly comparable without conversion. Checked directly against the real file: each
 top-level layer's `st` (start time) equals its own `ip` (in point), and `sr` (stretch ratio) is `1`
 for all three scenes (`0_3`: `ip=st=6252`; `0_2`: `ip=st=2955`; `0_1`: `ip=st=-171`) — the standard
-Lottie convention for "no time-remapping," meaning the conversion is simply `root_frame = st +
+Bodymovin convention for "no time-remapping," meaning the conversion is simply `root_frame = st +
 local_frame`. Verified end-to-end on the real 6-keyframe example layer (local frames 539–1377,
 `comp_0`'s `st=6252`): converts to root frames 6791–7629, all falling **inside** `comp_0`'s own real
 pan window (`6252–12168`) — no extrapolation needed for this example, and the resulting `scroll_y`
@@ -118,7 +118,7 @@ therefore: `scroll_y(local_frame, precomp_st) = scroll_y_from_pan(precomp_st + l
 
 ### Absolute canvas position — resolved by Plan Task 1.1
 
-The frame-axis calibration above answers "what `.comics` scroll-position does this Lottie frame
+The frame-axis calibration above answers "what `.comics` scroll-position does this Bodymovin frame
 correspond to." It does **not** by itself answer what a layer's **absolute `.comics` canvas
 position** should be — a real, separate compositing question this spec has not fully verified.
 
@@ -126,7 +126,7 @@ Checked directly: individual layers' own static/keyframed position values are sm
 static layers cited in Requirements sit at Y values like `188.786`, `325`, `260.571` — well within
 the `720×1600` viewport, nowhere near the multi-thousand-pixel range the scene's own pan spans:
 `7400.5` down to `−7403.425`). This confirms a layer's own `p` value is **local to the precomp's own
-coordinate frame**, not an absolute position on one tall `.comics` canvas — standard Lottie precomp
+coordinate frame**, not an absolute position on one tall `.comics` canvas — standard Bodymovin precomp
 compositing means a nested layer's on-screen position is the parent (pan) layer's own position
 **composited with** the nested layer's local position, not either value alone. `.comics` has no
 separate camera/viewport transform (per `flows/tdd-dot-comics-format`'s own confirmed model, every
@@ -145,7 +145,7 @@ absoluteX = screenTopLeft.x
 absoluteY = screenTopLeft.y + documentPosition
 ```
 
-Every transform matrix uses Lottie's `T(position) × R(rotation) × S(scale) × T(-anchor)` order.
+Every transform matrix uses Bodymovin's `T(position) × R(rotation) × S(scale) × T(-anchor)` order.
 For the common real case where the root starts with `position == anchor`, has identity scale/
 rotation, and the layer has no parent, the root sweep cancels exactly once against viewer scroll;
 the layer's absolute position therefore remains its local top-left, as expected. A focused automated
@@ -157,9 +157,9 @@ test evaluates the same layer at the sweep's start/end and proves both absolute 
 flow) already chains multiple same-type `Anim`s: each one's `start`/`end` is a scroll-position
 window, and its `x`/`y` is the value at `end`. The shared `KeyframeInterpolator` does **not** use its
 fallback as the previous value once the first segment becomes active; without a seed it interpolates
-from `(0,0)`. Therefore N real Lottie position keyframes become **N `TranslateAnim` objects**: one
+from `(0,0)`. Therefore N real Bodymovin position keyframes become **N `TranslateAnim` objects**: one
 zero-width seed (`start == end == first position`, carrying the first X/Y) plus N−1 segments. This is
-the exact pattern the existing tested Flutter Lottie importer already uses. It preserves irregular timing
+the exact pattern the existing tested Flutter Bodymovin importer already uses. It preserves irregular timing
 (deltas 312, 143, 117, 91, 175 frames → correspondingly irregular `scroll_y` deltas once calibrated)
 — the actual mechanism that makes the exported document's camera motion non-constant-speed, matching
 Requirements' Must-Have 1 without inventing a new keyframe/interpolation concept.
@@ -250,7 +250,7 @@ parallax reference, and the reason `cameraPath` must exist before z-depth can be
 
 ```json
 {
-  "images": [{}, {"file": "lottie_43_{0}_{1}_{2}.png", "width": 320, "height": 380}, {}],
+  "images": [{}, {"file": "bodymovin_43_{0}_{1}_{2}.png", "width": 320, "height": 380}, {}],
   "animations": [
     {"$type": "Comics.Editor.Models.TranslateAnim, Comics.Editor",
      "start": 1349, "end": 1349, "x": 592.164, "y": 3231.145},
@@ -272,7 +272,7 @@ parallax reference, and the reason `cameraPath` must exist before z-depth can be
 
 `start`/`end` above are the real frame positions normalized into increasing document scroll pixels
 and rounded to `Anim.start`/`end: int` for the real six-keyframe example — computed, not hand-picked.
-**`x`/`y` are the layer's raw local Lottie position values, unmodified** — per "A second, separate
+**`x`/`y` are the layer's raw local Bodymovin position values, unmodified** — per "A second, separate
 real problem" above, these still need the absolute-canvas compositing step resolved before they're
 correct `.comics` values; this example shows the correct **keyframe-chaining shape** (one seed plus
 N−1 segments, real irregular `start`/`end` spacing), not a claim that `436.12`/
@@ -319,14 +319,14 @@ the document root (per "Reconstructed Camera-Path Element" above) — not per-la
 | `camera_amplitude` (z-depth case 2) is 0 or near-0 (the camera-reference layer has ~0 displacement over the window being compared) | Degenerate/malformed input | Division-by-zero guard needed; fall back to `zDepth = 0.0` rather than crashing or producing `inf`/`NaN` |
 | A layer has scale keyframes but they don't overlap the same frame range as its position keyframes (not observed in the one real example checked, but not ruled out across all ~120 animated layers in the 3 scenes) | Real possibility, not yet exhaustively checked | Case-1 formula (scale-based) still applies independent of position-keyframe timing — z-depth is derived from scale growth alone when scale is present, regardless of whether position keyframes align |
 | Extrapolating `scroll_y(frame)` for a frame outside `[frame_start, frame_end]` (linear formula applied beyond its calibration range) | A layer's local keyframes span before/after the scene's own pan window | Mathematically well-defined (linear extrapolation), but not verified against any independent ground truth — disclosed as an approximation, not a confirmed-correct mapping |
-| A scene has **no** animated layers at all (not observed — all 3 real scenes have real animated minorities — but not structurally guaranteed for other future Lottie sources this same module might process) | `select_camera_reference_layer` finds no candidates | Falls back to `cameraPath = [the trivial linear pan itself]` (still real, still correct, just not a "broken curve") — never crashes or omits the field entirely, since `zDepth`'s case-2 formula needs *some* reference to divide by |
+| A scene has **no** animated layers at all (not observed — all 3 real scenes have real animated minorities — but not structurally guaranteed for other future Bodymovin sources this same module might process) | `select_camera_reference_layer` finds no candidates | Falls back to `cameraPath = [the trivial linear pan itself]` (still real, still correct, just not a "broken curve") — never crashes or omits the field entirely, since `zDepth`'s case-2 formula needs *some* reference to divide by |
 
 ### Testing Strategy
 
 - [ ] Unit: `scene_pan`/`frame_to_scroll_y` against the 3 real, hand-verified pan tuples in
       Requirements' table
 - [x] Unit: `to_translate_anim_keyframes` against the real 6-keyframe example layer, asserting
-      exactly 6 output `TranslateAnim`s (seed + 5 segments) with the real Lottie `x`/`y` values and correctly-chained
+      exactly 6 output `TranslateAnim`s (seed + 5 segments) with the real Bodymovin `x`/`y` values and correctly-chained
       `start`/`end`
 - [ ] Unit: `select_camera_reference_layer` against a synthetic scene with several candidate layers,
       asserting the scale+keyframe-count+displacement ranking picks the expected one; against the
@@ -336,7 +336,7 @@ the document root (per "Reconstructed Camera-Path Element" above) — not per-la
       both use the same normalized increasing scroll positions and verified absolute X/Y values
 - [ ] Unit: `derive_z_depth` for all cases (scale-present, position-only, static, camera-reference-
       itself-pinned-to-0), including the division-by-zero guard
-- [ ] Integration: run `import_lottie.py` against the real file end-to-end, assert the real
+- [ ] Integration: run `import_bodymovin.py` against the real file end-to-end, assert the real
       static/animated layer counts per scene match Requirements' cited numbers (e.g. `comp_0`:
       131 static, 56 animated), that `cameraPath` is present and non-trivial (not identical to the
       raw linear pan), and that at least two output layers have different non-zero `zDepth` values

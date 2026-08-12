@@ -1,4 +1,4 @@
-# Test Cases: dot-lottie-import-export
+# Test Cases: dot-bodymovin-import-export
 
 > Version: 1.1 (2026-08-08: NEW Category G added to already-approved v1.0 — Export/Import Modes,
 > per `01-requirements.md` v0.3's addition. Disclosed addition, not a silent rewrite.)
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Cases-first behavioral analysis for `apps/comics-editor`'s new Lottie import/export capability, per
+Cases-first behavioral analysis for `apps/comics-editor`'s new Bodymovin import/export capability, per
 `01-requirements.md` (v0.2, approved). Organized around the decisions already made there: import is
 a **review/triage step** (Джанава-informed), not a silent one-shot conversion; export is a simpler
 one-shot action; two real choices (time-base ratio, easing precision) are **user-facing dialogs**,
@@ -20,18 +20,18 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
 
 ## Category A — Import: the review screen (happy path and triage states)
 
-**A1 — A simple, fully-supported `.lottie` file shows an all-clean review screen**
-- Given: a `.lottie` file whose every layer is Lottie image type (`ty:2`), no shapes/masks/text
-- When: the user picks it via "Import from .lottie"
+**A1 — A simple, fully-supported `.Bodymovin` file shows an all-clean review screen**
+- Given: a `.Bodymovin` file whose every layer is Bodymovin image type (`ty:2`), no shapes/masks/text
+- When: the user picks it via "Import from .Bodymovin"
 - Then: the review screen shows N layers, all marked "converts cleanly," no flagged items; the
   time-base-ratio and easing-precision choices are presented (Category C/D); committing the import
-  creates one `EditorLayer` per Lottie image layer with translate/rotate/scale/alpha `Anim`s
+  creates one `EditorLayer` per Bodymovin image layer with translate/rotate/scale/alpha `Anim`s
 - Design implication: the review screen needs a per-layer status list (clean/flagged), not just an
   aggregate "N layers found" — matches Джанава's "review states matter" principle from
   `01-requirements.md`
 
-**A2 — A `.lottie` file containing an unsupported layer type shows it flagged, not silently dropped or crashed on**
-- Given: a `.lottie` file with a mix of image layers (`ty:2`) and one shape layer (`ty:4`)
+**A2 — A `.Bodymovin` file containing an unsupported layer type shows it flagged, not silently dropped or crashed on**
+- Given: a `.Bodymovin` file with a mix of image layers (`ty:2`) and one shape layer (`ty:4`)
 - When: imported
 - Then: the review screen shows the image layers as clean, the shape layer explicitly flagged
   ("unsupported: shape layer — will be skipped" or similar), with a running "N clean / M flagged"
@@ -41,8 +41,8 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
   shows 0 clean / N flagged; committing produces an empty or near-empty document, which itself
   should probably be a distinct warning state, not a silent success
 
-**A3 — A `.lottie` file with a precomp layer (nested composition) shows it as one importable group, not flattened without a trace**
-- Given: a `.lottie` file with a root precomp layer (`ty:0`) referencing a nested comp asset of 3
+**A3 — A `.Bodymovin` file with a precomp layer (nested composition) shows it as one importable group, not flattened without a trace**
+- Given: a `.Bodymovin` file with a root precomp layer (`ty:0`) referencing a nested comp asset of 3
   image layers (matches the real `ASHES.json` shape)
 - When: imported
 - Then: the review screen shows this as "3 layers (from precomp '&lt;name&gt;')" — one collapsible
@@ -50,11 +50,11 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
   `GroupId`, each with the precomp's own transform baked into its individual keyframes (per
   Requirements' Precomp Handling decision)
 - Design implication: the review screen's data model needs to represent grouping *before* commit,
-  not just after — the group relationship has to survive from Lottie parse through to the review
+  not just after — the group relationship has to survive from Bodymovin parse through to the review
   UI through to the final `EditorLayer`/`GroupId` assignment
 
 **A4 — Cancelling at the review screen leaves the document untouched**
-- Given: any `.lottie` file, review screen shown
+- Given: any `.Bodymovin` file, review screen shown
 - When: the user cancels instead of committing
 - Then: no `EditorLayer`s are created, no document mutation occurs, no partial/half-imported state
   — matches this app's existing cancel-is-silent-and-clean convention (e.g. the existing Export
@@ -63,7 +63,7 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
 ## Category B — Import: the two user-facing choice dialogs
 
 **B1 — Time-base ratio: the "as-is/identity" option produces 1 frame = 1 scroll-unit**
-- Given: a `.lottie` file with a keyframe at frame 100
+- Given: a `.Bodymovin` file with a keyframe at frame 100
 - When: the user picks "as-is" in the ratio dialog and commits
 - Then: the resulting `Anim.start`/`end` uses `100` directly (no rescaling) — matches Requirements'
   reasoning that some source content may never have had a real scroll concept in mind, so identity
@@ -77,7 +77,7 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
   some keyframes but not others, e.g. missing one property type)
 
 **B3 — Easing precision: "exact cubic fit" vs. "Easy Ease approximation" produce different, both-valid output for the same input**
-- Given: a Lottie keyframe pair using AE's standard Easy Ease handles (`i:{0.833,0.833},
+- Given: a Bodymovin keyframe pair using AE's standard Easy Ease handles (`i:{0.833,0.833},
   o:{0.167,0.167}`, the real-content-observed default)
 - When: importing with "exact cubic fit" chosen vs. importing the same file with "Easy Ease
   approximation" chosen
@@ -89,35 +89,35 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
 
 ## Category C — Import: TextRegion (interaction with the new schema field)
 
-**C1 — Real sampled Lottie content has no text layers and no masks — TextRegion is not populated from Lottie import today**
-- Given: `samples/sample.lottie` (real content, confirmed zero `ty:5` text layers, zero masks —
-  `tdd-dot-lottie-format`'s own finding)
+**C1 — Real sampled Bodymovin content has no text layers and no masks — TextRegion is not populated from Bodymovin import today**
+- Given: `samples/sample.Bodymovin` (real content, confirmed zero `ty:5` text layers, zero masks —
+  `tdd-dot-bodymovin-format`'s own finding)
 - When: imported
-- Then: no `EditorLayer` gets a `TextRegion` from this import — this is expected, not a gap; Lottie
-  import populating `TextRegion` would require either a Lottie mask (vector path) on a layer, which
+- Then: no `EditorLayer` gets a `TextRegion` from this import — this is expected, not a gap; Bodymovin
+  import populating `TextRegion` would require either a Bodymovin mask (vector path) on a layer, which
   real content doesn't use, or some other signal this flow doesn't yet define
 - Design implication: `TextRegion` import support may simply not be exercised by any real file
   today — worth stating explicitly so a future test author doesn't assume it's been validated
   against real data when it hasn't
 
-**C2 — A hypothetical `.lottie` layer with a vector mask maps to `TextRegion.shape == "polygon"` on import**
-- Given: a hand-crafted `.lottie` file with an image layer carrying a `masksProperties` vector path
+**C2 — A hypothetical `.Bodymovin` layer with a vector mask maps to `TextRegion.shape == "polygon"` on import**
+- Given: a hand-crafted `.Bodymovin` file with an image layer carrying a `masksProperties` vector path
 - When: imported
-- Then: the mask's bezier path becomes a `TextRegion` with `shape: "polygon"` (Lottie masks are
-  always vector, never raster — per `tdd-dot-lottie-format`'s own finding — so `shape: "mask"`
-  should never be the result of a Lottie import, only ever of the `comics-ai-baloons` pipeline's
+- Then: the mask's bezier path becomes a `TextRegion` with `shape: "polygon"` (Bodymovin masks are
+  always vector, never raster — per `tdd-dot-bodymovin-format`'s own finding — so `shape: "mask"`
+  should never be the result of a Bodymovin import, only ever of the `comics-ai-baloons` pipeline's
   own raster-mask path)
 - Design implication: `TextRegion.shape == "mask"` and `shape == "polygon"` may have genuinely
-  different *sources* in practice (comics-ai-baloons vs. Lottie import respectively) even though
+  different *sources* in practice (comics-ai-baloons vs. Bodymovin import respectively) even though
   they're the same field — worth documenting, not just implementing generically
 
 ## Category D — Export: happy path and TextRegion/GroupId round-trip
 
-**D1 — A plain `.comics` layer with translate/alpha `Anim`s exports to a Lottie image layer with equivalent keyframes**
+**D1 — A plain `.comics` layer with translate/alpha `Anim`s exports to a Bodymovin image layer with equivalent keyframes**
 - Given: an `EditorLayer` with a `TranslateAnim` (start=0,end=200) and an `AlphaAnim` (start=0,
   end=100)
-- When: exported to `.lottie` (any chosen easing precision)
-- Then: the output is valid Lottie JSON with one `ty:2` layer, a `p` (position) keyframe pair and an
+- When: exported to `.Bodymovin` (any chosen easing precision)
+- Then: the output is valid Bodymovin JSON with one `ty:2` layer, a `p` (position) keyframe pair and an
   `o` (opacity) keyframe pair, frame numbers derived from the chosen time-base ratio (Category B)
 
 **D2 — Layers sharing a `GroupId` export as one precomp, inverse of import's Category A3**
@@ -127,38 +127,38 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
   layer — round-tripping A3's structure, not flattening it back out into 3 unrelated top-level
   layers
 
-**D3 — A layer with a `TextRegion` exports its geometry as a real Lottie mask when `shape` is polygon-compatible**
+**D3 — A layer with a `TextRegion` exports its geometry as a real Bodymovin mask when `shape` is polygon-compatible**
 - Given: an `EditorLayer` with `TextRegion.shape == "polygon"`
 - When: exported
-- Then: the polygon becomes a real Lottie `masksProperties` vector path on that layer's export —
+- Then: the polygon becomes a real Bodymovin `masksProperties` vector path on that layer's export —
   this is the "genuine added benefit" `01-requirements.md` already identified (polygon regions map
-  directly onto Lottie's native mask model)
-- Edge case: `TextRegion.shape == "mask"` (raster) has no direct Lottie equiv4alent — needs a
+  directly onto Bodymovin's native mask model)
+- Edge case: `TextRegion.shape == "mask"` (raster) has no direct Bodymovin equiv4alent — needs a
   decision (not made yet): skip the mask on export with a disclosed limitation, or rasterize-then-
   vectorize as a lossy approximation. **Not yet answered — flagging, not guessing.**
 
 ## Category E — Round-trip (behavioral equivalence, per Requirements' decision)
 
 **E1 — Import → export → re-import produces the same rendered result at sampled scroll positions, not necessarily the same bytes**
-- Given: a real `.lottie` file, imported then immediately exported then re-imported
+- Given: a real `.Bodymovin` file, imported then immediately exported then re-imported
 - When: comparing the two imported documents' rendered layer transforms at several sample
   scroll/time positions
 - Then: transforms match within a small numeric tolerance (accounting for the easing-approximation
-  step, per Requirements) — the two `.lottie` files themselves are **not** expected to be
+  step, per Requirements) — the two `.Bodymovin` files themselves are **not** expected to be
   byte-identical (different easing handle encodings are an accepted, disclosed lossy step, not a
   bug)
 
 ## Category F — Error handling
 
-**F1 — A `.lottie` file that isn't valid JSON, or is valid JSON missing required top-level keys, is rejected with a clear message before the review screen even renders**
-- Given: a corrupt or non-Lottie JSON file
-- When: picked via "Import from .lottie"
-- Then: a clear error, no partial review screen, no crash — matches `tdd-dot-lottie-format`'s own
-  Test Case L1 (a generic Lottie-schema-key check is sufficient, no custom parser needed for this
+**F1 — A `.Bodymovin` file that isn't valid JSON, or is valid JSON missing required top-level keys, is rejected with a clear message before the review screen even renders**
+- Given: a corrupt or non-Bodymovin JSON file
+- When: picked via "Import from .Bodymovin"
+- Then: a clear error, no partial review screen, no crash — matches `tdd-dot-bodymovin-format`'s own
+  Test Case L1 (a generic Bodymovin-schema-key check is sufficient, no custom parser needed for this
   check specifically)
 
-**F2 — A `.lottie` file referencing an asset file that doesn't exist (broken `assets[].p` path) is flagged per-layer, not a fatal whole-file error**
-- Given: a `.lottie` file (unzipped alongside its assets) where one image asset's file is missing
+**F2 — A `.Bodymovin` file referencing an asset file that doesn't exist (broken `assets[].p` path) is flagged per-layer, not a fatal whole-file error**
+- Given: a `.Bodymovin` file (unzipped alongside its assets) where one image asset's file is missing
 - When: imported
 - Then: that specific layer is flagged in the review screen (Category A2's mechanism extends to
   this case too — "unsupported"/"broken" are both review-screen flag states, not different code
@@ -168,7 +168,7 @@ not silent defaults; round-trip fidelity is **behaviorally equivalent**, not byt
 
 Anchored on two real fixtures, per Anton's direct instruction: `samples/sample_v2012.comics_unzip`
 (real 1080×41500 `.comics`, ground truth for Full Canvas) and `samples/sample_playback_viewport
-.lottie_unzip` (real 720×1600 Lottie with confirmed root-level scene-sweep precomps, ground truth
+.Bodymovin_unzip` (real 720×1600 Bodymovin with confirmed root-level scene-sweep precomps, ground truth
 for Playback Viewport). See `01-requirements.md`'s new Export/Import Modes section for the byte-
 level findings these cases build on.
 
@@ -176,31 +176,31 @@ level findings these cases build on.
 - Given: a `.comics` document shaped like `sample_v2012.comics_unzip` (a tall canvas, layers at
   fixed absolute Y positions)
 - When: exported in Full Canvas mode
-- Then: the output Lottie composition's `w`/`h` equal the `.comics` canvas size (not a viewport);
+- Then: the output Bodymovin composition's `w`/`h` equal the `.comics` canvas size (not a viewport);
   every keyframe's frame number equals the source `Anim.start`/`end` directly (identity, no ratio
   applied); no scroll-speed prompt appears at all — Full Canvas mode has no such concept
 
 **G2 — Full Canvas import assumes fixed, non-moving scene placement, no root-sweep structure expected**
-- Given: a Lottie file with flat image/precomp layers at static (non-swept) positions — the shape
-  `sample_v2012.comics_unzip` would have if it were Lottie instead of `.comics`
+- Given: a Bodymovin file with flat image/precomp layers at static (non-swept) positions — the shape
+  `sample_v2012.comics_unzip` would have if it were Bodymovin instead of `.comics`
 - When: imported in Full Canvas mode
 - Then: each layer's frame numbers become `.comics` scroll-pixel `start`/`end` directly (identity);
   resulting `EditorLayer`s sit at fixed absolute positions on a (now-tall) canvas — no "scene sweeps
   past a viewport" interpretation is applied, even if the source happened to contain one (Full
   Canvas mode doesn't look for it)
 
-**G3 — Full Canvas round-trip using the real v2012 sample as ground truth (CORRECTED 2026-08-08, Anton: "из .lottie в .comics затем в .lottie")**
+**G3 — Full Canvas round-trip using the real v2012 sample as ground truth (CORRECTED 2026-08-08, Anton: "из .Bodymovin в .comics затем в .Bodymovin")**
 - **Fixture prep** (one-time, not part of the round-trip itself): `samples/sample_v2012.comics_unzip`
-  (real, trusted `.comics` content) is exported to `.lottie` (Full Canvas mode) once, to produce a
-  real Full-Canvas-shaped `.lottie` file — no such file exists in `samples/` directly, since this
-  fixture is a `.comics` sample, not a `.lottie` one. That derived file becomes the actual
+  (real, trusted `.comics` content) is exported to `.Bodymovin` (Full Canvas mode) once, to produce a
+  real Full-Canvas-shaped `.Bodymovin` file — no such file exists in `samples/` directly, since this
+  fixture is a `.comics` sample, not a `.Bodymovin` one. That derived file becomes the actual
   round-trip anchor from here on.
-- Given: the derived Full-Canvas-shaped `.lottie` file from fixture prep
-- When: imported into `.comics` (Full Canvas mode), then re-exported to `.lottie` (Full Canvas mode)
+- Given: the derived Full-Canvas-shaped `.Bodymovin` file from fixture prep
+- When: imported into `.comics` (Full Canvas mode), then re-exported to `.Bodymovin` (Full Canvas mode)
 - Then: rendered layer transforms at sampled scroll positions match the original within tolerance —
-  **the round-trip direction is `.lottie → .comics → .lottie`, matching G6's own direction exactly**
-  (both modes' round-trips start and end in Lottie, for consistency — this corrects an earlier draft
-  of this case that had Full Canvas round-tripping the opposite way, `.comics → .lottie → .comics`,
+  **the round-trip direction is `.Bodymovin → .comics → .Bodymovin`, matching G6's own direction exactly**
+  (both modes' round-trips start and end in Bodymovin, for consistency — this corrects an earlier draft
+  of this case that had Full Canvas round-tripping the opposite way, `.comics → .Bodymovin → .comics`,
   which Anton explicitly flagged as wrong)
 
 **G4 — Playback Viewport export produces a viewport-sized composition with a root-level scene sweep, requires a real scroll-speed value**
@@ -215,7 +215,7 @@ level findings these cases build on.
   Objects1"/"All Objects2" structure exactly
 
 **G5 — Playback Viewport import: scroll/time classification defaults to all-scroll-basis (Requirements' heuristic (a), the safe first-ship default)**
-- Given: `samples/sample_playback_viewport.lottie_unzip` (real content — confirmed real per-layer
+- Given: `samples/sample_playback_viewport.Bodymovin_unzip` (real content — confirmed real per-layer
   local `p`-keyframe wiggles distinct from the root sweep, per Requirements' byte-level findings)
 - When: imported in Playback Viewport mode
 - Then: every child layer's own local keyframes import as ordinary scroll-basis `Anim`s (today's
@@ -225,7 +225,7 @@ level findings these cases build on.
   so a future heuristic (b)/(c) change has a clear "before" to diff against, not an assumed one.
 
 **G6 — Playback Viewport round-trip using the real ASHES-based sample as ground truth**
-- Given: `samples/sample_playback_viewport.lottie_unzip`
+- Given: `samples/sample_playback_viewport.Bodymovin_unzip`
 - When: imported (Playback Viewport mode; scroll speed auto-derived from the file's own root sweeps
   — DECIDED 2026-08-08, computed to 149.49/150.00 px/sec for its two real scenes, 0.34% apart) then
   exported back (Playback Viewport mode, same speed)
@@ -233,7 +233,7 @@ level findings these cases build on.
   the second of the two real, concrete round-trip fixtures Anton named directly
 
 **G7 — Wrong-mode import produces a visibly wrong, not silently-broken, result**
-- Given: `samples/sample_playback_viewport.lottie_unzip` (a real viewport-shaped file)
+- Given: `samples/sample_playback_viewport.Bodymovin_unzip` (a real viewport-shaped file)
 - When: imported in Full Canvas mode (the wrong mode for this file's real shape)
 - Then: no crash — but the 2 root-level precomp layers ("All Objects1"/"All Objects2") become 2
   giant top-level `EditorLayer`-groups whose own position keyframes (the ~24000px sweep) are now
@@ -250,7 +250,7 @@ level findings these cases build on.
       in `01-requirements.md` has at least one case above, including the new v0.3 Export/Import
       Modes addition (Category G, 2026-08-08).
 - [x] Edge cases identified — all-unsupported-content (A2), cancel-leaves-no-trace (A4), the
-      mask-vs-polygon source distinction (C2), TextRegion-mask-has-no-Lottie-equivalent (D3),
+      mask-vs-polygon source distinction (C2), TextRegion-mask-has-no-Bodymovin-equivalent (D3),
       wrong-mode import (G7).
 - [x] Error scenarios defined — F1/F2, plus A2's per-layer (not whole-file) flagging.
 - [x] Design implications extracted — most cases include one; the review screen's data-model
@@ -260,7 +260,7 @@ level findings these cases build on.
 ## Open Design Questions
 
 - [ ] D3's edge case: what happens when exporting a raster (`shape: "mask"`) `TextRegion` to
-      Lottie, which has no raster mask concept at all? Skip with a disclosed limitation, or
+      Bodymovin, which has no raster mask concept at all? Skip with a disclosed limitation, or
       rasterize/vectorize as a lossy approximation? Not decided.
 - [ ] The 2 deferred Requirements-level Text Region questions (`isHandLettered`/`Style` relationship,
       coordinate space) still gate exactly how Categories C/D's cases get implemented, even though

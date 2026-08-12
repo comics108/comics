@@ -14,10 +14,10 @@ Anton's explicit request that they not live only in Tests:
 
 1. **Scroll position and time as two independent animation-driving dimensions** (Test Case D4).
 2. **The complete `.comics` animation-type inventory and its real, confirmed gaps against actual
-   produced Lottie content** — not a hypothetical comparison; grounded in direct inspection of all
-   7 real produced chapters (`dataset/mahabharata/boranko/mahabharata-dot-lottie/unzip/`).
+   produced Bodymovin content** — not a hypothetical comparison; grounded in direct inspection of all
+   7 real produced chapters (`dataset/mahabharata/boranko/mahabharata-dot-bodymovin/unzip/`).
 3. **`Layer.ParentId` and organizational (non-content) layers** — a new hierarchical-parenting
-   mechanism and a new organizational-layer concept, both directly motivated by the real Lottie
+   mechanism and a new organizational-layer concept, both directly motivated by the real Bodymovin
    parenting/null-layer evidence found while investigating item 2.
 4. **`Layer.Mask`/`Layer.SolidColor`** — two new additive fields for content-source/compositing,
    deliberately kept separate from `Kind` (role).
@@ -26,7 +26,7 @@ Anton's explicit request that they not live only in Tests:
 6. **`Layer.ZDepth`** — a new optional per-layer parallax-depth field, default `0`, for faking depth
    via scroll-response scaling on a format that otherwise remains genuinely flat 2D.
 7. **`cameraPath`** — an optional document-level, scroll-keyed XY path used with `Layer.ZDepth` for
-   portable 2.5D parallax; motivated by a real Lottie-derived `.comics` producer.
+   portable 2.5D parallax; motivated by a real Bodymovin-derived `.comics` producer.
 
 ## Affected Systems
 
@@ -35,7 +35,7 @@ Anton's explicit request that they not live only in Tests:
 | `.comics`/`data.json` schema | Modify (additive) | New optional per-`Anim` time-basis field (exact name TBD, see Open Design Questions) |
 | `apps/comics-editor/lib/src/ui/models.dart`'s `Anim` | Modify (additive) | New nullable field; every existing `Anim` continues to default to scroll-basis |
 | `apps/comics-editor/lib/src/ui/anim/keyframe_interpolator.dart` | Modify (additive, new code path) | Needs a second, time-driven evaluation path alongside the existing scroll-driven one; the two must compose independently per Test D4's edge case |
-| `flows/comics-editor/tdd-dot-lottie-import-export`'s Precomp Handling design | **Needs generalizing** | Currently scoped to precomp-child baking only; real content requires resolving arbitrary `parent` chains (see Animation-Type Inventory below) — now has a cleaner target: map onto `Layer.ParentId` directly instead of baking-and-discarding |
+| `flows/comics-editor/tdd-dot-bodymovin-import-export`'s Precomp Handling design | **Needs generalizing** | Currently scoped to precomp-child baking only; real content requires resolving arbitrary `parent` chains (see Animation-Type Inventory below) — now has a cleaner target: map onto `Layer.ParentId` directly instead of baking-and-discarding |
 | `.comics`/`data.json` schema (`Layer`) | Modify (additive) | New `Layer.Id` (stable identity, prerequisite), `Layer.ParentId` (nullable, references another `Layer.Id`), new `Kind` value for organizational layers |
 | `apps/comics-editor/lib/src/ui/models.dart`'s `EditorLayer` | Modify (additive) | New `id`, `parentId` fields; every existing layer has no parent, behaves exactly as today |
 | `apps/comics-editor`'s canvas/layers-panel editing logic | Modify (new behavior) | Moving a parent layer should visually move its children live during editing — new interaction, doesn't exist today (flat, independent layers) |
@@ -150,7 +150,7 @@ swinging-leg rotation keeps looping while the reader has stopped scrolling to re
 
 ### Blocks
 
-- `flows/comics-editor/tdd-dot-lottie-import-export`'s eventual handling of any Lottie content that
+- `flows/comics-editor/tdd-dot-bodymovin-import-export`'s eventual handling of any Bodymovin content that
   turns out to need a genuinely time-driven (not scroll-driven) reading — not currently in that
   flow's scope, but this addition is the schema prerequisite if it ever is.
 
@@ -185,7 +185,7 @@ format's history.
 
 ## `Layer.ParentId` & Organizational Layers — Specification
 
-Directly motivated by the real Lottie parenting/null-layer evidence found while building the
+Directly motivated by the real Bodymovin parenting/null-layer evidence found while building the
 Animation-Type Inventory below — moved to its own section since it's a `Layer`-level structural
 concept, not an `Anim`-level one like the time-basis addition above.
 
@@ -256,7 +256,7 @@ idea, not a different backward-compatibility strategy.
       stripping the field), renders identically to the same file with `ParentId` present — the
       core backward-compat guarantee, must be verified directly, not assumed
 - [ ] Real-data: attempt round-tripping `THE BROKEN TUSK`'s real parent structure (190/295 layers)
-      through this mechanism once `tdd-dot-lottie-import-export` implements the mapping
+      through this mechanism once `tdd-dot-bodymovin-import-export` implements the mapping
 
 ---
 
@@ -274,7 +274,7 @@ proposal awaiting review.
 // lib/src/ui/models.dart -- EditorLayer, modified (additive)
 class EditorLayer {
   // ...existing + id/parentId from above...
-  String? solidColor; // NEW, proposed -- hex string (e.g. "#ffffff"), mirrors Lottie's `sc`.
+  String? solidColor; // NEW, proposed -- hex string (e.g. "#ffffff"), mirrors Bodymovin's `sc`.
                        // When set, render as a flat fill; mutually exclusive with populated
                        // Images[] slots (an editor-side validation, not a hard schema constraint).
   LayerMask? mask;     // NEW, proposed -- a general compositing clip on this layer's own content.
@@ -326,8 +326,8 @@ ever open new v2026-authored content that uses it.
       precedence is decided)
 - [ ] Unit: `mask.shape=="rect"` correctly clips rendered content to the given bounds
 - [ ] Real-data: re-render `THE BROKEN TUSK`'s "White Solid 1" and `THE CHASE`'s 6 masked layers
-      through this mechanism once `tdd-dot-lottie-import-export` implements the mapping, compare
-      against the original Lottie rendering for visual equivalence
+      through this mechanism once `tdd-dot-bodymovin-import-export` implements the mapping, compare
+      against the original Bodymovin rendering for visual equivalence
 
 ---
 
@@ -517,7 +517,7 @@ Escalated from `02-tests.md`'s Test Cases B2-B5 into Specifications proper, per 
 request. **Corrected 2026-08-07**: device orientation is no longer platform-config-only — it becomes
 a real `.comics` field too (`preferredOrientation`), per Anton's direct instruction. **New
 2026-08-08**: a third field, `preferredViewportWidth`/`preferredViewportHeight` (default 720×1600),
-motivated by `flows/comics-editor/tdd-dot-lottie-import-export`'s Playback Viewport export/import
+motivated by `flows/comics-editor/tdd-dot-bodymovin-import-export`'s Playback Viewport export/import
 mode. Three genuinely independent *fields*, specified separately below — see `01-requirements.md`
 for the full narrative/rationale; this section states interfaces/data models/behavior.
 
@@ -545,7 +545,7 @@ class ComicsDoc {
 
   // NEW, 2026-08-08: independent of both fields above -- scale/extent of the intended viewing
   // window, not direction. Default 720x1600 matches the real value found in
-  // samples/sample_playback_viewport.lottie_unzip (checked byte-level). Flat ints, not a nested
+  // samples/sample_playback_viewport.Bodymovin_unzip (checked byte-level). Flat ints, not a nested
   // {width,height} object, to stay structurally parallel with ComicsDoc's own width/height.
   int preferredViewportWidth = 720;
   int preferredViewportHeight = 1600;
@@ -622,15 +622,15 @@ and the dialog's `choice`/orientation-tile state needs to actually write them on
 "Auto" third value for `preferredOrientation` has **no UI representation yet at all** — the real
 dialog only shows Portrait/Landscape tiles, two options, not three — a real gap for Plan to size.
 `preferredViewportWidth`/`Height` (NEW, 2026-08-08) has **no UI proposal at all yet**, in either the
-New Document dialog or anywhere else — its primary real motivation so far is the Lottie Playback
-Viewport export/import path (`flows/comics-editor/tdd-dot-lottie-import-export`), not a general
+New Document dialog or anywhere else — its primary real motivation so far is the Bodymovin Playback
+Viewport export/import path (`flows/comics-editor/tdd-dot-bodymovin-import-export`), not a general
 editor-authoring concern the way `scrollType`/`preferredOrientation` are; whether it needs its own
-New Document dialog control, or only ever gets set indirectly (e.g. by the Lottie import flow itself
+New Document dialog control, or only ever gets set indirectly (e.g. by the Bodymovin import flow itself
 when it detects a viewport-shaped source), is undecided.
 
 ---
 
-## Animation-Type Inventory & Lottie Coverage — Specification-Level Detail
+## Animation-Type Inventory & Bodymovin Coverage — Specification-Level Detail
 
 (See `01-requirements.md`'s own copy of this table for the full narrative; this section states the
 specification-relevant consequences.)
@@ -643,24 +643,24 @@ Any future addition to this set (e.g. a 6th type) would be a materially bigger c
 in this format's history to date and is **not proposed here** — only the new `basis` dimension
 (orthogonal to *which* type an anim is) is being added.
 
-### Real, confirmed gaps against actually-produced Lottie content (specification impact)
+### Real, confirmed gaps against actually-produced Bodymovin content (specification impact)
 
-| Real Lottie feature found | Files affected | Specification consequence |
+| Real Bodymovin feature found | Files affected | Specification consequence |
 |---|---|---|
-| Vector masks (`masksProperties`) | 1/7 (`THE CHASE`) | `flows/comics-editor/tdd-dot-lottie-import-export`'s Won't-Have ("no shape/mask/text Lottie support") excludes real, already-produced content — needs Anton's explicit acknowledgment in that flow, not silent scope-narrowing |
+| Vector masks (`masksProperties`) | 1/7 (`THE CHASE`) | `flows/comics-editor/tdd-dot-bodymovin-import-export`'s Won't-Have ("no shape/mask/text Bodymovin support") excludes real, already-produced content — needs Anton's explicit acknowledgment in that flow, not silent scope-narrowing |
 | Null/organizational layers (`ty:3`) | 1/7 (`SVAYAMWARA`) | No `.comics` equivalent; that flow's import path needs a defined behavior for these (likely: skip, since they carry no visual content — not yet decided) |
 | Solid color layers (`ty:1`) | 1/7 (`THE BROKEN TUSK`) | No `.comics` equivalent (no flat-color-fill layer type); same open question as masks |
-| **Layer parenting (`parent` field)** | **5/7**, up to **64% of layers** in `THE BROKEN TUSK` | **Highest-impact finding**: the "bake absolute values at import time" mechanism already decided for precomp-children (`tdd-dot-lottie-import-export`'s Precomp Handling) must generalize to **arbitrary parent chains** between sibling layers, not just precomp-nesting — a real, larger implementation task than that flow's current Specifications (`03-specifications.md`) scopes. This is the most consequential correction from this investigation. |
+| **Layer parenting (`parent` field)** | **5/7**, up to **64% of layers** in `THE BROKEN TUSK` | **Highest-impact finding**: the "bake absolute values at import time" mechanism already decided for precomp-children (`tdd-dot-bodymovin-import-export`'s Precomp Handling) must generalize to **arbitrary parent chains** between sibling layers, not just precomp-nesting — a real, larger implementation task than that flow's current Specifications (`03-specifications.md`) scopes. This is the most consequential correction from this investigation. |
 
 ### Resolution — DECIDED (2026-08-07), supersedes the earlier recommendation below
 
 Given parenting affects the majority of at least one real chapter's layers, `.comics` v2026 gains a
-real `Layer.ParentId` mechanism (see the new section above) — `tdd-dot-lottie-import-export`'s
-import path should map Lottie's `parent` field **directly onto `Layer.ParentId`**, not bake-and-
+real `Layer.ParentId` mechanism (see the new section above) — `tdd-dot-bodymovin-import-export`'s
+import path should map Bodymovin's `parent` field **directly onto `Layer.ParentId`**, not bake-and-
 discard it. This is a better outcome than the original recommendation (bake-only): the hierarchy
 survives into `.comics`, live-editing behavior (move a parent, children follow) becomes possible in
 the editor, and backward compatibility is unaffected either way (both approaches persist absolute
-values for old readers). `tdd-dot-lottie-import-export`'s own Specifications should be updated to
+values for old readers). `tdd-dot-bodymovin-import-export`'s own Specifications should be updated to
 reflect this — flagged there directly (see its `_status.md`).
 
 *(Original recommendation, preserved for history, now superseded)*: "cannot treat 'resolve one
@@ -674,10 +674,10 @@ representing it for real via `ParentId`.
       `02-tests.md`'s own Open Design Questions for the 5 sub-questions: field shape, time units,
       start/loop semantics, composition rule, which reader implements first).
 - [ ] How does the new time-basis dimension interact with `flows/comics-editor/
-      tdd-dot-lottie-import-export`'s time-base-ratio dialog (scroll-pixels ↔ frames)? That dialog
+      tdd-dot-bodymovin-import-export`'s time-base-ratio dialog (scroll-pixels ↔ frames)? That dialog
       was designed assuming everything is scroll-driven on the `.comics` side — a genuinely
       time-based anim wouldn't need that ratio at all. Not yet reconciled.
-- [x] Should the parenting-generalization finding block `tdd-dot-lottie-import-export`'s progress to
+- [x] Should the parenting-generalization finding block `tdd-dot-bodymovin-import-export`'s progress to
       Plan? **Decided (2026-08-07): resolved via `Layer.ParentId`**, not a blocking question anymore
       — that flow maps onto the new mechanism directly (see the Resolution note above).
 - [ ] `Layer.Id` generation/uniqueness scheme (UUID? sequential? something else?) — not specified,

@@ -14,12 +14,12 @@
 | 1.5 Move keyframe_interpolator.dart | Done | Byte-identical except the one import-path line, confirmed via `diff` |
 | 2.1 Move models_test.dart + fix lib importers | Done | Also fixed `canvas_view.dart` (a real gap the Plan's own import-list missed) |
 | 2.2 Fix ~47 test files | Done | 40 mechanical + 8 `editor_mode.dart` additions; also moved `keyframe_interpolator_test.dart` (a second missed-portable-test gap) |
-| 3.1 Move 3 Lottie files | Done | `archive_io.dart`→`archive.dart` applied |
-| 3.2 Move 4 Lottie test files | Done | 38 tests pass |
-| 3.3 Fix editor Lottie-UI imports | Done | |
+| 3.1 Move 3 Bodymovin files | Done | `archive_io.dart`→`archive.dart` applied |
+| 3.2 Move 4 Bodymovin test files | Done | 38 tests pass |
+| 3.3 Fix editor Bodymovin-UI imports | Done | |
 | 4.1 comics_reader.dart | Done | New `ComicsArchiveReader` + Web-safe `read_file.dart` conditional-import shim |
 | 4.2 comics_reader_test.dart | Done | 10 new tests, full schema coverage |
-| 4.3 Move lottie_roundtrip_test.dart | Done | G3 rewritten to re-zip the fixture in-memory + `ComicsArchiveReader.readBytes` |
+| 4.3 Move bodymovin_roundtrip_test.dart | Done | G3 rewritten to re-zip the fixture in-memory + `ComicsArchiveReader.readBytes` |
 | 4.4 Backward-compat re-verification | Done | 403/403 (+3 skipped) in `apps/comics-editor` |
 | 5.1-5.4 flutter_comics_viewer rewrite | Done | 15/15 passing; real schema fields confirmed no longer dropped |
 | 5.5 Manual verification | Deferred | Needs a real device/simulator session -- automated coverage (Task 5.4's new tests) already confirms solidColor/mask survive parsing end-to-end |
@@ -74,13 +74,13 @@ exist on disk yet.
     version fallback after an external `pubspec.yaml` bump to 3.2.3+4) — same one-line-sync pattern
     as a prior session, not part of this Plan but left unfixed would have made the "full suite
     green" checkpoint falsely red.
-- Task 3.1: moved the 3 Lottie files via `cp` + `diff`-verified-identical, then applied the planned
-  edits (`archive_io.dart`→`archive.dart`, relative import path fixups for the new `lottie/`
+- Task 3.1: moved the 3 Bodymovin files via `cp` + `diff`-verified-identical, then applied the planned
+  edits (`archive_io.dart`→`archive.dart`, relative import path fixups for the new `bodymovin/`
   location).
-- Task 3.2: moved the 4 clean Lottie test files the same way; all 38 cases pass in
+- Task 3.2: moved the 4 clean Bodymovin test files the same way; all 38 cases pass in
   `libs/flutter_comics`.
-- Task 3.3: fixed `lottie_import_dialog.dart`, `controller.dart`'s remaining `lottie_mapping.dart`
-  import, and `lottie_controller_test.dart`'s imports (all stay in `apps/comics-editor`).
+- Task 3.3: fixed `bodymovin_import_dialog.dart`, `controller.dart`'s remaining `bodymovin_mapping.dart`
+  import, and `bodymovin_controller_test.dart`'s imports (all stay in `apps/comics-editor`).
 - Task 4.1: wrote `ComicsArchiveReader.readBytes`/`.readFile`, porting `models_mapping.dart`'s
   read-side per-field JSON helpers (`_animFromJson`/`_maskFromJson`/`_textRegionFromJson`/
   `_asScrollType`/`_asPreferredOrientation`) into `comics_reader.dart` (can't literally import
@@ -91,7 +91,7 @@ exist on disk yet.
   Web-safe despite `readFile`'s real filesystem access.
 - Task 4.2: `comics_reader_test.dart` (10 cases) — full schema field coverage, `.puzzle` filename
   detection, defaults, F1 error handling, and `readFile`'s real-disk round trip.
-- Task 4.3: moved `lottie_roundtrip_test.dart`, resolving the Plan's own Open Implementation
+- Task 4.3: moved `bodymovin_roundtrip_test.dart`, resolving the Plan's own Open Implementation
   Question: G3's fixture-prep step re-zips `sample_v2012.comics_unzip/data.json` in-memory (matching
   `comics_reader_test.dart`'s own established pattern) rather than adding a raw-map bypass entry
   point to `ComicsArchiveReader`'s public API that nothing else needs.
@@ -208,7 +208,7 @@ confirmed via `diff`/`cp` after each move, not just assumed.
 | `DartViewerTile` deleted (Task 5.2's own wording) | Kept as-is | Real tile pixel bytes/position have no shared-model equivalent — deleting it was a mistake in the Plan's own phrasing, corrected during implementation |
 | `dart_comics_viewer_backend_test.dart` "relocates" (Specifications' original wording) | Rewritten in place, stays in `flutter_comics_viewer/test/` | Tests this package's own backend/surface wiring, not portable format logic — same backwards-dependency rule already applied to `apps/comics-editor`'s tests |
 | Task 4.3's fixture-prep mechanism (Open Implementation Question) | Re-zip `data.json` in-memory via `package:archive` | Matches `comics_reader_test.dart`'s own established pattern; no new bypass API added to `ComicsArchiveReader` |
-| `models_test.dart`/`lottie_*_test.dart` only (2.1/3.2) | Also moved `keyframe_interpolator_test.dart` | Fully portable test the Plan's own file list missed — found via `flutter analyze` after the mechanical import pass, not pre-planned |
+| `models_test.dart`/`bodymovin_*_test.dart` only (2.1/3.2) | Also moved `keyframe_interpolator_test.dart` | Fully portable test the Plan's own file list missed — found via `flutter analyze` after the mechanical import pass, not pre-planned |
 | No pubspec-level consequence anticipated for Task 5.1 | `flutter_comics_viewer` needed `publish_to: 'none'` | It's a genuinely *published* pub.dev package; a permanent local `path:` dependency blocks republishing until `flutter_comics` is published too or the dependency is swapped at publish time — disclosed, not silently patched over |
 
 ## Learnings

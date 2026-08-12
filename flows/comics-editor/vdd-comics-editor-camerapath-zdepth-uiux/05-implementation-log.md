@@ -103,7 +103,7 @@ public widget surface without duplicating behavior.
 - Focused `flutter analyze` over every changed implementation file: no issues.
 - Full `flutter analyze`: no errors or warnings; four pre-existing style infos remain in unrelated
   `process_cutting_client.dart`, `ffi_core.dart`, `cutting_canvas.dart`, and
-  `lottie_import_dialog.dart` (`curly_braces_in_flow_control_structures`).
+  `bodymovin_import_dialog.dart` (`curly_braces_in_flow_control_structures`).
 - Repository-wide format check remains non-green because 45 pre-existing test files do not match
   the current Dart formatter. Changed implementation and focused tests were formatted directly;
   unrelated files were not rewritten for this flow.

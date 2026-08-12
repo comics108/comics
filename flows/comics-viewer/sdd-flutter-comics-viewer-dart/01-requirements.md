@@ -261,7 +261,7 @@ packages.
 
 - **`flows/sdd-flutter-comics`** — **IMPLEMENTATION COMPLETE (2026-08-08)**. `libs/flutter_comics`
   exists for real: `ComicsDoc`/`EditorLayer`/`Anim`/`LayerMask`/`TextRegion` (the full schema,
-  including `.puzzle`), `KeyframeInterpolator` (moved verbatim), the portable `.lottie` import/export
+  including `.puzzle`), `KeyframeInterpolator` (moved verbatim), the portable `.Bodymovin` import/export
   code, and `ComicsArchiveReader` — 87/87 tests passing. `flutter_comics_viewer` consumes it directly
   — 15/15 tests passing (re-verified). **This flow's blocker is resolved**: this flow's remaining real
   work (sound) builds on the current, real shared types. The one deferred item from that flow (Task
@@ -369,8 +369,8 @@ guess.
   `flows/comics-viewer/sdd-comics-viewer` also actively owns — that flow's `_status.md` should get a
   cross-reference once this flow's Plan is approved (a real, still-unactioned item carried over from
   `flows/sdd-flutter-comics`'s own Blockers too).
-- **`legacy/mahabharata-mobile-swift-v2012` includes a large vendored Lottie-iOS pod** — investigation
-  must stay scoped to the real app paths, not Lottie internals (unchanged from v0.1/v0.2).
+- **`legacy/mahabharata-mobile-swift-v2012` includes a large vendored Bodymovin-iOS pod** — investigation
+  must stay scoped to the real app paths, not Bodymovin internals (unchanged from v0.1/v0.2).
 
 ## Open Questions
 

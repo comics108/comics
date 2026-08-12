@@ -273,8 +273,8 @@ until that flow's own Requirements v0.3 are explicitly approved.
   against the real manifest, not written from memory of what should have happened
 - **Complexity**: Low
 
-**Note (2026-08-09)**: a Phase 10 (Lottie camera-path/per-layer z-depth extraction) was drafted here
-and then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`,
+**Note (2026-08-09)**: a Phase 10 (Bodymovin camera-path/per-layer z-depth extraction) was drafted here
+and then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/`,
 per Anton's explicit instruction — see that flow's own Plan for the full content, not duplicated here.
 
 ### SUPERSEDED Phase 10: direct panorama AI Cut/Arrange/Animate
@@ -390,9 +390,9 @@ rewritten "Panoramic PDF Source" section. Tasks 10.1-10.2 (research/mapping) are
 #### Task 10.7: Extend `package_comics.py` for AI-arranged layers + per-layer `zDepth` + document-root `cameraPath`
 - **Description**: `build_data_json` needs to accept the arranged/animated/z-depth-tagged regions
   from Tasks 10.4-10.6 as ordinary layers (no `scrollType` parameter needed — vertical is the
-  existing default) plus the same document-root `cameraPath` list shape the sibling Lottie flow
+  existing default) plus the same document-root `cameraPath` list shape the sibling Bodymovin flow
   already specified for its own `package_comics.py` extension — **reuse that same extension, not
-  duplicate it**. Coordinate with `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie`'s own Task
+  duplicate it**. Coordinate with `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin`'s own Task
   1.4 if both are implemented — whichever lands first should leave the `cameraPath`-writing code in a
   shape the other can reuse directly.
 - **Files**:
@@ -434,7 +434,7 @@ rewritten "Panoramic PDF Source" section. Tasks 10.1-10.2 (research/mapping) are
 - **Status**: COMPLETE (2026-08-10) — real 24-source inventory generated; filename-only mapping
   rejection and read-only/determinism verified; see `04-implementation-log.md`.
 - **Description**: Inventory native sources with hashes/media facts and a reviewed scope registry.
-  Seed the verified facts: Lottie `unzip/1` = standalone 9-stanza Gita Dhyanam; `app_BG._chiba5.psd`
+  Seed the verified facts: Bodymovin `unzip/1` = standalone 9-stanza Gita Dhyanam; `app_BG._chiba5.psd`
   = chapter 5 verses 5.14-5.29; `5_1.psd`/`5_2.psd` = its source components. Reject filename-only
   chapter inference.
 - **Files**: `scripts/inventory_sources.py`, scope fixture/registry, tests — Create.
@@ -444,13 +444,13 @@ rewritten "Panoramic PDF Source" section. Tasks 10.1-10.2 (research/mapping) are
   unchanged.
 - **Complexity**: Medium.
 
-#### Task 10.3: Native PSD/PDF/Lottie/`.comics` recovery adapters
+#### Task 10.3: Native PSD/PDF/Bodymovin/`.comics` recovery adapters
 - **Status**: COMPLETE (2026-08-11) — all four native adapters verified against real sources;
   5/5 focused and 106/106 full tests pass; see `04-implementation-log.md`.
 - **Description**: Recover native hierarchy, RGBA, masks, transforms, text/audio provenance, and
-  component links before flattened fallback. Reuse the separate Lottie flow's parser contract while
+  component links before flattened fallback. Reuse the separate Bodymovin flow's parser contract while
   treating camera/depth as evidence rather than gold truth.
-- **Files**: `scripts/adapters/{psd,pdf,lottie,comics}.py`, tests — Create; shared parser imports only
+- **Files**: `scripts/adapters/{psd,pdf,bodymovin,comics}.py`, tests — Create; shared parser imports only
   through stable adapters.
 - **Dependencies**: Task 10.2.
 - **Verification**: real-source tests assert PSD descendant/group checkpoints, 15 chapter-5 text
@@ -672,11 +672,11 @@ The historical v0.6 Tasks 10.1-10.8 above are excluded from this graph and MUST 
 | `apps/comics-editor/test/bhagavadgita_generator_test.dart` | Create | Real editor-loader validation (Task 7.2) |
 | `work/bhagavadgita/*.comics`, `manifest.json`, `report.md` | Create (gitignored) | Real pipeline output |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/import_panorama.py` | Create (NEW, 2026-08-09, v2) | Panorama page rendering, chapter mapping, AI cutting (`comics-ai-multimodal`), AI arranging (`comics-ai-positioning`), AI animating + reveal-density `cameraPath` (`comics-ai-animations`) (Tasks 10.2-10.6) |
-| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/package_comics.py` | Modify (NEW, 2026-08-09, v2) | Per-layer `zDepth` + document-root `cameraPath` for AI-arranged vertical layers (Task 10.7), coordinated with the sibling Lottie flow's own extension |
+| `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/package_comics.py` | Modify (NEW, 2026-08-09, v2) | Per-layer `zDepth` + document-root `cameraPath` for AI-arranged vertical layers (Task 10.7), coordinated with the sibling Bodymovin flow's own extension |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/report.py` | Modify (NEW, 2026-08-09, v2) | Mapping-confidence + domain-shift + positioning-model-caveat disclosure (Task 10.8) |
 
-*(The Lottie camera-path/z-depth extraction's own file changes now live in
-`flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/03-plan.md` — extracted 2026-08-09, not
+*(The Bodymovin camera-path/z-depth extraction's own file changes now live in
+`flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/03-plan.md` — extracted 2026-08-09, not
 duplicated here. Note that flow's own Plan does still modify `package_comics.py`/`pipeline.py`/
 `report.py` from this app, a real cross-flow file-ownership fact disclosed in both flows' status
 docs.)*
@@ -741,9 +741,9 @@ After each phase, verify:
 - [x] Approved on: 2026-08-06 (`_status.md` records "plan approved") — v0.1, Phases 1-9. This
       section's own checkboxes were never updated at the time, corrected here rather than left
       stale.
-- [x] Notes: the Lottie camera-path/z-depth extraction Phase (v0.2-v0.3, "Phase 10") was drafted and
+- [x] Notes: the Bodymovin camera-path/z-depth extraction Phase (v0.2-v0.3, "Phase 10") was drafted and
       approved here 2026-08-09, then **extracted into its own flow** per Anton's explicit
-      instruction — see `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/03-plan.md` for that
+      instruction — see `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/03-plan.md` for that
       content's own Plan and approval record.
 - [x] v0.6 Phase 10 was never approved and is now explicitly superseded by Requirements v0.8. Its
       tasks remain historical evidence only and must not be executed.

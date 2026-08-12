@@ -1,4 +1,4 @@
-# Specifications: dot-lottie-import-export
+# Specifications: dot-bodymovin-import-export
 
 > Version: 1.3 (2026-08-08: NEW — Export/Import Modes, Full Canvas vs. Playback Viewport, per
 > `01-requirements.md` v0.3/`02-tests.md` v1.1's addition. Still DRAFT throughout, so amended
@@ -10,17 +10,17 @@
 
 ## CORRECTION (2026-08-07) — Precomp Handling must generalize to arbitrary layer parenting, not just precomp children
 
-While documenting the full `.comics` animation-type/Lottie-coverage inventory in
-`flows/tdd-dot-comics-format`, all 7 real produced Lottie chapters were inspected directly (this
-flow's own drafting had only reasoned from `ASHES.json`, per `tdd-dot-lottie-format`'s original,
-now-corrected conversion-feasibility claim). Result: **Lottie's `parent` field (one layer's
+While documenting the full `.comics` animation-type/Bodymovin-coverage inventory in
+`flows/tdd-dot-comics-format`, all 7 real produced Bodymovin chapters were inspected directly (this
+flow's own drafting had only reasoned from `ASHES.json`, per `tdd-dot-bodymovin-format`'s original,
+now-corrected conversion-feasibility claim). Result: **Bodymovin's `parent` field (one layer's
 transform expressed relative to another layer's, independent of precomp nesting) is used in 5 of
 7 real chapters, and in `THE BROKEN TUSK` specifically, 190 of 295 layers (64%) use it** — a real
 character rig built from named anatomical parts ("голова"/head, "руки сложен"/folded arms,
 "предплечье"/forearm, confirmed real layer names) parented to each other, not a flat stack of
 independent layers. The same chapter also has 1 real solid-color layer (`ty:1`); `THE CHASE` has 6
 real masked layers; `SVAYAMWARA` has 1 real null/organizational layer (`ty:3`) — none of which this
-Specifications draft's Won't-Have ("no shape/mask/text Lottie support") accounted for as *already
+Specifications draft's Won't-Have ("no shape/mask/text Bodymovin support") accounted for as *already
 affecting real, already-produced content*, as opposed to a hypothetical future risk.
 
 **UPDATE (2026-08-07, supersedes the paragraph below)**: `flows/tdd-dot-comics-format` has since
@@ -28,7 +28,7 @@ decided a real, persisted `Layer.ParentId` mechanism for `.comics` v2026 (hierar
 live-relative positioning, backward-compatible via the same "always persist resolved absolute
 values" pattern already used for `GroupId`), plus a new `Layer.Id` (stable identity — a real
 prerequisite) and a new organizational/non-content `Kind` value (the `SVAYAMWARA` null-layer case).
-**This flow's import path should map Lottie's `parent` field directly onto `Layer.ParentId`**, not
+**This flow's import path should map Bodymovin's `parent` field directly onto `Layer.ParentId`**, not
 bake-and-discard it — a better outcome, since the hierarchy survives into `.comics` and becomes
 real, live-editable structure in the editor, not just a one-time-flattened import artifact. See
 `flows/tdd-dot-comics-format/03-specifications.md`'s new "`Layer.ParentId` & Organizational Layers"
@@ -45,7 +45,7 @@ changes A3/D2's scope.
 
 ## Overview
 
-Adds Lottie (`.lottie`, real Bodymovin JSON) import and export to `apps/comics-editor`. Import is a
+Adds Bodymovin (`.Bodymovin`, real Bodymovin JSON) import and export to `apps/comics-editor`. Import is a
 review/triage step (parse → per-layer preview with clean/flagged status → two user choices
 (time-base ratio, easing precision) → explicit commit); export is a simpler one-shot conversion.
 Two new additive `EditorLayer` fields (`GroupId`, `TextRegion`) carry grouping (precomp- **and**
@@ -59,7 +59,7 @@ the Traceability Matrix at the end.
 assumed constant scroll speed, per-layer motion composed as scroll-basis + time-basis `Anim`s).
 See `01-requirements.md`'s Export/Import Modes section for the real byte-level grounding
 (`samples/sample_v2012.comics_unzip` for Full Canvas, `samples/sample_playback_viewport
-.lottie_unzip` for Playback Viewport) and `02-tests.md`'s Category G for the behavioral cases.
+.Bodymovin_unzip` for Playback Viewport) and `02-tests.md`'s Category G for the behavioral cases.
 Playback Viewport mode's scroll+time composition is not a new mechanism this flow invents — it
 directly reuses `apps/comics-editor`'s already-shipped `Anim.basis`/`ComicsDoc.scrollType`
 (`flows/tdd-dot-comics-format`'s Plan, Phases 2 and 5).
@@ -70,11 +70,11 @@ directly reuses `apps/comics-editor`'s already-shipped `Anim.basis`/`ComicsDoc.s
 |--------|--------|-------|
 | `apps/comics-editor/lib/src/ui/models.dart` | Modify | Add `EditorLayer.groupId` (String?) and `EditorLayer.textRegion` (TextRegion?) |
 | `apps/comics-editor/lib/src/bridge/models_mapping.dart` | Modify | `_animFromJson`/`_animToJson`-equivalent additive read/write for the two new fields |
-| `apps/comics-editor/lib/src/bridge/lottie_mapping.dart` (new) | Create | Lottie JSON ↔ an intermediate `LottieDocument` model — parsing/writing, independent of `.comics` |
-| `apps/comics-editor/lib/src/ui/lottie/lottie_import.dart` (new) | Create | `LottieDocument` → `ImportPreview` (per-layer clean/flagged status, grouping) → commit → mutates `ComicsDoc` |
-| `apps/comics-editor/lib/src/ui/lottie/lottie_export.dart` (new) | Create | `ComicsDoc` → `LottieDocument` → JSON |
-| `apps/comics-editor/lib/src/ui/widgets/lottie_import_dialog.dart` (new) | Create | The review screen (Category A) + two choice controls (Category B) |
-| `apps/comics-editor/lib/src/ui/widgets/top_bar.dart` or `dialogs.dart` | Modify | New "Import from .lottie" / "Export to .lottie" menu entries — not a repurposing of the existing Export button (`top_bar.dart:240-243`, confirmed a different, existing `.comics`-to-`.comics` mechanism) |
+| `apps/comics-editor/lib/src/bridge/bodymovin_mapping.dart` (new) | Create | Bodymovin JSON ↔ an intermediate `BodymovinDocument` model — parsing/writing, independent of `.comics` |
+| `apps/comics-editor/lib/src/ui/bodymovin/bodymovin_import.dart` (new) | Create | `BodymovinDocument` → `ImportPreview` (per-layer clean/flagged status, grouping) → commit → mutates `ComicsDoc` |
+| `apps/comics-editor/lib/src/ui/bodymovin/bodymovin_export.dart` (new) | Create | `ComicsDoc` → `BodymovinDocument` → JSON |
+| `apps/comics-editor/lib/src/ui/widgets/bodymovin_import_dialog.dart` (new) | Create | The review screen (Category A) + two choice controls (Category B) |
+| `apps/comics-editor/lib/src/ui/widgets/top_bar.dart` or `dialogs.dart` | Modify | New "Import from .Bodymovin" / "Export to .Bodymovin" menu entries — not a repurposing of the existing Export button (`top_bar.dart:240-243`, confirmed a different, existing `.comics`-to-`.comics` mechanism) |
 | `apps/comics-editor/lib/src/ui/anim/keyframe_interpolator.dart` | None | Consumed, not modified — imported `Anim`s must already be valid input to the existing interpolator, not a parallel engine |
 
 ## Architecture
@@ -83,11 +83,11 @@ directly reuses `apps/comics-editor`'s already-shipped `Anim.basis`/`ComicsDoc.s
 
 ```
 Import direction:
-  .lottie file --> [mode: fullCanvas | playbackViewport, chosen or detected] --> LottieDocument
-                    (lottie_mapping.dart, pure parse)
+  .Bodymovin file --> [mode: fullCanvas | playbackViewport, chosen or detected] --> BodymovinDocument
+                    (bodymovin_mapping.dart, pure parse)
                         |
                         v
-                  ImportPreview (lottie_import.dart)
+                  ImportPreview (bodymovin_import.dart)
                   -- per-layer: clean | flagged(reason) | grouped(with N members) | scened(index)
                   -- pending choices: easingPrecision (both modes); scrollSpeed (playbackViewport
                      only -- fullCanvas mode skips this choice entirely, per Test G1)
@@ -101,28 +101,28 @@ Import direction:
               ComicsDoc mutation: N EditorLayers, Anims, groupId tags, TextRegions
 
 Export direction:
-  ComicsDoc --> LottieDocument (lottie_export.dart, deterministic, no user review step)
+  ComicsDoc --> BodymovinDocument (bodymovin_export.dart, deterministic, no user review step)
                         |
                         v
-                  .lottie file (JSON, zipped alongside referenced image assets)
+                  .Bodymovin file (JSON, zipped alongside referenced image assets)
 ```
 
 ### Data Flow
 
 ```
-Import: file picked -> lottie_mapping.parse(bytes) -> LottieDocument
+Import: file picked -> bodymovin_mapping.parse(bytes) -> BodymovinDocument
      -> user (or auto-detect, per Open Design Question) picks ExportImportMode
-     -> lottie_import.buildPreview(LottieDocument, mode) -> ImportPreview
+     -> bodymovin_import.buildPreview(BodymovinDocument, mode) -> ImportPreview
 
      [mode == fullCanvas]
-        (walks LottieDocument.layers; ty:2 => clean; ty:4/5/mask-bearing => flagged;
+        (walks BodymovinDocument.layers; ty:2 => clean; ty:4/5/mask-bearing => flagged;
          ty:0 precomp => resolve nested comp asset's layers, tag with one new groupId;
          frame numbers used AS-IS as .comics scroll-pixel start/end -- identity, no ratio,
          no scroll-speed prompt at all, per Test G1/G2)
 
      [mode == playbackViewport]
-        (walks LottieDocument.layers looking for the real root-sweep shape confirmed in
-         samples/sample_playback_viewport.lottie_unzip: root-level ty:0 layers, each with
+        (walks BodymovinDocument.layers looking for the real root-sweep shape confirmed in
+         samples/sample_playback_viewport.Bodymovin_unzip: root-level ty:0 layers, each with
          exactly one position keyframe pair spanning most of that layer's own ip/op range --
          each such root layer becomes one "scene"; the sweep's total pixel distance / duration,
          combined with the user-supplied or file-derived scroll speed, produces that scene's
@@ -132,14 +132,14 @@ Import: file picked -> lottie_mapping.parse(bytes) -> LottieDocument
 
      -> user sets ImportPreview.easingPrecision (or accepts default); timeBaseRatio only applies/
         appears at all in playbackViewport mode (fullCanvas mode has no such dialog, per G1)
-     -> user commits -> lottie_import.commit(preview, doc)
+     -> user commits -> bodymovin_import.commit(preview, doc)
         (for each clean/grouped/scened layer: create EditorLayer; for each animated property
          (p/r/s/o): create Anim entries per the mode-specific frame->scroll-pixel mapping above;
          easing handles -> either matched via curve-fit (exact) or passed through as Easy-Ease
          equivalent (approximation) -- both currently produce .comics's one fixed cubic ease-out
          per Test B3's finding, so this choice is real but not yet observably different in output)
 
-Export: doc -> lottie_export.build(doc, mode, timeBaseRatio, easingPrecision)
+Export: doc -> bodymovin_export.build(doc, mode, timeBaseRatio, easingPrecision)
 
      [mode == fullCanvas]
         (composition w/h = doc.width/doc.height; frame numbers = start/end directly, no ratio,
@@ -156,9 +156,9 @@ Export: doc -> lottie_export.build(doc, mode, timeBaseRatio, easingPrecision)
          contributes to that sweep's baseline, any time-basis Anim composes on top per
          KeyframeInterpolator's already-shipped composition rule, unchanged, just consumed here)
 
-     -> for each EditorLayer: one Lottie ty:2 layer; groupId-sharing layers -> one shared precomp
+     -> for each EditorLayer: one Bodymovin ty:2 layer; groupId-sharing layers -> one shared precomp
         asset instead of N independent root layers; TextRegion (shape:polygon) -> masksProperties
-     -> JSON encode + zip alongside referenced image assets -> .lottie file
+     -> JSON encode + zip alongside referenced image assets -> .Bodymovin file
 ```
 
 ## Interfaces
@@ -166,22 +166,22 @@ Export: doc -> lottie_export.build(doc, mode, timeBaseRatio, easingPrecision)
 ### New Interfaces
 
 ```dart
-// lib/src/bridge/lottie_mapping.dart
-/// Minimal Lottie/Bodymovin JSON model -- only what this flow's Test Cases need
+// lib/src/bridge/bodymovin_mapping.dart
+/// Minimal Bodymovin/Bodymovin JSON model -- only what this flow's Test Cases need
 /// (image layers, precomps, position/rotation/scale/opacity keyframes, vector
 /// masks). Deliberately does not model shape/text/gradient/repeater content --
-/// those are represented only as [LottieLayer.unsupportedReason], per Test A2.
-class LottieDocument {
-  LottieDocument({required this.width, required this.height, required this.frameRate,
+/// those are represented only as [BodymovinLayer.unsupportedReason], per Test A2.
+class BodymovinDocument {
+  BodymovinDocument({required this.width, required this.height, required this.frameRate,
       required this.inPoint, required this.outPoint, required this.layers, required this.assets});
   final int width, height;
   final double frameRate, inPoint, outPoint;
-  final List<LottieLayer> layers;
-  final List<LottieAsset> assets; // includes precomp assets (id + nested layers) and image assets
+  final List<BodymovinLayer> layers;
+  final List<BodymovinAsset> assets; // includes precomp assets (id + nested layers) and image assets
 }
 
-class LottieLayer {
-  // ty: 2=image (supported), 0=precomp (supported, resolved via LottieDocument.assets),
+class BodymovinLayer {
+  // ty: 2=image (supported), 0=precomp (supported, resolved via BodymovinDocument.assets),
   // 1=solid/3=null/4=shape/5=text/other=unsupported (Test A2) -- `unsupportedReason` is non-null
   // exactly when ty is not 2 or 0, or when ty==2 but a mask/effect this flow doesn't model is
   // present. CORRECTED 2026-08-07: ty:1 (solid) and ty:3 (null) are now explicitly named here,
@@ -190,8 +190,8 @@ class LottieLayer {
   // legible in the review screen, not a generic "unsupported layer type."
   final int type;
   final String name;
-  final String? refId; // for precomp layers, references LottieDocument.assets' id
-  final int? parent; // CORRECTED 2026-08-07, UPDATED 2026-08-07: Lottie's `parent` field (index of
+  final String? refId; // for precomp layers, references BodymovinDocument.assets' id
+  final int? parent; // CORRECTED 2026-08-07, UPDATED 2026-08-07: Bodymovin's `parent` field (index of
                       // another layer in the SAME composition this layer's transform is relative
                       // to) -- confirmed real, in 5/7 chapters, up to 64% of layers in one. Maps
                       // directly onto the new `EditorLayer.parentId` (see
@@ -201,24 +201,24 @@ class LottieLayer {
                       // of nesting (still needs its own resolution, but now also produces
                       // `parentId` tags for its resolved children, not just a `groupId`).
   final String? unsupportedReason;
-  final LottieTransform transform; // p/r/s/o, each either a static value or a keyframe list
-  final LottieMask? mask; // vector path, for Test C2/D3 -- confirmed real in THE CHASE (6 layers)
+  final BodymovinTransform transform; // p/r/s/o, each either a static value or a keyframe list
+  final BodymovinMask? mask; // vector path, for Test C2/D3 -- confirmed real in THE CHASE (6 layers)
 }
 
-/// Parses raw bytes into [LottieDocument]. Throws a typed exception (not a
+/// Parses raw bytes into [BodymovinDocument]. Throws a typed exception (not a
 /// generic FormatException) on missing required top-level keys, per Test F1 --
 /// callers use the exception type to short-circuit before ever building a
 /// preview/review screen.
-LottieDocument parseLottieDocument(Uint8List zipBytes);
+BodymovinDocument parseBodymovinDocument(Uint8List zipBytes);
 
-/// The inverse -- builds a real, zippable Lottie file from a document.
-Uint8List writeLottieDocument(LottieDocument doc, {required List<AssetFile> assetFiles});
+/// The inverse -- builds a real, zippable Bodymovin file from a document.
+Uint8List writeBodymovinDocument(BodymovinDocument doc, {required List<AssetFile> assetFiles});
 ```
 
 ```dart
-// lib/src/ui/lottie/lottie_import.dart (NEW enum 2026-08-08, per 01-requirements.md's
+// lib/src/ui/bodymovin/bodymovin_import.dart (NEW enum 2026-08-08, per 01-requirements.md's
 // Export/Import Modes section -- grounded in samples/sample_v2012.comics_unzip (fullCanvas) and
-// samples/sample_playback_viewport.lottie_unzip (playbackViewport))
+// samples/sample_playback_viewport.Bodymovin_unzip (playbackViewport))
 enum ExportImportMode { fullCanvas, playbackViewport }
 
 enum LayerPreviewStatus { clean, flagged, missingAsset }
@@ -226,7 +226,7 @@ enum LayerPreviewStatus { clean, flagged, missingAsset }
 class LayerPreview {
   LayerPreview(this.sourceLayer, this.status,
       {this.reason, this.groupId, this.groupName, this.sceneIndex});
-  final LottieLayer sourceLayer;
+  final BodymovinLayer sourceLayer;
   final LayerPreviewStatus status;
   final String? reason;       // populated when flagged/missingAsset (Test A2, F2)
   final String? groupId;      // shared across a precomp's resolved member layers (Test A3)
@@ -244,7 +244,7 @@ enum EasingChoice { exactCubicFit, easyEaseApproximation }
 /// resulting Anims get scaled.
 class ImportPreview {
   ImportPreview(this.document, this.mode, this.layers);
-  final LottieDocument document;
+  final BodymovinDocument document;
   final ExportImportMode mode;
   final List<LayerPreview> layers;
 
@@ -270,13 +270,13 @@ class ImportPreview {
   /// Builds the preview from a parsed document -- pure, no side effects,
   /// callable independently of any UI (Tests A1-A3, F2, G1-G2). In
   /// playbackViewport mode, looks for the real root-sweep shape confirmed in
-  /// `samples/sample_playback_viewport.lottie_unzip` (root-level ty:0 layers
+  /// `samples/sample_playback_viewport.Bodymovin_unzip` (root-level ty:0 layers
   /// each with one position keyframe pair spanning most of their own ip/op
   /// range) to assign `sceneIndex` AND to auto-populate [scrollSpeed] (per
   /// its own doc comment); a file with no such structure produces zero
   /// scenes, which the review screen should treat as its own flagged state
   /// (Open Design Question, not yet specified precisely).
-  static ImportPreview build(LottieDocument document, ExportImportMode mode);
+  static ImportPreview build(BodymovinDocument document, ExportImportMode mode);
 }
 
 /// Applies [preview]'s current choices, mutating [doc]. No-op-safe to never
@@ -289,8 +289,8 @@ void commitImport(ImportPreview preview, ComicsDoc doc);
 ```
 
 ```dart
-// lib/src/ui/lottie/lottie_export.dart
-LottieDocument buildLottieExport(
+// lib/src/ui/bodymovin/bodymovin_export.dart
+BodymovinDocument buildBodymovinExport(
   ComicsDoc doc,
   ExportImportMode mode, {
   // Required when mode == playbackViewport (Test G4); ignored for fullCanvas
@@ -333,7 +333,7 @@ class TextRegion {
 Two new optional `Layer` keys in `data.json`: `groupId` (string) and `textRegion` (object, shape
 above). Both omitted from JSON when absent — v2012/v2.8 readers that have never heard of either key
 render every existing and newly-saved-without-them file exactly as today, per `tdd-dot-comics-format`
-and `tdd-dot-lottie-import-export/01-requirements.md`'s already-established backward-compat
+and `tdd-dot-bodymovin-import-export/01-requirements.md`'s already-established backward-compat
 mechanism (no re-derivation needed here, just applied).
 
 ## Behavior Specifications
@@ -344,8 +344,8 @@ mechanism (no re-derivation needed here, just applied).
 choices (identity time-base, Easy Ease) → commit → N new `EditorLayer`s appear in the canvas/layers
 panel, fully editable by existing tooling (drag, `KeyframeInterpolator`-driven playback).
 
-**Export** (Test D1): open document → "Export to .lottie" → choose time-base/easing (or accept
-defaults) → one `.lottie` file written, valid per a generic Lottie schema check.
+**Export** (Test D1): open document → "Export to .Bodymovin" → choose time-base/easing (or accept
+defaults) → one `.Bodymovin` file written, valid per a generic Bodymovin schema check.
 
 ### Edge Cases
 
@@ -355,17 +355,17 @@ defaults) → one `.lottie` file written, valid per a generic Lottie schema chec
 | Precomp nesting | A3 | One grouped preview entry, not N unrelated rows; commit tags real `EditorLayer`s with a shared `groupId` |
 | Cancel | A4 | Zero document mutation |
 | Missing asset file | F2 | Per-layer flag (`LayerPreviewStatus.missingAsset`), not a fatal whole-file error |
-| Raster `TextRegion` on export | D3 | **Unresolved** — no Lottie raster-mask equivalent exists; Open Design Question, not guessed |
+| Raster `TextRegion` on export | D3 | **Unresolved** — no Bodymovin raster-mask equivalent exists; Open Design Question, not guessed |
 | Wrong mode for the file's real shape | G7 | No crash; produces a visibly-wrong-but-not-broken document (e.g. a viewport-shaped file imported as fullCanvas turns its 2 scene-sweep precomps into 2 giant document-wide-motion layers) — whether to detect and warn is an Open Design Question |
-| Zero recovered scenes in playbackViewport mode | (new, not yet a Test Case) | A Lottie file with no root-sweep-shaped layers at all, imported in playbackViewport mode — should probably be its own flagged/warning state (mirrors A2's all-unsupported case), not specified precisely yet |
+| Zero recovered scenes in playbackViewport mode | (new, not yet a Test Case) | A Bodymovin file with no root-sweep-shaped layers at all, imported in playbackViewport mode — should probably be its own flagged/warning state (mirrors A2's all-unsupported case), not specified precisely yet |
 
 ### Error Handling
 
 | Error | Cause | Response |
 |-------|-------|----------|
-| Invalid/non-Lottie JSON | Corrupt file or wrong format entirely | `parseLottieDocument` throws before any preview UI renders (Test F1) |
-| Missing required top-level keys | Malformed Lottie | Same as above — a single validation path, not two |
-| Missing referenced asset | Broken `.lottie` package | Per-layer `missingAsset` status (Test F2), rest of file still imports |
+| Invalid/non-Bodymovin JSON | Corrupt file or wrong format entirely | `parseBodymovinDocument` throws before any preview UI renders (Test F1) |
+| Missing required top-level keys | Malformed Bodymovin | Same as above — a single validation path, not two |
+| Missing referenced asset | Broken `.Bodymovin` package | Per-layer `missingAsset` status (Test F2), rest of file still imports |
 
 ## Dependencies
 
@@ -388,21 +388,21 @@ defaults) → one `.lottie` file written, valid per a generic Lottie schema chec
 
 ### External Systems
 
-None — Lottie is a public JSON format with no SDK/network dependency; parsing/writing is plain JSON
-manipulation, no third-party Lottie library needed for this scope (this flow never *renders*
-Lottie, only converts to/from `.comics`).
+None — Bodymovin is a public JSON format with no SDK/network dependency; parsing/writing is plain JSON
+manipulation, no third-party Bodymovin library needed for this scope (this flow never *renders*
+Bodymovin, only converts to/from `.comics`).
 
 ### Internal Systems
 
-`models.dart`, `models_mapping.dart` (modify); new `lottie_mapping.dart`, `lottie_import.dart`,
-`lottie_export.dart`, `lottie_import_dialog.dart`; `top_bar.dart`/`dialogs.dart` (new menu entries).
+`models.dart`, `models_mapping.dart` (modify); new `bodymovin_mapping.dart`, `bodymovin_import.dart`,
+`bodymovin_export.dart`, `bodymovin_import_dialog.dart`; `top_bar.dart`/`dialogs.dart` (new menu entries).
 
 ## Testing Strategy
 
 ### Unit Tests
 
-- [ ] `parseLottieDocument`: valid file parses (A1); missing top-level keys throws (F1); each
-      `LottieLayer.type` maps to the right supported/unsupported classification (A2)
+- [ ] `parseBodymovinDocument`: valid file parses (A1); missing top-level keys throws (F1); each
+      `BodymovinLayer.type` maps to the right supported/unsupported classification (A2)
 - [ ] `ImportPreview.build`: precomp resolution produces correctly-grouped `LayerPreview`s (A3);
       all-unsupported input produces 0 clean (A2 edge case); **fullCanvas mode** uses frame numbers
       directly, no ratio, no scroll-speed field populated (G1/G2); **playbackViewport mode**
@@ -411,7 +411,7 @@ Lottie, only converts to/from `.comics`).
       start/end, consistently across every property type on every layer (B2's specific concern);
       **playbackViewport mode**'s per-layer local keyframes import as scroll-basis (not time-basis)
       Anims per heuristic (a) (G5)
-- [ ] `buildLottieExport`: `groupId`-sharing layers produce one precomp, not N roots (D2);
+- [ ] `buildBodymovinExport`: `groupId`-sharing layers produce one precomp, not N roots (D2);
       `TextRegion.shape=="polygon"` produces a real `masksProperties` entry (D3); **fullCanvas
       mode** produces a canvas-sized composition with no scroll-speed dependency (G1);
       **playbackViewport mode** produces a viewport-sized composition with one root-sweep precomp
@@ -419,18 +419,18 @@ Lottie, only converts to/from `.comics`).
 
 ### Integration Tests
 
-- [ ] Real-file round-trip (E1): import `samples/sample.lottie` → export → re-import → compare
+- [ ] Real-file round-trip (E1): import `samples/sample.Bodymovin` → export → re-import → compare
       rendered transforms at sampled scroll positions within tolerance
 - [ ] F2 against a deliberately-broken copy of a real sample (one asset file removed)
 - [ ] **Full Canvas round-trip (G3, CORRECTED 2026-08-08)**: fixture prep — export
-      `samples/sample_v2012.comics_unzip` to `.lottie` (fullCanvas) once to produce a real
-      Full-Canvas-shaped `.lottie` file; the round-trip test itself then runs
-      `.lottie` → import (fullCanvas) → export (fullCanvas) → `.lottie`, comparing rendered
+      `samples/sample_v2012.comics_unzip` to `.Bodymovin` (fullCanvas) once to produce a real
+      Full-Canvas-shaped `.Bodymovin` file; the round-trip test itself then runs
+      `.Bodymovin` → import (fullCanvas) → export (fullCanvas) → `.Bodymovin`, comparing rendered
       transforms — same direction as G6, not the reverse (an earlier draft had this round-tripping
-      `.comics → .lottie → .comics`, which Anton corrected)
-- [ ] **Playback Viewport round-trip (G6)**: `samples/sample_playback_viewport.lottie_unzip` →
+      `.comics → .Bodymovin → .comics`, which Anton corrected)
+- [ ] **Playback Viewport round-trip (G6)**: `samples/sample_playback_viewport.Bodymovin_unzip` →
       import (playbackViewport) → export (playbackViewport) → compare
-- [ ] **Wrong-mode import (G7)**: `samples/sample_playback_viewport.lottie_unzip` imported in
+- [ ] **Wrong-mode import (G7)**: `samples/sample_playback_viewport.Bodymovin_unzip` imported in
       fullCanvas mode — confirm no crash, document the actually-produced (wrong but defined) shape
 
 ### Manual Verification
@@ -448,15 +448,15 @@ risk.
 
 | Spec element | Test Case(s) |
 |---|---|
-| `LottieDocument`/`parseLottieDocument` | A1, A2, F1 |
+| `BodymovinDocument`/`parseBodymovinDocument` | A1, A2, F1 |
 | `LayerPreviewStatus`/`LayerPreview` | A1, A2, A3, F2 |
 | `ImportPreview` + `EasingChoice` | A1, B1, B2, B3 |
 | `commitImport` | A1, A3, A4, B1, B2 |
 | `EditorLayer.groupId` | A3, D2 |
 | `EditorLayer.textRegion` / `TextRegion` | C1, C2, D3 |
-| `buildLottieExport` | D1, D2, D3 |
+| `buildBodymovinExport` | D1, D2, D3 |
 | Round-trip behavioral equivalence | E1 |
-| New menu entries (not the existing Export button) | (Requirements' UI-entry-point decision; no dedicated Test Case beyond A1's "picked via Import from .lottie" premise) |
+| New menu entries (not the existing Export button) | (Requirements' UI-entry-point decision; no dedicated Test Case beyond A1's "picked via Import from .Bodymovin" premise) |
 | `ExportImportMode` (NEW 2026-08-08) | G1, G2, G4, G7 |
 | `ImportPreview.scrollSpeed`/`LayerPreview.sceneIndex` (NEW) | G4, G5, G6 |
 | Full Canvas round-trip (real fixture) | G3 |
@@ -464,13 +464,13 @@ risk.
 
 ## Open Design Questions
 
-- [ ] D3's raster-`TextRegion`-to-Lottie-export gap — carried forward from `02-tests.md`, still
+- [ ] D3's raster-`TextRegion`-to-Bodymovin-export gap — carried forward from `02-tests.md`, still
       unresolved: skip with a disclosed limitation, or lossy rasterize/vectorize?
 - [ ] The 2 deferred Requirements-level Text Region questions (`isHandLettered`/`Style`
       relationship, coordinate space) still block finalizing `TextRegion`'s exact shape above —
       the struct in "New Types" is a reasonable working shape, not a final one.
 - [ ] Whether the review screen (Category A) and the two choice controls (Category B) are one
-      combined dialog or sequential steps — affects `lottie_import_dialog.dart`'s own internal
+      combined dialog or sequential steps — affects `bodymovin_import_dialog.dart`'s own internal
       structure, not the data model above, deferred to Plan.
 - [x] **Does `ImportPreview.build`'s grouping logic resolve `parent` chains generically? — DECIDED
       (2026-08-07)**: yes, via the new `Layer.ParentId` mechanism (`tdd-dot-comics-format

@@ -106,10 +106,10 @@ today) — not by introducing a separate group-level transform. A saved file loo
 exactly like three independently-positioned layers that happen to have moved together — because
 that's literally what happened.
 
-## Component: Lottie import producing a pre-populated group
+## Component: Bodymovin import producing a pre-populated group
 
 ```
-Importing a .lottie file whose root has a precomp layer named "Character_Ashes"
+Importing a .Bodymovin file whose root has a precomp layer named "Character_Ashes"
 referencing 3 nested image layers:
 
   Import result in the layers panel:

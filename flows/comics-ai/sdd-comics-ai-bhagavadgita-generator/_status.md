@@ -31,7 +31,7 @@ scale-out correctly remain blocked by measured quality gates, not human particip
 
 ## NEW (2026-08-10): Semantic source scopes verified and saved
 
-- `bhagavadgita_lottie/unzip/1/` is the complete 9-stanza Gita Dhyanam standalone prologue in RU/EN,
+- `bhagavadgita_bodymovin/unzip/1/` is the complete 9-stanza Gita Dhyanam standalone prologue in RU/EN,
   not canonical chapter 1. Directory `1` and `S3_B1_C1` are production/package identifiers.
 - `app_BG._chiba5.psd` is canonical Bhagavad Gita chapter 5, verses 5.14-5.29, represented by 15
   sequential balloon/caption groups.
@@ -43,7 +43,7 @@ scale-out correctly remain blocked by measured quality gates, not human particip
 ## NEW (2026-08-09): Production asset-first vision recorded
 
 - `.comics` is the final compiler target; the canonical intermediate is a reviewed asset graph.
-- PSD alpha/hierarchy and Lottie assets are recovered before flattened-image segmentation.
+- PSD alpha/hierarchy and Bodymovin assets are recovered before flattened-image segmentation.
 - A compact local instance segmenter may be trained on the Apple M4 Max, but must output and retain
   RGBA + bitmap masks, use source-disjoint evaluation, and beat the current bbox path.
 - Visual narrative maps chapters to 6+ story beats, not one PDF page to one chapter.
@@ -95,15 +95,15 @@ Domain-shift risk (all three tools trained/calibrated on Mahabharata, not Gita a
 forward as a real, disclosed, unverified risk. Full detail in `01-requirements.md` v0.6,
 `02-specifications.md` v0.7, `03-plan.md` v0.6 (Phase 10 rewritten, 8 tasks 10.1-10.8).
 
-## EXTRACTED (2026-08-09): Lottie camera-path / per-layer z-depth extraction
+## EXTRACTED (2026-08-09): Bodymovin camera-path / per-layer z-depth extraction
 
 This flow briefly held (v0.2-v0.3 of `01-requirements.md`/v0.3-v0.4 of `02-specifications.md`/v0.2-
 v0.3 of `03-plan.md`, all APPROVED same-day, 2026-08-09) a real addition: extracting camera-path and
-per-layer z-depth from a real, previously-unaudited Lottie source in the dataset
-(`dataset/bhagavadgita/vaishnav/bhagavadgita_lottie/`) and exporting it into `.comics` v2026. Per
+per-layer z-depth from a real, previously-unaudited Bodymovin source in the dataset
+(`dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/`) and exporting it into `.comics` v2026. Per
 Anton's explicit follow-up instruction ("Вынеси в отдельный sdd, из прошлого sdd удали"), **that
-content has been moved into its own flow**: `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`
-— that flow is now IMPLEMENTATION COMPLETE: it added the standalone `--lottie-source` pipeline and
+content has been moved into its own flow**: `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/`
+— that flow is now IMPLEMENTATION COMPLETE: it added the standalone `--bodymovin-source` pipeline and
 extended this flow's `package_comics.py`/`pipeline.py`/`report.py` backward-compatibly; all 92 tests
 pass and the 18-chapter path remains unchanged. See its `_status.md` for the verified output details.
 Nothing about that work is duplicated here anymore.
@@ -180,8 +180,8 @@ text/OCR shortcuts. Production cutting and exact lettering remain fail-closed.)
       visual inspection of chapter 5
 - [ ] Implementation complete — blocked only on the manual GUI-launch verification (see Blockers);
       everything generatable/testable by Claude without opening a GUI window is done
-- [x] Lottie camera-path/z-depth work (drafted+approved here 2026-08-09) extracted to
-      `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/` — see that flow's own Progress
+- [x] Bodymovin camera-path/z-depth work (drafted+approved here 2026-08-09) extracted to
+      `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/` — see that flow's own Progress
 - [x] **NEW (2026-08-09)**: Panoramic PDF Source inspected directly (`pdfinfo`/`pdftoppm`, real page
       counts/dimensions/visual review of 4/12 pages) — corrects the "art only for chapter 5" premise
 - [x] Phase 10 (Panoramic PDF Source) Requirements drafted (v0.5) and Specifications drafted (v0.6)
@@ -207,8 +207,8 @@ text/OCR shortcuts. Production cutting and exact lettering remain fail-closed.)
 - [x] Production Task 10.1 — canonical production models, immutable validated version store, and
       source-root write boundary; 4/4 focused tests pass
 - [x] Production Task 10.2 — source inventory and semantic-scope gate; 5/5 focused tests, real
-      24-source deterministic inventory, stale Lottie fixture path corrected, 101/101 full tests
-- [x] Production Task 10.3 — native PSD/PDF/Lottie/`.comics` recovery adapters; real hierarchy,
+      24-source deterministic inventory, stale Bodymovin fixture path corrected, 101/101 full tests
+- [x] Production Task 10.3 — native PSD/PDF/Bodymovin/`.comics` recovery adapters; real hierarchy,
       mask, embedded-image, translation/audio, slot/transform/tile checkpoints; 5/5 focused and
       106/106 full tests
 - [x] Production Task 10.4 — asset graph, uncertain identity proposals, append-only merge/split
@@ -295,7 +295,7 @@ text/OCR shortcuts. Production cutting and exact lettering remain fail-closed.)
   unresolved items.
 - `dataset/bhagavadgita/` must remain read-only; all generated artifacts go under
   `work/bhagavadgita/`.
-- Lottie `unzip/1` is Gita Dhyanam and cannot count toward canonical chapter coverage; the editable
+- Bodymovin `unzip/1` is Gita Dhyanam and cannot count toward canonical chapter coverage; the editable
   PSD with balloons is chapter 5 verses 5.14-5.29. These are explicit semantic scopes in approved
   Specifications v0.9, not filename assumptions.
 - The repository already had extensive unrelated dirty/untracked changes before this flow; they are
@@ -310,11 +310,11 @@ v2.2 crop/boundary/semantic and corrected one-to-one tiled gates. Then continue 
 downstream queue in dependency order; do not scale all 18 until both golden chapters release.
 
 The old manual GUI-open item remains a regression-proof task for Phases 1-9 but cannot make their
-text-card output production art. The Lottie camera-path/z-depth implementation remains in its own
+text-card output production art. The Bodymovin camera-path/z-depth implementation remains in its own
 approved flow and is not silently folded back into this one.
 
 ## Fork History
 
-- None; this is a new flow. (The Lottie camera-path/z-depth work was extracted OUT of this flow into
-  `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/` on 2026-08-09 — see that flow's own Fork
+- None; this is a new flow. (The Bodymovin camera-path/z-depth work was extracted OUT of this flow into
+  `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/` on 2026-08-09 — see that flow's own Fork
   History.)

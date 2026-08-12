@@ -357,8 +357,8 @@ Format rules:
   normalized so identical inputs/configuration produce identical archive bytes and SHA-256 hashes;
 - packaging first writes a staging file, validates it, then atomically replaces the final path.
 
-**Note (2026-08-09)**: a Lottie camera-path/per-layer z-depth extraction design was drafted here and
-then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`, per
+**Note (2026-08-09)**: a Bodymovin camera-path/per-layer z-depth extraction design was drafted here and
+then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/`, per
 Anton's explicit instruction — see that flow for the full specification, not duplicated here.
 
 ## Production Asset-First Architecture (v0.8)
@@ -382,7 +382,7 @@ file successfully never promotes its release level.
 ```text
 dataset/bhagavadgita (read-only)
         │
-        ├── SourceInventory ── NativeSourceAdapters (PSD/PDF/Lottie/.comics/text)
+        ├── SourceInventory ── NativeSourceAdapters (PSD/PDF/Bodymovin/.comics/text)
         │                              │
         │                              ▼
         ├────────────────────── AssetStore + AssetGraph
@@ -439,7 +439,7 @@ identity. Writes use staging + validation + atomic rename; immutable versions ar
 class SourceRecord:
     id: str
     kind: Literal[
-        "structured_text", "manuscript", "psd", "pdf", "raster", "lottie",
+        "structured_text", "manuscript", "psd", "pdf", "raster", "bodymovin",
         "audio", "comics", "font", "lettering_sample", "palette", "editorial_note"
     ]
     relative_path: str
@@ -593,7 +593,7 @@ contains:
 
 | Source | Verified semantic scope |
 |---|---|
-| `bhagavadgita_lottie/unzip/1/` | `gita_dhyanam` / `standalone_prologue`; all 9 traditional stanzas in RU and EN; no canonical chapter mapping |
+| `bhagavadgita_bodymovin/unzip/1/` | `gita_dhyanam` / `standalone_prologue`; all 9 traditional stanzas in RU and EN; no canonical chapter mapping |
 | `drawing/app_BG._chiba5.psd` | `bhagavad_gita` / `canonical_verse_range`; chapter 5, verses 5.14-5.29, confirmed from 15 sequential balloon/caption groups |
 | `drawing/5_1.psd` | `bhagavad_gita` / `source_component`; component reproduced inside `app_BG._chiba5.psd`, attached to its chapter-5 parent scope |
 | `drawing/5_2.psd` | `bhagavad_gita` / `source_component`; component reproduced inside `app_BG._chiba5.psd`, attached to its chapter-5 parent scope |
@@ -634,12 +634,12 @@ All 6 colour pages are matched against 12 B&W pages using global perceptual cand
 local feature/geometry registration and mandatory human confirmation. Confirmed pairs produce
 aligned crops plus an occlusion/invalid-pixel mask. Page number equality is never assumed.
 
-### Lottie and `.comics` adapters
+### Bodymovin and `.comics` adapters
 
-The Lottie adapter consumes the separate approved from-Lottie flow's verified parser contract and
+The Bodymovin adapter consumes the separate approved from-Bodymovin flow's verified parser contract and
 recovers referenced images, transforms, timing, hierarchy, and audio/translation provenance. The
 current `unzip/1` package is explicitly tagged as standalone Gita Dhyanam containing all 9 RU/EN
-stanzas, not chapter 1 and not any other canonical chapter. Lottie asset-array order is not stanza
+stanzas, not chapter 1 and not any other canonical chapter. Bodymovin asset-array order is not stanza
 order. The adapter does not import unverified ad hoc camera formulas as gold truth.
 
 The `.comics` adapter reconstructs tiled layers and imports transforms/animations/text slots as
@@ -789,13 +789,13 @@ The vertical strip is composed from accepted story beats/assets. `CompositionCan
 viewport width, canvas dimensions, placements, masks, transforms, z-order/depth, beat order,
 lettering, animations, camera proposal, method lineage, and quality results.
 
-Candidate sources may be deterministic rules, learned models, Lottie evidence, manual templates, or
+Candidate sources may be deterministic rules, learned models, Bodymovin evidence, manual templates, or
 human edits. All candidates pass bounds, overlap/occlusion, mask edge, reading order, viewport, and
 runtime checks. Human edits create a new version; they do not destroy model evidence.
 
 `cameraPath` and animations are optional until supported consistently by target readers. Their
 absence cannot block a visually complete static composition; invalid/unsupported animation cannot
-be silently packaged. The separate Lottie flow may provide evidence after its own verification.
+be silently packaged. The separate Bodymovin flow may provide evidence after its own verification.
 
 ## Review State Machine
 
@@ -1357,7 +1357,7 @@ baseline without changing source ingestion or chapter cardinality.
 - [x] One continuous-scroll `.comics` file is produced per chapter.
 - [x] Deterministic text-forward output is retained only as a fixture/draft regression fallback.
 - [x] AI summaries are optional, labeled, cited, and never replace source verses.
-- [x] Native PSD/PDF/Lottie/`.comics` recovery precedes flattened-image fallback.
+- [x] Native PSD/PDF/Bodymovin/`.comics` recovery precedes flattened-image fallback.
 - [x] Content-verified semantic scopes prevent Gita Dhyanam/package numbering from being mistaken
       for a canonical chapter and identify the chapter-5 PSD range/components explicitly.
 - [x] Canonical source, asset, entity, story-beat, coverage, action, candidate, review, composition,
@@ -1374,9 +1374,9 @@ baseline without changing source ingestion or chapter cardinality.
 - [x] Cross-flow backend TDD cases are enumerated as a backlog pending that flow's own Requirements
       approval.
 - [x] Specifications reviewed and approved by user (2026-08-06, "specs approved") — v0.2 baseline.
-- [x] Lottie camera-path/per-layer z-depth extraction design (v0.3-v0.4) was drafted and approved
+- [x] Bodymovin camera-path/per-layer z-depth extraction design (v0.3-v0.4) was drafted and approved
       here 2026-08-09, then **extracted into its own flow** per Anton's explicit instruction — see
-      `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/02-specifications.md` for the full
+      `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-bodymovin/02-specifications.md` for the full
       content and its own approval record.
 - [x] v0.7 direct panorama cut/arrange/animate draft explicitly superseded and marked historical.
 - [x] v0.9 production asset-first Specifications reviewed and approved by Anton on 2026-08-10

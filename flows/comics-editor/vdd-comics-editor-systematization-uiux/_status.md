@@ -12,7 +12,7 @@ diverge per topic)
 1. **Character variant tagging** (original scope) — still DRAFTING/parked, unchanged, still
    blocked on a real Джанава session.
 2. **Layer Grouping** (new, 2026-08-07, per Anton's direct request while resolving an Open
-   Question in `flows/comics-editor/tdd-dot-lottie-import-export`) — NOT blocked, real, immediately
+   Question in `flows/comics-editor/tdd-dot-bodymovin-import-export`) — NOT blocked, real, immediately
    actionable. Requirements + Visual both drafted same day.
 
 ## Last Updated
@@ -42,7 +42,7 @@ diverge per topic)
 - [ ] Requirements approved
 - [x] Visual drafted (2026-08-07) — `02-visual.md` v1.0: layers-panel before/after grouping,
       multi-select→Group, collapsed/expanded states, group-drag-moves-all-members, and the
-      Lottie-import-produces-a-pre-populated-group case
+      Bodymovin-import-produces-a-pre-populated-group case
 - [ ] Visual approved
 - [ ] Specifications drafted
 - [ ] Plan drafted
@@ -79,7 +79,7 @@ diverge per topic)
   `sdd-comics-editor-questions` extraction pattern from the same parent flow.
 - **Second addition (2026-08-07)**: Layer Grouping content added directly by Claude per Anton's
   explicit instruction while resolving an Open Question in the sibling flow
-  `flows/comics-editor/tdd-dot-lottie-import-export`. Not extracted from another flow's content —
+  `flows/comics-editor/tdd-dot-bodymovin-import-export`. Not extracted from another flow's content —
   authored fresh here, grounded in real code (`scene_panel.dart`, `models.dart`) and the already-
   decided backward-compatibility mechanism.
 
@@ -99,7 +99,7 @@ diverge per topic)
    its own top-level entity).
 2. Once approved, the schema addition (`Layer.GroupId`) should also be reflected as a new fact in
    `flows/tdd-dot-comics-format` (the format's own consolidated reference), and the sibling
-   `flows/comics-editor/tdd-dot-lottie-import-export` flow can un-block its precomp-handling
+   `flows/comics-editor/tdd-dot-bodymovin-import-export` flow can un-block its precomp-handling
    Must-Have criteria against a concrete, approved design.
 3. This topic is NOT blocked on the character-variant topic or on Джанава — it can proceed
    independently through Specifications/Plan/Implementation on its own timeline.
