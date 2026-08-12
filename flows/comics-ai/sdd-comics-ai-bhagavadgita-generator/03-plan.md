@@ -1,20 +1,16 @@
 # Implementation Plan: comics-ai-bhagavadgita-generator
 
-> Version: 0.6 (2026-08-09, SUPERSEDED DRAFT): Phase 10 — Panoramic PDF Source rendering (all
-> 18 chapters), rewritten from v0.5's withdrawn `scrollType: horizontal` design to standard
-> vertical-scroll everywhere, with AI cutting (`comics-ai-multimodal`), AI arranging
-> (`comics-ai-positioning`), and AI animating (`comics-ai-animations`) as the core mechanism per
-> Anton's explicit correction — 6 tasks (10.1-10.6) become 8 (10.1-10.8). See
-> `02-specifications.md` v0.7. (The Lottie camera-path/per-layer z-depth extraction Phase that
-> previously used the "Phase 10" number has been extracted into its own flow, `flows/comics-ai/
-> sdd-comics-ai-bhagavadgita-from-lottie/` — this is a new, unrelated Phase 10, not a revival of
-> that one.) v0.1's own header said `Status: DRAFT` despite `_status.md` recording real approval on
-> 2026-08-06 and all 9 phases since implemented — corrected here, not silently left stale.
-> Status: v0.1-v0.4 (Phases 1-9) APPROVED 2026-08-06 and IMPLEMENTED; v0.6 Phase 10 SUPERSEDED by
-> Requirements v0.8 and MUST NOT be implemented. A replacement Plan can only be drafted after
-> revised Requirements and Specifications receive their explicit SDD approvals.
-> Last Updated: 2026-08-09
-> Specifications: [02-specifications.md](./02-specifications.md) (v0.7 SUPERSEDED DRAFT)
+> Version: 0.8 (2026-08-11, APPROVED by direct implementation instruction): all mandatory human
+> gates are replaced by fail-closed automated reviewers defined in Requirements v0.9 and
+> Specifications v0.10. Human review is optional and never on the critical path.
+
+> Version: 0.7 (2026-08-10, APPROVED): replacement production asset-first Plan derived from approved
+> Specifications v0.9. Phases 1-9 remain implemented regression infrastructure. The v0.6 direct
+> panorama/U-Net-bbox/known-underperforming-positioner/heuristic-animation Phase 10 remains
+> historical and MUST NOT be implemented. Active production work is defined below as Phases 10-13.
+> Status: APPROVED — explicit `plan approved` received 2026-08-10; implementation may proceed
+> Last Updated: 2026-08-10
+> Specifications: [02-specifications.md](./02-specifications.md) (v0.10 APPROVED)
 
 ## Note on drafting order
 
@@ -22,7 +18,7 @@ This Plan was drafted per Anton's explicit `resume comics-ai/sdd-comics-ai-bhaga
 plan` instruction, moments before his separate, real "specs approved" message landed for
 `02-specifications.md` v0.2. No conflict: Specifications didn't change between drafting this Plan
 and that approval, so this document's content is unaffected — noted here only so the timing isn't
-confusing when read back later. This Plan itself still awaits its own explicit "plan approved."
+confusing when read back later. This Plan received its own explicit `plan approved` on 2026-08-10.
 
 ## Summary
 
@@ -45,6 +41,12 @@ as absent. Anton pointed at the real one: `/opt/homebrew/bin/python3.14` (whose 
 is therefore de-risked too, not just the deterministic fallback — real compositing against the
 actual PSDs should be attempted for real during Implementation, not assumed to degrade to warning-
 only. Both corrections are reflected in Task 4.1 and Risk Assessment below.
+
+The active replacement adds four production phases after that implemented baseline: canonical
+source/asset infrastructure; gold data and model competition; story/action/lettering; and golden
+chapter composition/release. Each implementation task starts with a failing focused test. Backend
+behavioral cases are queued into the related TDD flow, but cannot be written into its `02-tests.md`
+until that flow's own Requirements v0.3 are explicitly approved.
 
 ## Task Breakdown
 
@@ -415,6 +417,221 @@ rewritten "Panoramic PDF Source" section. Tasks 10.1-10.2 (research/mapping) are
   chapter exercising each mapping case (confirmed, inferred, unmapped)
 - **Complexity**: Low
 
+### ACTIVE Replacement Phase 10: Semantic Source Inventory and Asset Graph
+
+#### Task 10.1: Production models and versioned stores
+- **Status**: COMPLETE (2026-08-10) — implemented test-first; see `04-implementation-log.md`.
+- **Description**: Add `SourceRecord`, `SourceSemanticScope`, `Asset`, `AssetVersion`, lineage,
+  review, and immutable version-store primitives exactly as specified. Enforce staging, validation,
+  atomic rename, and source-root read-only boundaries.
+- **Files**: `scripts/production_models.py`, `scripts/production_store.py`, focused tests — Create.
+- **Dependencies**: Implemented Phase 1 models only.
+- **Verification**: start with one failing test for immutable version creation and one for forbidden
+  source-root writes; run the focused test after each smallest implementation step.
+- **Complexity**: Medium.
+
+#### Task 10.2: Source inventory and semantic-scope gate
+- **Status**: COMPLETE (2026-08-10) — real 24-source inventory generated; filename-only mapping
+  rejection and read-only/determinism verified; see `04-implementation-log.md`.
+- **Description**: Inventory native sources with hashes/media facts and a reviewed scope registry.
+  Seed the verified facts: Lottie `unzip/1` = standalone 9-stanza Gita Dhyanam; `app_BG._chiba5.psd`
+  = chapter 5 verses 5.14-5.29; `5_1.psd`/`5_2.psd` = its source components. Reject filename-only
+  chapter inference.
+- **Files**: `scripts/inventory_sources.py`, scope fixture/registry, tests — Create.
+- **Dependencies**: Task 10.1.
+- **Verification**: failing-first tests explicitly reject `unzip/1 -> chapter 1`, `S3_B1_C1` as
+  canonical numbering, and `5_1`/`5_2` as verse identifiers; real inventory leaves dataset hashes
+  unchanged.
+- **Complexity**: Medium.
+
+#### Task 10.3: Native PSD/PDF/Lottie/`.comics` recovery adapters
+- **Status**: COMPLETE (2026-08-11) — all four native adapters verified against real sources;
+  5/5 focused and 106/106 full tests pass; see `04-implementation-log.md`.
+- **Description**: Recover native hierarchy, RGBA, masks, transforms, text/audio provenance, and
+  component links before flattened fallback. Reuse the separate Lottie flow's parser contract while
+  treating camera/depth as evidence rather than gold truth.
+- **Files**: `scripts/adapters/{psd,pdf,lottie,comics}.py`, tests — Create; shared parser imports only
+  through stable adapters.
+- **Dependencies**: Task 10.2.
+- **Verification**: real-source tests assert PSD descendant/group checkpoints, 15 chapter-5 text
+  groups, 9 RU/EN Dhyanam overlays, and recovered bitmap masks for separable alpha layers.
+- **Complexity**: High.
+
+#### Task 10.4: Asset graph, identity proposals, review and invalidation
+- **Status**: COMPLETE (2026-08-11) — append-only identity/entity history, immutable graph/review
+  snapshots, transitive approval invalidation, and mask acceptance gate; 4/4 focused and 110/110
+  full tests pass; see `04-implementation-log.md`.
+- **Description**: Persist asset/entity links, candidate revisions, merge/split decisions, and graph
+  invalidation of dependent approvals without mutating historical releases.
+- **Files**: `scripts/asset_graph.py`, `scripts/reviews.py`, tests — Create.
+- **Dependencies**: Task 10.3.
+- **Verification**: failing-first graph tests for uncertain identity, merge/split history, upstream
+  invalidation, and rejection of bbox-only foreground acceptance.
+- **Complexity**: High.
+
+### ACTIVE Replacement Phase 11: Gold Data and Model Competition
+
+#### Task 11.1: Gold v1 annotation/evaluation dataset
+- **Status**: COMPLETE (2026-08-11) — immutable `gold-v1-2026-08-11` contains 130 artifact-verified
+  true masks across 5 source-disjoint compositions (90 PSD train + 40 panorama test); 121/121 full
+  tests pass. Unresolved panorama identity is explicitly non-principal and not identity Gold.
+- **Description**: Build the specified minimum 120 accepted foreground instances across at least
+  four source-disjoint compositions, including 30 held-out instances. Store true masks, semantic/
+  principal-identity labels, reversible source coordinates, and versioned automated decisions.
+- **Files**: `scripts/build_gold_dataset.py`, annotation manifests/tools/tests — Create.
+- **Dependencies**: Task 10.4 and autonomous mask-review consensus; no human gate.
+- **Verification**: split-leakage, mask-shape, count, provenance, and automated-review tests; no
+  box-shaped bootstrap label silently enters gold.
+- **Complexity**: High.
+
+#### Task 11.2: Compact local segmenter competition
+- **Status**: COMPLETE (2026-08-11) — bbox fill, classical ink, legacy U-Net, legacy Mask R-CNN,
+  and a newly trained compact binary U-Net were benchmarked on the same 40 held-out instances.
+  None passed; immutable decision is `no_candidate_promoted`, so production cutting stays blocked
+  instead of silently retaining a failing checkpoint.
+- **Description**: Benchmark current U-Net/bbox and wired Mask R-CNN candidates, shortlist
+  license-compatible compact instance segmenters, train viable candidates locally on M4 Max, and
+  promote only a candidate beating baselines on mask/boundary plus automated artifact metrics.
+- **Files**: `scripts/train_segmenter.py`, `scripts/evaluate_segmenter.py`, model/evaluation records,
+  tests — Create.
+- **Dependencies**: Task 11.1.
+- **Verification**: reproducible source-disjoint evaluation report; licensing and visual-review
+  gates remain explicit and fail closed even if no candidate is promoted.
+- **Complexity**: High.
+
+#### Task 11.3: Identity/style retrieval and classification
+- **Status**: COMPLETE (2026-08-11) — 130 deterministic visual descriptors and palette/style
+  proposals plus 130 top-5 retrieval rankings published. Canonical identity and semantic-model
+  promotion abstained because Gold lacks principal identity labels and class-complete train data;
+  similarity produced zero silent identity merges. 128/128 tests pass.
+- **Description**: Produce reviewable entity/kind/style/palette/pose/expression/costume proposals;
+  similarity may rank but never confirm canonical identity.
+- **Files**: `scripts/classify_assets.py`, `scripts/retrieve_assets.py`, tests — Create.
+- **Dependencies**: Tasks 10.4 and 11.1.
+- **Verification**: gold macro-F1/retrieval metrics, calibrated uncertainty and abstention tests.
+- **Complexity**: High.
+
+#### Task 11.4: B&W/colour registration and colourization
+- **Status**: COMPLETE (2026-08-11) — six unique high-margin ORB/RANSAC registrations, 24 paired
+  crops, and invalid masks published. Registered edge F1 is 0.975-0.992. Deterministic and compact
+  learned colourizers preserved ink but failed held-out palette error, so neither was promoted.
+  132/132 tests pass.
+- **Description**: Resolve and review six coloured-to-B&W page matches, register geometry, create
+  paired crops/invalid masks, compare deterministic palette transfer and learned colourization,
+  rejecting line/anatomy/iconography drift.
+- **Files**: `scripts/register_panorama_pairs.py`, `scripts/colourize_assets.py`, tests — Create.
+- **Dependencies**: Tasks 10.3 and 11.1.
+- **Verification**: automatically verified mapping table, registration error thresholds,
+  ink-preservation metrics, held-out evaluation, and artifact gate.
+- **Complexity**: High.
+
+### ACTIVE Replacement Phase 12: Story Coverage, Actions, and Exact Lettering
+
+#### Task 12.1: Story beats and coverage for golden chapters 1 and 11
+- **Status**: COMPLETE (2026-08-11) — six beats per golden chapter cover every source sloka exactly
+  once. Published prose is exact cited source text and visual requirements remain empty rather than
+  invented. Coverage resolves all 12 visual gaps as local `generation_required`; inferred panorama
+  mappings and Gita Dhyanam cannot satisfy canonical coverage. 137/137 tests pass.
+- **Description**: Build at least six grounded, reviewed beats per golden chapter and resolve every
+  entity/action/location/shot requirement to accepted source, reuse, transform, explicit generation
+  gap, or blocker. Gita Dhyanam cannot count toward canonical chapter coverage.
+- **Files**: `scripts/build_story_beats.py`, `scripts/resolve_coverage.py`, tests — Create.
+- **Dependencies**: Tasks 10.4 and 11.3.
+- **Verification**: citation completeness, deterministic ordering, minimum-beat/exception gate, and
+  paid-generation suppression whenever a lower-tier accepted asset satisfies coverage.
+- **Complexity**: High.
+
+#### Task 12.2: Provider-neutral action/candidate runner
+- **Status**: COMPLETE (2026-08-11) — immutable fingerprinted requests, action-bound authorization,
+  paid-budget/reference-upload denial, proposed-only candidates, lineage, local execution, cached
+  replay, and disabled-by-default `gpt-image-2` adapter implemented. Real run: 12 actions, 24 plan
+  candidates, 12/12 replay cache hits, zero external calls/cost. 142/142 tests pass.
+- **Description**: Implement immutable local/external action requests, idempotency, candidate
+  versions, authorization/budget/upload records, and cached retries. `gpt-image-2` stays disabled
+  without explicit paid-call/reference-upload authority.
+- **Files**: `scripts/action_runner.py`, provider interfaces/local provider/gpt-image-2 adapter,
+  tests — Create.
+- **Dependencies**: Tasks 10.4 and 12.1.
+- **Verification**: no duplicate candidate/paid call on retry, denied upload/budget paths, lineage
+  completeness, and multiple-candidate review behavior using fakes unless separately authorized.
+- **Complexity**: High.
+
+#### Task 12.3: Exact multilingual lettering
+- **Status**: COMPLETE (2026-08-11) — published a 267-entry authoritative corpus for chapters 1 and
+  11 (89 slokas × RU/EN/Sanskrit), with dynamic EN/RU runtime slots and Sanskrit retained as a
+  separate authoritative content role rather than inventing a Hindi slot. Deterministic Chromium
+  shaping retains region/glyph/RGBA masks, gates fit/collision/readability, and requires normalized
+  exact Tesseract readback. Six real fixtures fit without collisions; 3 passed and 3 were correctly
+  rejected only for exact OCR mismatch. Production release remains blocked until real accepted
+  balloon/caption masks replace proof regions and all OCR gates pass. 146/146 tests pass.
+- **Description**: Retain balloon/caption bitmap masks, shape authoritative RU/EN/Sanskrit strings
+  deterministically, apply learned style only after glyph-mask creation, and block promotion on
+  normalized exact-string/OCR/readability failure.
+- **Files**: `scripts/lettering.py`, text-region models, renderer adapters, tests — Create/Modify.
+- **Dependencies**: Tasks 10.3 and 12.1.
+- **Verification**: exact strings, slot/language mapping, mask retention, complex shaping, overflow,
+  OCR mismatch, deterministic readability, collision, and viewport fixtures.
+- **Complexity**: High.
+
+### ACTIVE Replacement Phase 13: Golden Composition and Release
+
+#### Task 13.1: Vertical composition, depth, camera and animation candidates
+- **Status**: COMPLETE (2026-08-11) — deterministic rule and optional learned-positioner candidates
+  share one vertical/portrait contract, retain editable RGBA/mask references, preserve beat order,
+  and gate bounds, overlap, depth, camera, and runtime packaging structure. Heuristic animation and
+  camera/depth remain `proposed`, explicitly not artist intent. The real golden summary emits zero
+  candidates and remains blocked because chapters 1 and 11 each have zero accepted coverage assets
+  and six missing beats. Immutable summary SHA-256
+  `49a0f926c351e9b8b5f5bd49af699bb6314d4ce1b69ff31a55d981bfd5e6f7b0`; 149/149 tests pass.
+- **Description**: Compose accepted golden-chapter assets into coherent vertical strips, preserve
+  editable layers, compare rule/learned proposals, and emit format-compliant camera/z-depth using
+  shared contracts. No heuristic is promoted as artist intent without review.
+- **Files**: `scripts/compose_production.py`, packager adapter, tests — Create/Modify.
+- **Dependencies**: Tasks 11.2-11.4 and 12.1-12.3.
+- **Verification**: overlap/seam/bounds/read-order tests plus real viewer comparison on chapter 1
+  and 11 candidates.
+- **Complexity**: High.
+
+#### Task 13.2: QA, review registry and immutable release compiler
+- **Status**: COMPLETE (2026-08-12) — a six-dimension immutable gate compiler now requires complete
+  unique decisions, checksummed release artifacts, and all-approved state; reject, abstain, stale,
+  missing dimension, or missing artifact blocks publication. Dependency hash drift marks prior
+  approvals stale. Real golden validation records technical/art-direction/lettering rejected and
+  identity-style/cultural-editorial/runtime abstained, emits no archive, and has SHA-256
+  `0890850121df3fd7a2e9176dcbd3aa4e992664bbcf85789b6478c08e9373dab2`; 153/153 tests pass.
+- **Description**: Implement automated mask/halo/seam/identity/style/lettering/archive/runtime gates,
+  six independent automated review dimensions, release-level state machine, immutable manifest, and
+  dependency invalidation.
+- **Files**: `scripts/validate_production.py`, `scripts/release.py`, report/CLI/tests — Create/Modify.
+- **Dependencies**: Task 13.1.
+- **Verification**: format-valid draft cannot become release; every missing/abstaining automated gate blocks;
+  historical release stays immutable after upstream revision; editor/viewer/device opens are real.
+- **Complexity**: High.
+
+#### Task 13.3: Golden chapter production run and scale-out decision
+- **Status**: COMPLETE (2026-08-12) — immutable proof verifies 13 production manifests and both
+  golden chapters. Each chapter has six grounded beats but 0 accepted coverage assets, six
+  generation gaps, and 0 composition candidates; lettering remains 3/6; six review dimensions are
+  3 rejected + 3 abstained. Golden release and all-18 scale-out are therefore blocked. The proof
+  contains a five-step autonomous remediation order and explicitly requires no human participation.
+  SHA-256 `70a451c20c0bc7208730dedec6ee1ac1737937be3965d4ff915ff36f0f09e780`;
+  154/154 tests pass.
+- **Description**: Generate machine-reviewed candidates for chapters 1 and 11, record all gaps and
+  metrics, and run automated art-direction/cultural/editorial verification. Only after both become `release` is
+  an all-18 scale-out Plan amendment allowed.
+- **Files**: `work/bhagavadgita/production/**`, `04-implementation-log.md` — Generate/Modify.
+- **Dependencies**: Task 13.2 automated reviewers.
+- **Verification**: real immutable release manifests and device opens for both chapters; otherwise
+  report precise candidate/blocker state without claiming production completion.
+- **Complexity**: High.
+
+### Cross-flow TDD synchronization
+
+At each task above, add the corresponding case to the incoming backlog of
+`comics-backend/tdd-comics-backend-endpoints-v2026-ai`. Do not create/modify that flow's
+`02-tests.md` until its Requirements v0.3 receive their own explicit `requirements approved`; this
+Plan cannot bypass another flow's TDD gate.
+
 ## Dependency Graph
 
 ```
@@ -425,16 +642,13 @@ rewritten "Panoramic PDF Source" section. Tasks 10.1-10.2 (research/mapping) are
                                                     (needs 6.1's real output) ─────────┘
 4.1 (independent) ─────────────────────────────────> feeds into 5.1 for chapter 5 only
 
-10.1 -> 10.2 -> 10.3 -> 10.4 -> 10.5 -> 10.6 -> 10.7 -> 10.8   (Phase 10: independent of Phases
-                                                 1-9's own chain except reusing 6.1's
-                                                 package_comics.py, which 10.7 extends rather than
-                                                 forks; coordinate with the sibling Lottie flow's
-                                                 own package_comics.py extension, per Task 10.7's
-                                                 own note. 10.4/10.5/10.6 each bridge live into a
-                                                 different sibling app -- comics-ai-multimodal,
-                                                 comics-ai-positioning, comics-ai-animations --
-                                                 same import-bridge convention those apps already
-                                                 use for each other)
+ACTIVE:
+10.1 -> 10.2 -> 10.3 -> 10.4 -> 11.1 -> 11.2 ─┐
+                              ├──────> 11.3 ─────┼─> 12.1 -> 12.2 ─┐
+                              └──────> 11.4 ─────┤          12.3 ─┼─> 13.1 -> 13.2 -> 13.3
+                                                └─────────────────┘
+
+The historical v0.6 Tasks 10.1-10.8 above are excluded from this graph and MUST NOT execute.
 ```
 
 ## File Change Summary
@@ -533,5 +747,5 @@ After each phase, verify:
       content's own Plan and approval record.
 - [x] v0.6 Phase 10 was never approved and is now explicitly superseded by Requirements v0.8. Its
       tasks remain historical evidence only and must not be executed.
-- [ ] Replacement Plan — blocked by the normal SDD gates: Requirements v0.8 approval, then revised
-      Specifications drafting/approval.
+- [x] Replacement Plan v0.7 drafted from approved Specifications v0.9 on 2026-08-10.
+- [x] Replacement Plan v0.7 explicitly approved with `plan approved` on 2026-08-10.

@@ -1,6 +1,13 @@
 # Requirements: comics-editor-ai-bhagavadgita-generator
 
-> Version: 0.8 (2026-08-09, DRAFT): production-art pivot approved as the desired vision by Anton
+> Version: 0.9 (2026-08-11, APPROVED by direct instruction): fully autonomous production. Anton
+> explicitly required that human participation must not be necessary. This addendum supersedes
+> every older mandatory-human-review clause below. Manual review remains optional and auditable,
+> never a release dependency. Automated approval must remain honest: it reports
+> `machine_verified`, never claims human theological/editorial endorsement, and fails closed when
+> independent evidence is insufficient.
+
+> Version: 0.8 (2026-08-09, APPROVED): production-art pivot approved as the desired vision by Anton
 > ("Утверждено именно твое видение"). Replaces v0.6's direct panorama → existing U-Net bbox →
 > known-underperforming positioner → heuristic animation proposal with an asset-first production
 > pipeline: source recovery, bitmap masks/matting, identity/style graph, story-beat coverage,
@@ -8,7 +15,23 @@
 > `.comics` compilation. Phases 1-9 remain implemented and unchanged; their text-card output is a
 > format/fidelity baseline, not accepted as the final production-art result.
 > Status: v0.8 APPROVED on 2026-08-09 (`reqs approved`)
-> Last Updated: 2026-08-09
+> Last Updated: 2026-08-11 (mandatory human participation removed by direct instruction)
+
+## Autonomous Release Addendum (v0.9, superseding)
+
+- Every technical, identity/style, art-direction, lettering, cultural/editorial, and runtime gate
+  must have a deterministic or independently reproducible automated reviewer.
+- Native PSD alpha may be accepted after source-integrity, non-empty/non-rectangular mask, boundary,
+  and provenance checks. Panorama masks require consensus from at least two genuinely different
+  methods; the box-supervised U-Net/Mask R-CNN pair alone is not independent gold evidence.
+- Gold records store reviewer pipeline/version, input/checkpoint hashes, metrics, and evidence.
+  Missing evidence fails closed; `reviewer="human"` placeholders are forbidden.
+- Cultural/editorial automation verifies canonical source citations, chapter/verse scope, named
+  entity rules, and contradiction checks. It is labelled machine verification, not theological
+  authority.
+- Exact lettering is gated by normalized authoritative-string equality plus independent OCR/readback.
+- Optional human corrections create new immutable decisions but are not required for candidate,
+  release, model promotion, golden chapters, or all-18 expansion.
 
 ## Origin
 
@@ -33,9 +56,9 @@ The chapter count is not an estimate: the dataset contains **18 logical chapters
 - `Gita_Vocabularies.csv`: 16,933 vocabulary rows.
 - `db_quoutes.csv`: 116 quote rows.
 - The dataset contains no actual audio media despite populated audio-path fields.
-- The only visual source files are three large PSDs under `vaishnav/drawing/`: `5_1.psd`,
-  `5_2.psd`, and `app_BG._chiba5.psd`. Their names indicate chapter-5 material; no source artwork
-  for the other 17 chapters is present.
+- The first-audited editable visual sources were three large PSDs under `vaishnav/drawing/`:
+  `5_1.psd`, `5_2.psd`, and `app_BG._chiba5.psd`. Later inspection found the panorama PDFs and the
+  Lottie package described below, so filenames alone are not a complete source inventory.
 - `dataset/bhagavadgita/` is an immutable input. It must never be modified by the generator.
 
 The 18 Russian chapter titles, in dataset order, are:
@@ -64,6 +87,30 @@ The 18 Russian chapter titles, in dataset order, are:
 then **extracted into its own flow**, `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/`, per
 Anton's explicit instruction — see that flow for the full findings (camera-path/z-depth extraction),
 not duplicated here.
+
+### Semantic source classification (verified 2026-08-10)
+
+Direct inspection of the source content, including every RU/EN raster text overlay and the editable
+PSD text layers, establishes the following classifications. Folder/file numbering is production
+metadata and must never be interpreted as scripture chapter/verse numbering without content
+evidence:
+
+- `bhagavadgita_lottie/unzip/1/` is **not Bhagavad Gita chapter 1**. It is the complete standalone
+  **Gita Dhyanam** prologue/meditation: all 9 traditional invocatory stanzas are present in both RU
+  and EN overlay Lotties. The source title's `Mediation` spelling, directory `1`, and cover token
+  `S3_B1_C1` are package/course identifiers, not canonical chapter semantics. Its art/timing may be
+  reused as reviewed style or motion evidence, but its text and scenes cannot satisfy coverage for
+  any of the 18 canonical chapters.
+- `vaishnav/drawing/app_BG._chiba5.psd` is confirmed canonical **Bhagavad Gita chapter 5**, covering
+  verses **5.14-5.29** in 15 sequential English balloon/caption groups (the coupled 5.27-5.28
+  passage shares one group). This is not Gita Dhyanam and not chapter 1.
+- `5_1.psd` and `5_2.psd` are production art components reproduced inside
+  `app_BG._chiba5.psd`; their suffixes are not reliable verse identifiers and they are not separate
+  chapter documents.
+
+Every native source therefore needs an explicit reviewed semantic scope (`work`, canonical chapter
+and verse range where applicable, standalone/prologue/component status, mapping confidence, and
+evidence). An unreviewed filename-derived mapping is a release-blocking provenance error.
 
 ## Panoramic PDF Source (NEW, 2026-08-09) — corrects the original "art only exists for chapter 5" premise
 
@@ -308,9 +355,9 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
     semantic/art-stage metadata, review state, and a recoverable RGBA image plus true bitmap mask
     whenever it is a separable foreground object. Bboxes alone do not satisfy this criterion.
 13. **Local segmentation training and evaluation**: a compact instance-segmentation candidate is
-    trained/evaluated locally from PSD alpha, corrected panorama labels, and explicitly separated
+    trained/evaluated locally from PSD alpha, automated-consensus panorama labels, and explicitly separated
     Mahabharata support data. Data splits are source/scene-disjoint. A model ships only after
-    beating the current U-Net/bbox path on mask and boundary metrics plus real visual review.
+    beating the current U-Net/bbox path on mask, boundary, and independent automated visual metrics.
 14. **Identity/type/style catalogue**: recovered regions can be grouped and corrected by canonical
     character/entity, object kind, scene/location, pose/expression/costume, and art stage/style.
     Automatic clustering remains reviewable; uncertain clusters are not silently merged.
@@ -324,26 +371,26 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
     narrative model.
 17. **Golden-chapter gate**: chapters 1 and 11 are developed first as complete production pilots.
     Expansion to all 18 starts only after both pass visual, narrative, lettering, format, device,
-    and human art-direction review.
+    and all six versioned automated review dimensions.
 18. **Production visual density**: every final chapter has at least six approved visual beats in a
     coherent vertical-scroll composition. A text card, title card, or unprocessed panorama does not
     count as a visual beat for this gate.
 19. **Exact production lettering**: balloon/caption geometry is retained as polygon or bitmap mask;
     multilingual text is deterministically shaped from authoritative strings before any learned
-    hand-lettering texture/style is applied. Final lettering passes exact-string/OCR and human
-    readability checks; an image model may not invent final word images unchecked.
+    hand-lettering texture/style is applied. Final lettering passes exact-string/OCR and automated
+    readability/layout checks; an image model may not invent final word images unchecked.
 20. **Controlled generative gap filling**: local generators and `gpt-image-2` are used only for
     explicit missing/repair/variant tasks with approved references and masks. Multiple candidates,
-    identity/style ranking, input/output hashes, model/prompt lineage, and human selection are
+    identity/style ranking, input/output hashes, model/prompt lineage, and automated arbitration are
     required before a generated asset becomes release-eligible.
 21. **Model competition, not forced reuse**: existing U-Net, Mask R-CNN, positioning, and animation
     artifacts may bootstrap/propose output, but known-underperforming or domain-shifted models are
     never mandatory. Rule, learned, and generative alternatives are evaluated against the same gold
-    set; the best verified result wins, with human override recorded.
+    set; the best verified result wins, with optional human override recorded.
 22. **Production QA and art-direction**: release candidates have automated checks for mask edges,
     halos, cross-tile duplicates, seams, overlap, ink preservation, identity/style consistency,
     exact lettering, viewport readability, archive validity, and runtime opening. Every chapter also
-    requires recorded human visual/cultural/editorial approval.
+    requires recorded machine visual/cultural/editorial verification with source-cited evidence.
 23. **Honest release status**: the existing 18 format-valid files remain useful regression fixtures
     but are not labelled production art. A chapter becomes production-complete only after all
     applicable gates above pass; partial progress is reported as such.
@@ -375,8 +422,8 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
 - Publishing generated comics, changing app-store assets, or uploading artifacts outside the local
   workspace.
 - Uploading PSD/PDF/reference art or making paid API calls without separate explicit authorization.
-- Claiming theological/editorial approval from automated metrics; this requires recorded human
-  review.
+- Claiming human theological/editorial approval from automated metrics. Autonomous output is
+  explicitly labelled machine-verified and retains its source-citation evidence.
 
 ## Constraints
 
@@ -395,7 +442,7 @@ generated baseline rather than remaining disconnected CSV/PSD source material.
   provenance. Generated paraphrase must never be formatted as a verbatim verse.
 - **Dirty worktree**: unrelated existing changes in the repository must be preserved.
 
-## Production Requirement Defaults (vision approved; formal Requirements approval pending)
+## Production Requirement Defaults (Requirements approved)
 
 1. **Primary edition**: Russian `BookId=1` for the first production set; other editions remain
    available as source/reference but do not multiply the deliverable to 108 files.

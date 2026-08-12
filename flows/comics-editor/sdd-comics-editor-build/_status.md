@@ -12,7 +12,7 @@ Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05
 
 ## Last Updated
 
-2026-08-07 by Claude
+2026-08-10 by Claude
 
 ## Related Flows
 
@@ -51,6 +51,57 @@ Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05
     action (vs. archive/export). Also flagged: this same root cause likely blocks
     `sdd-comics-editor-publish`'s untested `release-macos` fastlane lane too, since its own Step 1
     is the identical bare `flutter build macos --release` call.
+- **`pubspec_overrides.yaml` introduced (2026-08-10, user request)**: `pubspec.yaml`'s
+  `dependency_overrides` (pointing `flutter_comics` at the local monorepo path
+  `../../libs/flutter_comics` for active local development) moved into a new
+  `pubspec_overrides.yaml` — the standard Dart/Flutter mechanism, auto-merged by `flutter pub get`,
+  now gitignored (`.gitignore` updated). This is exactly the same class of bug already found once
+  this flow (the Android `comics-viewer-android` Gradle path only existing in the monorepo, not the
+  standalone CI repo) — local-only override paths no longer live in the tracked `pubspec.yaml` at
+  all, so CI/the standalone `comics108/comics-editor` mirror only ever sees the real, published
+  dependency versions declared in `dependencies:`. Verified: `flutter pub get` explicitly reports
+  `flutter_comics 0.2.0 from path ../../libs/flutter_comics (overridden in
+  ./pubspec_overrides.yaml)`; `flutter analyze` still clean (1 unrelated pre-existing lint in
+  `test/layer_batch_actions_test.dart`, not touched, out of scope); `git status` confirms
+  `pubspec_overrides.yaml` stays untracked.
+- **`flutter_comics_viewer` added to the same override (2026-08-10, user follow-up)**: same
+  rationale — genuinely published to pub.dev (`^1.1.0`) but under active local development at
+  `libs/comics_viewer/flutter_comics_viewer`. Note this is a *separate* concern from that package's
+  own real Android Gradle bug (hard `implementation(project(":comics-viewer-android"))` dependency
+  that only resolves in this monorepo, see the 2026-08-07 session above) — this override only
+  affects which Dart source `flutter analyze`/editing/local `flutter build` use on this machine, it
+  doesn't touch or fix the Gradle issue (still the user's to fix at the package-publish source).
+  Verified: `flutter pub get` reports both `flutter_comics ... (overridden in
+  ./pubspec_overrides.yaml)` and `flutter_comics_viewer 1.1.0 from path
+  ../../libs/comics_viewer/flutter_comics_viewer (overridden in ./pubspec_overrides.yaml)`;
+  `flutter analyze` shows 4 pre-existing unrelated style lints (`curly_braces_in_flow_control_structures`
+  in `process_cutting_client.dart`/`ffi_core.dart`/`cutting_canvas.dart`/`lottie_import_dialog.dart`)
+  — not touched, out of scope for this request.
+- **Local build verification (2026-08-10)**: `flutter build ios --release --no-codesign` and
+  `flutter build macos --release` both succeeded after the `pubspec_overrides.yaml` change; fast
+  test suite (widget/dart_io_core/core_client/document_open_coordinator/file_association_metadata,
+  20 tests) all green. Confirms the override move didn't break anything.
+- **`tool/build_headless.sh` gained an optional explicit app-path 2nd argument (2026-08-10)**: the
+  script's existing autodetect glob only ever finds a plain `flutter build macos` output
+  (`build/macos/Build/Products/*/comics_editor.app`) — `xcodebuild archive` builds into a completely
+  separate DerivedData location, so the script previously couldn't be used to embed the headless
+  core into a real release archive at all (this flow's earlier real Mac App Store upload,
+  `sdd-comics-editor-publish` 2026-08-07, had to do the publish+copy manually instead of via this
+  script). When an explicit path is given, the ad-hoc re-sign step is now skipped (caller is
+  expected to do real distribution signing afterward) — auto-detect path behavior (CI verification
+  builds) is unchanged/backward compatible.
+- **New `tool/publish_macos_appstore.sh` and `tool/publish_ios_appstore.sh` (2026-08-10, user
+  request)**: wrap the exact real, working local archive→upload sequences from
+  `sdd-comics-editor-publish`'s 2026-08-07 sessions into reusable scripts, now using
+  `tool/build_headless.sh`'s new explicit-path support for the macOS core-embedding step instead of
+  duplicating that logic inline. Both use `xcodebuild archive` + `xcodebuild -exportArchive
+  destination:upload -allowProvisioningUpdates` (no fastlane, no API key — reuses whatever Apple ID
+  is already signed into Xcode). macOS script additionally signs the embedded headless core with
+  `macos/Runner/HeadlessCore.entitlements` before the final export, per the real sandbox-entitlement
+  bug found and fixed in that same 2026-08-07 session. **Not yet re-verified by a real run as
+  scripts** — the underlying command sequences are each individually proven (real uploads
+  succeeded when run manually), but the scripts themselves (as complete, unattended files) haven't
+  been executed end-to-end yet.
 
 ## Progress
 

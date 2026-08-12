@@ -1,13 +1,42 @@
 # Specifications: comics-editor-ai-bhagavadgita-generator
 
-> Version: 0.8 (2026-08-09, DRAFT): production asset-first specification derived from approved
+> Version: 0.10 (2026-08-11, APPROVED by direct implementation instruction): autonomous-review
+> addendum derived from Requirements v0.9. It supersedes every mandatory-human gate in v0.9 while
+> retaining optional immutable human overrides.
+
+> Version: 0.9 (2026-08-10, APPROVED): production asset-first specification derived from approved
 > Requirements v0.8. Retains implemented Phases 1-9 as regression infrastructure, supersedes the
 > unapproved v0.7 direct panorama/U-Net/positioner/heuristic-animation design, and defines the
 > production asset refinery, gold evaluation, story-beat coverage, controlled generation, exact
-> lettering, composition, review, and release contracts.
-> Status: DRAFT — awaiting explicit `specs approved`
-> Last Updated: 2026-08-09
-> Requirements: [01-requirements.md](./01-requirements.md) (v0.8 APPROVED)
+> lettering, composition, review, and release contracts. v0.9 adds the content-verified semantic
+> source-scope gate for Gita Dhyanam and chapter-5 PSD material discussed with Anton.
+> Status: APPROVED — Anton: "$sdd resume ... Сохрани обсужденные детали и заапрувь" (2026-08-10)
+> Last Updated: 2026-08-10
+> Requirements: [01-requirements.md](./01-requirements.md) (v0.9 APPROVED)
+
+## Autonomous Review Contract (v0.10, superseding)
+
+Release states are now `fixture → draft → candidate → machine_verified_release`. `release` remains
+an accepted backward-compatible alias for the last state. Promotion requires all six review
+dimensions from versioned automated reviewers with input/output/checkpoint hashes; no human decision
+is required. A reviewer may abstain, and abstention blocks promotion rather than inventing evidence.
+
+Mask acceptance has two paths:
+
+1. `native_alpha`: PSD/source alpha with checksum, reversible coordinates, non-empty coverage,
+   non-rectangularity and boundary checks;
+2. `automated_consensus`: panorama output from at least two independent method families among
+   instance model, edge/matting, paired-registration, and foreground optimization. Two checkpoints
+   trained from the same box-shaped labels count as one family. Default acceptance requires mask
+   agreement IoU ≥ 0.85, boundary F1 ≥ 0.75, coverage in `(0.01, 0.95)`, rectangularity `< 0.98`,
+   valid provenance, and a source-disjoint split.
+
+Identity/style uses calibrated ensemble confidence and abstains below threshold. Cultural/editorial
+verification is source-citation/scope/entity-rule consistency and is stored as
+`machine_verified`, never “human approved”. Lettering requires exact normalized source equality and
+independent OCR. Runtime/art-direction use deterministic geometry, viewport, collision, continuity,
+palette/style, and artifact detectors. Optional human overrides append history but never unblock a
+missing automated contract.
 
 ## Overview
 
@@ -342,8 +371,8 @@ Every chapter and composition has one of four non-overlapping levels:
 |---|---|---|
 | `fixture` | Existing text-card/format regression artifact | No |
 | `draft` | Incomplete/reviewable visual output with explicit gaps | No |
-| `candidate` | All automated gates pass; human gates remain | No |
-| `release` | Immutable artifact with every required human and automated approval | Yes |
+| `candidate` | Some automated dimensions still abstain or fail | No |
+| `machine_verified_release` / `release` | Immutable artifact with every automated dimension passing | Yes |
 
 The existing `work/bhagavadgita/chapter_*.comics` files remain `fixture`. Packaging or opening a
 file successfully never promotes its release level.
@@ -418,11 +447,35 @@ class SourceRecord:
     byte_size: int
     media_type: str
     metadata: dict[str, JsonValue]
+    semantic_scope_id: str
     parent_source_id: str | None = None
 ```
 
 Inventory walks only configured source roots, records checksums and media facts, and never modifies
 source files. Derived files are new `AssetVersion`s, not `SourceRecord` mutations.
+
+`semantic_scope_id` resolves to an immutable reviewed record:
+
+```python
+@dataclass(frozen=True)
+class SourceSemanticScope:
+    id: str
+    work: Literal["bhagavad_gita", "gita_dhyanam", "unclassified"]
+    scope: Literal[
+        "canonical_chapter", "canonical_verse_range", "standalone_prologue",
+        "source_component", "unclassified"
+    ]
+    chapter_orders: tuple[int, ...]
+    verse_ranges: tuple[tuple[int, int, int], ...]  # chapter, first verse, last verse
+    mapping_state: Literal["confirmed", "inferred", "unmapped", "not_applicable"]
+    evidence: tuple[str, ...]
+    reviewer: str | None
+```
+
+Canonical chapter coverage accepts only `work="bhagavad_gita"` with a matching confirmed chapter
+or verse-range scope. Standalone devotional material may be a separate release or reviewed style/
+motion reference, but cannot be counted as a canonical chapter merely because a directory, cover,
+or production layer contains a number.
 
 ### `Asset` and `AssetVersion`
 
@@ -533,6 +586,23 @@ checksums, gate results, and reviewer decisions and is immutable after creation.
 
 ## Source Recovery Adapters
 
+### Semantic classification gate
+
+Classification happens before assets enter story-beat coverage. The initial verified scope registry
+contains:
+
+| Source | Verified semantic scope |
+|---|---|
+| `bhagavadgita_lottie/unzip/1/` | `gita_dhyanam` / `standalone_prologue`; all 9 traditional stanzas in RU and EN; no canonical chapter mapping |
+| `drawing/app_BG._chiba5.psd` | `bhagavad_gita` / `canonical_verse_range`; chapter 5, verses 5.14-5.29, confirmed from 15 sequential balloon/caption groups |
+| `drawing/5_1.psd` | `bhagavad_gita` / `source_component`; component reproduced inside `app_BG._chiba5.psd`, attached to its chapter-5 parent scope |
+| `drawing/5_2.psd` | `bhagavad_gita` / `source_component`; component reproduced inside `app_BG._chiba5.psd`, attached to its chapter-5 parent scope |
+
+The registry records content evidence, not just these conclusions. Tests must fail if `unzip/1` is
+assigned to chapter 1, if `S3_B1_C1` is treated as canonical numbering, or if `5_1`/`5_2` suffixes
+are interpreted as verse numbers. Any future inferred mapping remains non-release until the
+`cultural_editorial` review dimension confirms it.
+
 ### PSD adapter
 
 `psd-tools` walks groups and pixel layers, preserving hierarchy, visibility, blend mode, opacity,
@@ -542,7 +612,10 @@ requested. Tiny/noise layers are retained in inventory but may be rejected by re
 `Generative Fill` are provenance signals, not semantic labels.
 
 The known real checkpoints are recorded: `5_1.psd` has 5 descendants/1 group, `5_2.psd` 32/6, and
-`app_BG._chiba5.psd` 419/92. Inventory tests assert counts/checksums without modifying the files.
+`app_BG._chiba5.psd` 419/92. `app_BG._chiba5.psd` contains 15 sequential text groups covering
+canonical verses 5.14-5.29; `5_1.psd` and `5_2.psd` are structurally reproduced as component groups
+inside it. Inventory tests assert counts/checksums, parent/component relationships, and semantic
+scope without modifying the files.
 
 ### PDF panorama adapter
 
@@ -564,8 +637,10 @@ aligned crops plus an occlusion/invalid-pixel mask. Page number equality is neve
 ### Lottie and `.comics` adapters
 
 The Lottie adapter consumes the separate approved from-Lottie flow's verified parser contract and
-recovers referenced images, transforms, timing, hierarchy, and audio/translation provenance. It
-does not import unverified ad hoc camera formulas as gold truth.
+recovers referenced images, transforms, timing, hierarchy, and audio/translation provenance. The
+current `unzip/1` package is explicitly tagged as standalone Gita Dhyanam containing all 9 RU/EN
+stanzas, not chapter 1 and not any other canonical chapter. Lottie asset-array order is not stanza
+order. The adapter does not import unverified ad hoc camera formulas as gold truth.
 
 The `.comics` adapter reconstructs tiled layers and imports transforms/animations/text slots as
 training/reference evidence. Format/runtime fixtures are tagged separately from production-approved
@@ -812,6 +887,7 @@ receive their own explicit approval; they are not silently treated as approved S
 | MH21 model competition | Gold datasets, split policy, promotion defaults |
 | MH22 production QA/review | Review State Machine; Production Validation and Release |
 | MH23 honest release status | Release levels and immutable release manifest |
+| Semantic source correctness | `SourceSemanticScope`; classification gate; cultural/editorial review |
 
 ## SUPERSEDED: Panoramic PDF Source — direct AI Cutting/Positioning/Animation draft
 
@@ -1282,6 +1358,8 @@ baseline without changing source ingestion or chapter cardinality.
 - [x] Deterministic text-forward output is retained only as a fixture/draft regression fallback.
 - [x] AI summaries are optional, labeled, cited, and never replace source verses.
 - [x] Native PSD/PDF/Lottie/`.comics` recovery precedes flattened-image fallback.
+- [x] Content-verified semantic scopes prevent Gita Dhyanam/package numbering from being mistaken
+      for a canonical chapter and identify the chapter-5 PSD range/components explicitly.
 - [x] Canonical source, asset, entity, story-beat, coverage, action, candidate, review, composition,
       evaluation, and release models are defined.
 - [x] True bitmap-mask acceptance and source/scene-disjoint Gold v1 evaluation are defined.
@@ -1301,5 +1379,5 @@ baseline without changing source ingestion or chapter cardinality.
       `flows/comics-ai/sdd-comics-ai-bhagavadgita-from-lottie/02-specifications.md` for the full
       content and its own approval record.
 - [x] v0.7 direct panorama cut/arrange/animate draft explicitly superseded and marked historical.
-- [ ] v0.8 production asset-first Specifications reviewed.
-- [ ] v0.8 production asset-first Specifications approved with explicit `specs approved`.
+- [x] v0.9 production asset-first Specifications reviewed and approved by Anton on 2026-08-10
+      (`"Сохрани обсужденные детали и заапрувь"`).

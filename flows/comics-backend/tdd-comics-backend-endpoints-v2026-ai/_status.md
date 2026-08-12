@@ -90,6 +90,15 @@ Requirements approval:
    provider work honestly.
 10. Golden-chapter scale-out remains blocked until mask, identity/style, lettering, art-direction,
     cultural/editorial, runtime, and minimum-story-beat gates all pass.
+11. Publishing an existing asset/object version returns a conflict and leaves the original bytes,
+    metadata, lineage, and reviews unchanged; failed validation never exposes a partial version.
+12. Any configured write target resolving inside an original dataset/source root is rejected before
+    staging or blob creation, including paths that enter the source root through symlinks.
+13. Canonical coverage accepts only reviewed confirmed `bhagavad_gita` chapter/chapter-range scopes:
+    Gita Dhyanam package/layer numbers and chapter-5 component suffixes cannot become chapter/verse
+    mappings through filename inference.
+14. Rebuilding source inventory is read-only and deterministic: unchanged source path+bytes retain
+    IDs/checksums, and inventory publication is validated/atomic outside configured source roots.
 
 ## Next Action
 

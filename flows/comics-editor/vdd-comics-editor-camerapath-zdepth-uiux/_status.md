@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-REQUIREMENTS
+DOCUMENTATION
 
 ## Phase Status
 
-DRAFTING
+IMPLEMENTATION COMPLETE — DOCUMENTATION NOT STARTED
 
 ## Last Updated
 
@@ -14,22 +14,27 @@ DRAFTING
 
 ## Blockers
 
-- Requirements review and resolution of the primary camera-authoring interaction.
+- Interactive Chromium smoke is unavailable in the current session because no browser backend is
+  exposed. Flutter Web compilation/serve succeeded; this limitation is recorded in the
+  Implementation Log.
 
 ## Progress
 
 - [x] Flow created (2026-08-10)
 - [x] Existing camera/depth format, shared library, viewer, scroll, Properties, and timeline context
       consolidated into Requirements v0.1 (2026-08-10)
-- [ ] Requirements approved
-- [ ] Visual drafted
-- [ ] Visual approved
-- [ ] Specifications drafted
-- [ ] Specifications approved
-- [ ] Plan drafted
-- [ ] Plan approved
-- [ ] Implementation started
-- [ ] Implementation complete
+- [x] Requirements approved (2026-08-10)
+- [x] Visual drafted (2026-08-10)
+- [x] Visual v0.2 approved (2026-08-10)
+- [x] Visual v0.3 multi-selection addendum drafted (2026-08-10)
+- [x] Visual v0.3 approved (2026-08-10)
+- [x] Specifications v0.2 drafted (2026-08-10)
+- [x] Specifications v0.3 multi-selection revision drafted (2026-08-10)
+- [x] Specifications approved (2026-08-10)
+- [x] Plan v0.2 drafted (2026-08-10)
+- [x] Plan approved (2026-08-10)
+- [x] Implementation started (2026-08-10)
+- [x] Implementation complete (2026-08-10)
 - [ ] Documentation drafted
 - [ ] Documentation approved
 
@@ -40,10 +45,26 @@ DRAFTING
 - Default product context is vertical-scroll comic strip in portrait, with horizontal/landscape
   affordances future-disabled.
 - Properties follow `General / Selection / Document`; `zDepth` belongs to Selection and camera path
-  belongs to Document unless Requirements review changes that information architecture.
+  belongs to Document.
 - Viewer is result-only. Authoring controls exist only in Editor mode, while both modes render the
   same scroll/camera/depth result.
 - Desktop numbers remain visible/editable beside sliders; phone precise editing opens in one action.
+- Visual v0.2 approves: separate viewport/camera rail lanes; authoritative Document list plus XY pad;
+  add-at-current without jumps; `-0.9…4` soft depth slider with unrestricted valid exact input;
+  explicit mixed-selection apply; contextual session-only overlay eye.
+- Specifications v0.2 grounds the Visual in current Flutter code. It also corrects Edit
+  `currentTime` to true document pixels (including fit scale), shares the selected-device range
+  model with Viewer, and keeps camera point data target-independent.
+- The editor now supports the approved shared ID-based multi-selection model, including explicit
+  `Mixed` Z-Depth UX and primary-layer compatibility for legacy single-selection consumers.
+- Visual v0.3 uses familiar modifier selection on desktop and long-press selection mode on touch;
+  adds deterministic batch Show/Hide, depth, Canvas translate, stable Up/Down, and confirmed Delete;
+  and keeps unsafe bulk Parent/Kind/animation semantics out of scope.
+- Specifications v0.3 uses stable `EditorLayer.id` selection with primary/range anchor, freezes
+  gesture target IDs, moves selected hierarchy roots only, and makes each batch mutation one
+  document-history transaction.
+- Plan v0.2 sequences compatibility and controller tests before Scene/Canvas UI, then canonical
+  viewport/rail before Z-Depth and Camera Path rendering, followed by cross-device/accessibility QA.
 
 ## Fork History
 
@@ -51,6 +72,5 @@ N/A — new flow.
 
 ## Next Actions
 
-1. Review `01-requirements.md` v0.1 and resolve its five UI/UX questions.
-2. Say `requirements approved` when the scope is correct; only then draft full cross-device ASCII
-   Visuals and states.
+1. Review the completed implementation evidence in `05-implementation-log.md`.
+2. Author and review client-facing Documentation when that phase is approved.

@@ -1,7 +1,7 @@
 # Requirements: Comics Editor Camera Path + Z-Depth UI/UX
 
-> Version: 0.1
-> Status: DRAFT
+> Version: 0.2
+> Status: APPROVED
 > Last Updated: 2026-08-10
 
 ## Problem Statement
@@ -89,6 +89,18 @@ save normally, so that exploration is safe.
 12. **Given** camera points share or cross positions during editing, **when** the edit is committed,
     **then** the UI produces a deterministic strictly ordered path consistent with the existing
     last-point-wins format normalization.
+13. **Given** Editor contains multiple layers, **when** the author uses familiar desktop modifiers
+    or touch selection mode in Scene or Canvas, **then** they can create and clearly inspect a
+    multi-layer selection without losing a stable primary layer.
+14. **Given** several layers are selected, **when** Selection properties are opened, **then** common
+    Z-Depth is editable, differing values show `Mixed`, and no layer is overwritten until the
+    author explicitly chooses a shared value or reset.
+15. **Given** several layers are selected, **when** a compatible group action is invoked, **then**
+    visibility, movement, stacking-order movement, or deletion applies deterministically to the
+    stated selection as one undoable transaction.
+16. **Given** selection contains a parent and its descendant, **when** layers move together on
+    Canvas, **then** descendants move exactly once rather than receiving both the selected-group
+    delta and the parent's propagated delta.
 
 ### Should Have
 
@@ -99,6 +111,9 @@ save normally, so that exploration is safe.
 - Reset-to-reference for layer depth and reset/remove-path actions with normal undo behavior.
 - Keyboard adjustment and accessible labels on desktop/Web; touch targets and one-action precise
   value entry on phone/tablet.
+- Select all, clear selection, and invert visible selection shortcuts/actions.
+- A persistent primary-selection cue inside multi-selection so single-value fields and Canvas
+  handles have an unambiguous owner.
 - Multi-selection behavior that cannot silently overwrite different layer depths.
 
 ### Won't Have (This Iteration)
@@ -109,7 +124,8 @@ save normally, so that exploration is safe.
 - Baking parallax into layer animations or changing `ParentId` depth inheritance semantics.
 - Enabling horizontal-scroll or landscape document modes; their future affordances remain disabled.
 - Camera/depth editing in Viewer mode.
-- Redesign of unrelated Properties, Timeline, Layers, Scene, or bottom-bar behavior.
+- Persistent named layer groups, marquee/lasso selection, or a new grouping file format.
+- Redesign of unrelated Properties, Timeline, or bottom-bar behavior.
 
 ## Constraints
 
@@ -123,6 +139,8 @@ save normally, so that exploration is safe.
   Android, and iOS with responsive interaction rather than platform-specific feature differences.
 - **UI consistency**: Follow the approved bottombar/Properties conventions and existing slider plus
   exact-number policy.
+- **Selection identity**: Multi-selection must track stable layer IDs rather than mutable list
+  indices and must remain coherent through reorder, delete, Undo/Redo, and parent hierarchies.
 - **Scope ownership**: Format semantics belong to `tdd-dot-comics-format`; rendering math belongs to
   `flutter_comics`; this VDD owns editor authoring and visualization only.
 
@@ -134,8 +152,8 @@ save normally, so that exploration is safe.
       or place a draggable canvas handle immediately?
 - [ ] What practical slider range and stepping should the layer-depth control expose while precise
       entry still permits the full valid `zDepth > -1` domain?
-- [ ] For mixed multi-selection, should depth show `Mixed` with a relative adjustment workflow, or
-      require an explicit value before applying one depth to all selected layers?
+- [x] Mixed multi-selection shows `Mixed` and requires an explicit common value or reset; relative
+      adjustment is not introduced.
 - [ ] Should the camera-path overlay be always visible when the Document tab is active, or controlled
       by a lightweight show/hide toggle remembered only for the editing session?
 
@@ -154,6 +172,7 @@ save normally, so that exploration is safe.
 
 ## Approval
 
-- [ ] Reviewed by: Anton Dodonov
-- [ ] Approved on:
-- [ ] Notes:
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-10
+- [x] Notes: Originally approved as v0.1. v0.2 adds multi-layer selection and compatible group
+      actions by Anton's direct request on 2026-08-10; their concrete UX is subject to Visual v0.3.

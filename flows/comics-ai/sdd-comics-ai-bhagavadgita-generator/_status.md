@@ -5,14 +5,40 @@
 Phases 1-9: IMPLEMENTATION — functionally complete and retained as format/source-fidelity regression
 fixtures, not accepted as final production artwork.
 
-**Production-art pivot: SPECIFICATIONS v0.8 awaiting review.** Anton approved the asset-first Requirements
-v0.8 on 2026-08-09 (`reqs approved`). The old direct panorama
+**Production-art pivot: IMPLEMENTATION (Plan v0.7 APPROVED).** Anton approved the asset-first Requirements
+v0.8 on 2026-08-09 (`reqs approved`) and approved Specifications v0.9 on 2026-08-10
+(`"Сохрани обсужденные детали и заапрувь"`). The old direct panorama
 cut/arrange/animate Phase 10 and its Specifications/Plan are explicitly superseded and must not be
 implemented. Revised Requirements now define source recovery, true bitmap masks/matting,
 identity/style asset graph, story-beat coverage, paired sketch colourization, controlled local and
 `gpt-image-2` gap filling, exact lettering, golden chapters 1+11, and production art-direction gates.
-Revised Specifications are now drafted as the active artifact; implementation remains gated by separate
-`specs approved` and `plan approved` transitions.
+Revised Specifications and replacement Plan v0.8 are approved. Active replacement Phase 10
+(Tasks 10.1-10.4), Tasks 11.1-11.4, and Tasks 12.1-12.3 are complete. No segmenter, identity
+classifier, or colourizer passed promotion, so those production paths remain fail closed. The
+lettering implementation is complete, while production lettering remains fail closed until accepted
+real text-region masks exist and every exact OCR gate passes. Task 13.1 vertical composition is also
+implemented and correctly emits no real candidates because both golden chapters have zero accepted
+coverage assets. Task 13.2 QA/release state machine is implemented and the real golden validation
+is blocked across all six independently recorded dimensions; no release archive was emitted. Task
+13.3 is complete with a 13-manifest reproducible proof bundle and an autonomous five-action
+remediation queue. Replacement production Plan v0.8 implementation is complete. The first
+post-plan remediation iteration produced evaluation-ready Gold v2.1 and evaluated two new
+segmenter paths plus a true-mask semantic Mask R-CNN; none passed production gates. Two independent
+exact-lettering audits initially failed to improve the real 3/6 result. A subsequent bounded search
+over shipped-font size/weight variants found and production-verified a Sanskrit 1.1 candidate,
+improving lettering to 4/6; English 1.1 and Sanskrit 11.1 remain exact failures. Golden release and all-18
+scale-out correctly remain blocked by measured quality gates, not human participation.
+
+## NEW (2026-08-10): Semantic source scopes verified and saved
+
+- `bhagavadgita_lottie/unzip/1/` is the complete 9-stanza Gita Dhyanam standalone prologue in RU/EN,
+  not canonical chapter 1. Directory `1` and `S3_B1_C1` are production/package identifiers.
+- `app_BG._chiba5.psd` is canonical Bhagavad Gita chapter 5, verses 5.14-5.29, represented by 15
+  sequential balloon/caption groups.
+- `5_1.psd` and `5_2.psd` are production components reproduced inside the chapter-5 PSD; suffixes
+  must not be inferred as verse identifiers.
+- Specifications v0.9 now require immutable `SourceSemanticScope` records and reject filename-only
+  chapter mapping before story-beat coverage or release.
 
 ## NEW (2026-08-09): Production asset-first vision recorded
 
@@ -102,26 +128,19 @@ Full task-by-task detail (files, real test counts, real visual spot-checks) is i
 
 ## Last Updated
 
-2026-08-09 by Codex (Requirements v0.8 explicitly approved; replacement production Specifications
-v0.8 drafted and awaiting review; backend TDD cross-flow cases queued without skipping its own
-Requirements gate; prior Phase 10 Specifications/Plan remain superseded)
+2026-08-12 by Codex (Plan v0.8 complete; Gold v2.1/v2.2 segmenter remediation evaluated border
+matting, compact U-Net, and true-mask semantic Mask R-CNN without unsafe promotion. Mask R-CNN crop
+IoU/recall reached 0.854/1.0, but boundary F1 0.294, animal F1 0, and tiled recall/precision
+0.275/0.289. Lettering remediation then ran a 24-configuration Tesseract audit and an independent
+Apple Vision exact audit, then a 592-row shipped-font render search. A weight-700/size-52 Sanskrit
+1.1 candidate passed actual layout/mask/exact OCR gates, improving lettering from 3/6 to 4/6 without
+text/OCR shortcuts. Production cutting and exact lettering remain fail-closed.)
 
 ## Blockers
 
-- **SDD gate**: replacement production Specifications must be reviewed and explicitly approved
-  before a replacement Plan is drafted.
-- **Later production decisions, not blockers to Requirements approval**: minimum corrected gold-mask
-  budget; compact segmenter/framework/license shortlist; chapter-specific exceptions to the proposed
-  six-visual-beat floor; paid API/reference-upload authority for `gpt-image-2`.
-- **One manual verification step is still outstanding**: Specifications/Requirements ask for,
-  beyond the real automated Dart test against all 18 real files (done, passing), "a documented
-  manual open in the actual Comics Editor app" — i.e. actually launching the real macOS GUI app
-  and visually confirming a rendered chapter with human eyes. Not attempted: it would open a
-  visible window on Anton's real desktop, which felt like something to check in about rather than
-  do unilaterally. Needs either Anton doing this himself (open
-  `work/bhagavadgita/chapter_05.comics` — the most feature-complete one — in the running Comics
-  Editor app once) or his explicit go-ahead for Claude to launch `flutter run -d macos` here.
-  Everything else in Requirements' Must-Have 10 is satisfied by the real Dart test.
+- None requiring human participation. Requirements v0.9 / Specifications v0.10 replace all manual
+  gates with fail-closed automated reviewers. Paid/external generation remains optional; the local
+  deterministic path must complete without it.
 - A background research agent for Task 7.2 failed mid-run on an unrelated API session-limit error
   (not a real finding) before the task was retried directly and completed successfully — no
   lasting effect, noted here only so a future session doesn't misread the failure as a real
@@ -182,9 +201,76 @@ Requirements gate; prior Phase 10 Specifications/Plan remain superseded)
 - [x] Production asset-first vision approved by Anton and saved in Requirements v0.8
 - [x] Requirements v0.8 formally approved on 2026-08-09 (`reqs approved`)
 - [x] Replacement production Specifications v0.8 drafted
-- [ ] Replacement production Specifications v0.8 approved
-- [ ] Replacement production Plan — not drafted before Specifications approval
-- [ ] Production asset-graph implementation — not started
+- [x] Replacement production Specifications v0.9 approved (2026-08-10)
+- [x] Replacement production Plan v0.7 drafted
+- [x] Replacement production Plan v0.7 approved (2026-08-10, `plan approved`)
+- [x] Production Task 10.1 — canonical production models, immutable validated version store, and
+      source-root write boundary; 4/4 focused tests pass
+- [x] Production Task 10.2 — source inventory and semantic-scope gate; 5/5 focused tests, real
+      24-source deterministic inventory, stale Lottie fixture path corrected, 101/101 full tests
+- [x] Production Task 10.3 — native PSD/PDF/Lottie/`.comics` recovery adapters; real hierarchy,
+      mask, embedded-image, translation/audio, slot/transform/tile checkpoints; 5/5 focused and
+      106/106 full tests
+- [x] Production Task 10.4 — asset graph, uncertain identity proposals, append-only merge/split
+      revisions, immutable graph/review snapshots, transitive invalidation, and bbox-only
+      foreground rejection; 4/4 focused and 110/110 full tests
+- [x] Production Task 11.1 — immutable Gold v1 dataset generated and artifact-verified: 90
+      native-alpha PSD masks plus 40 two-family panorama consensus masks, 130 total across 5
+      source-disjoint compositions, 40 held out; 121/121 full tests
+- [x] Production Task 11.2 — five segmenter approaches benchmarked and ranked; compact 117,681-
+      parameter U-Net trained source-disjoint on MPS; no candidate passed mask/boundary/recall and
+      complete promotion gates, so no model promoted; immutable summary; 125/125 full tests
+- [x] Production Task 11.3 — deterministic descriptor/palette/style proposals and top-5 retrieval
+      for 130 assets; no automatic identity merge; evaluation explicitly abstains because train
+      kind coverage and canonical principal identity coverage are insufficient; 128/128 tests
+- [x] Production Task 11.4 — all 6 colour panoramas uniquely registered to B&W pages with 24 paired
+      crops and invalid masks; edge F1 0.975-0.992; deterministic and compact learned colourizers
+      preserve ink but fail palette ΔE gates, so neither promoted; 132/132 tests
+- [x] Production Task 12.1 — 12 source-grounded beats for chapters 1 and 11, exact citation/full
+      coverage validation, independent local-model advisory evidence, and coverage matrix; all 12
+      unresolved visual gaps routed to local actions, no paid generation; 137/137 tests
+- [x] Production Task 12.2 — immutable provider-neutral runner, action fingerprinting,
+      authorization/budget/upload gates, crash-safe provider idempotency contract, local provider,
+      disabled-by-default gpt-image-2 adapter; 12 actions/24 proposals, replay 12/12 cached; 142/142
+- [x] Production Task 12.3 — deterministic authoritative RU/EN/Sanskrit corpus, dynamic runtime
+      language slots, retained region/glyph masks, complex-script shaping, layout/collision gates,
+      and normalized exact OCR readback; six real fixtures, 3 accepted/3 fail-closed; 146/146 tests
+- [x] Production Task 13.1 — vertical/portrait rule and learned-positioner candidate contracts,
+      editable RGBA/mask references, deterministic beat order, bounds/overlap gates, proposed-only
+      z-depth/camera/animation and shared packager proof; real chapters 1/11 remain 0-candidate
+      blocked because all 12 beats lack accepted assets; 149/149 tests
+- [x] Production Task 13.2 — immutable six-dimension gate report, missing/duplicate dimension and
+      artifact rejection, upstream-hash stale invalidation, atomic accepted-only publication; real
+      validation has 3 rejected/3 abstained dimensions plus missing archive, so emits report only;
+      153/153 tests
+- [x] Production Task 13.3 — reproducible golden proof over 13 checksummed manifests, per-chapter
+      coverage/composition readiness, six-dimension outcome and ordered autonomous remediation;
+      golden release and all-18 scale-out correctly blocked; 154/154 tests
+- [x] Remediation 1 — Gold v2.1 independent evaluation: 131 masks, 61 native-alpha held-out,
+      semantic diversity only from explicit PSD groups, one layer-scoped Krishna identity, and a
+      full-panorama bipartite tiled fixture; evaluation infrastructure ready
+- [x] Remediation 1 — border-matting and compact Gold v2.1 U-Net evaluated and rejected. Border
+      matting crop IoU/F1/recall = 0.927/0.832/0.967 but tiled recall/precision = 0.275/0.216,
+      duplicates 0.389, 36 collapsed matches, no semantic macro F1. U-Net independent test IoU
+      0.434 despite best validation IoU 0.878
+- [x] Remediation 2 — Gold v2.2 semantic/source split plus true-bitmap-mask Mask R-CNN. Six CPU
+      epochs (last three inverse-frequency balanced) improve crop IoU to 0.854 and recall to 1.0,
+      but normalized boundary F1 is 0.294, animal F1 stays 0, tiled recall/precision are
+      0.275/0.289, duplicate rate 0.421, and 34 truth instances collapse; candidate rejected
+- [x] Remediation 3 — independent exact-lettering audits. Tesseract's 24 relevant language/PSM/
+      scale configurations produce 0 exact matches on the three rejected fixtures. Apple Vision
+      accurate/no-correction rejects the remaining English fixture and explicitly abstains on two
+      unsupported Sanskrit fixtures; no fuzzy, wordlist, or diacritic shortcut is accepted
+- [x] Remediation 3 render variants — 592 bounded shipped-font weight/size/OCR combinations find
+      44 exact rows for Sanskrit 1.1. The actual renderer independently reproduces and promotes its
+      weight-700/size-52 candidate; lettering improves from 3/6 to 4/6 while release stays blocked
+- [x] Remediation 3 verification — final suite 172 passed, 2 expected torch-only skips in the lightweight app
+      environment; all 3 skipped-scope torch tests pass in the established multimodal environment;
+      `git diff --check` clean
+- [x] Next-input audit — no independent panorama segmenter/checkpoint is locally present; existing
+      COCO-consensus and flow-trained models are contamination or already rejected, so Gold v2.3 is
+      not fabricated. Six registered colour pages remain valid recovered source evidence but cover
+      neither golden pilot's hypothesised B&W page 2/12
 
 ## Context Notes
 
@@ -209,15 +295,19 @@ Requirements gate; prior Phase 10 Specifications/Plan remain superseded)
   unresolved items.
 - `dataset/bhagavadgita/` must remain read-only; all generated artifacts go under
   `work/bhagavadgita/`.
+- Lottie `unzip/1` is Gita Dhyanam and cannot count toward canonical chapter coverage; the editable
+  PSD with balloons is chapter 5 verses 5.14-5.29. These are explicit semantic scopes in approved
+  Specifications v0.9, not filename assumptions.
 - The repository already had extensive unrelated dirty/untracked changes before this flow; they are
   not part of this work and must be preserved.
 
 ## Next Action
 
-Anton reviews replacement Specifications v0.8 for the asset graph, source adapters, gold
-annotations/evaluation, story-beat coverage, colourization, exact lettering, generation-provider
-contract, review gates, and golden chapters 1+11, then says `specs approved`. Codex subsequently
-drafts a replacement Plan; no production implementation begins before that Plan is approved.
+Expand independently accepted full-panorama instance supervision and rare semantic-class coverage
+before another model run. The true-mask Mask R-CNN is now an evaluated rejected reference; more
+epochs on the same imbalanced isolated crops are not justified. Any new candidate must pass Gold
+v2.2 crop/boundary/semantic and corrected one-to-one tiled gates. Then continue identity/palette and
+downstream queue in dependency order; do not scale all 18 until both golden chapters release.
 
 The old manual GUI-open item remains a regression-proof task for Phases 1-9 but cannot make their
 text-card output production art. The Lottie camera-path/z-depth implementation remains in its own
