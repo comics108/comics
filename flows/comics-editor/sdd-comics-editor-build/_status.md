@@ -6,13 +6,13 @@ IMPLEMENTATION
 
 ## Phase Status
 
-Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05 Windows rerun: C# publication now invokes the MSBuild `Publish` target directly, bypassing the .NET 10.0.302 `dotnet publish` parser that converted both `-o` and `-p:PublishDir` into positional tokens. Round 8's Linux plugins-base dependency and round 9's Windows command require real CI verification.
+Docker Build (Phase 1-4) — DONE. CI resolution fixed (2026-08-13): resolved `flutter pub get` failure on pub.dev caused by timing of package publishing. Bumped `pubspec.yaml` dependency constraints in `apps/comics-editor` to `flutter_comics_viewer: ^1.1.1` and `flutter_comics: ^0.2.1`. Local verification without `pubspec_overrides.yaml` confirmed `flutter pub get`, `flutter analyze` (0 errors), and fast test suite (15/15) all pass.
 
 **Важно**: `apps/comics-editor-v2.9/` переименован пользователем в `apps/comics-editor/` (тот же проект, `pubspec.yaml` `name: comics_editor`) — не найдя старый путь, искать по новому.
 
 ## Last Updated
 
-2026-08-10 by Claude
+2026-08-13 by Antigravity
 
 ## Related Flows
 
@@ -129,6 +129,7 @@ Docker Build (Phase 1-4) — DONE. CI repair round 9 applied from the 2026-08-05
 - [x] 2026-08-05 Windows rerun: `dotnet publish` still failed MSB1008 because its parser stripped `-p:PublishDir` before invoking MSBuild
 - [x] Round 9 code change: invoke `dotnet msbuild -restore -target:Publish` with native MSBuild property switches
 - [x] Round 9 local check: exact direct-MSBuild command published a disposable .NET 10 project and produced the requested DLL
+- [x] 2026-08-13 CI pubspec resolution fix: updated `apps/comics-editor/pubspec.yaml` to `flutter_comics_viewer: ^1.1.1` and `flutter_comics: ^0.2.1` matching newly published pub.dev package versions; verified `flutter pub get` (without overrides), `flutter analyze`, and fast tests (15/15).
 - [ ] Real Native Build rerun green on Windows, Linux, macOS, and analyze jobs
 
 ## Context Notes

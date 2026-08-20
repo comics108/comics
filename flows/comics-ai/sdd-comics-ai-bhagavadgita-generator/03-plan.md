@@ -711,6 +711,250 @@ change is introduced by this Phase's v2 design (per-layer `zDepth` and document-
 are both already-additive fields decided elsewhere); rollback never needs to un-write a `scrollType`
 value since v2 no longer writes one.
 
+---
+
+## ⭐ Phase 14: Miw Artist Source → Full .comics with Objects + Animations (HIGHEST PRIORITY)
+
+> **Updated**: 2026-08-20 (v3). Key clarifications from Anton:
+>
+> 1. **Miw's lettering is her own story** — the Russian text already drawn on
+>    `sinuan_comics_2.62-2.65-vertical.png` is Miw's original narrative, NOT Bhagavad Gita slokas.
+>    `lettering_mode: embedded_artist_text` — preserve as-is, no OCR/replacement.
+>
+> 2. **Bhagavad Gita slokas are used for model fine-tuning reference** — specifically:
+>    - Chapter 2 slokas 62-65 describe sensory attachment → loss of discrimination → destruction.
+>      This semantic content guides the **object classifier** (what types of figures/objects to expect)
+>      and the **animation proposer** (mood/pacing — contemplative → escalating tension).
+>    - The `story-script` pipeline (`apps/comics-ai/comics-script-context/`) already produces
+>      `SceneExtraction` (characters, props, actions) from scripture text via local Ollama. Run it on
+>      slokas 2.62-2.65 to get character/action labels → use as semantic priors for segmenter class
+>      hints and animation mood calibration.
+>
+> 3. **Boranko dataset** provides real ground-truth object cuts + Lottie animation keyframes for
+>    fine-tuning the segmenter and animation proposer models on actual hand-drawn comic art.
+>
+> **Full strategy**:
+> - `story-script` on Gita 2.62-2.65 → SceneExtraction (semantic priors) →
+> - Boranko fine-tuned UNetBaseline → object-level RGBA segmentation of Miw PNG →
+> - Boranko fine-tuned animation proposer (Lottie-calibrated) → per-object animations →
+> - Full layered `.comics` with Miw's own embedded lettering + animations
+
+### Task 14.0: Boranko dataset audit and training index
+
+- **Description**: Parse and index all boranko supervision data:
+  1. Inventory `layers/` PNGs: parse naming convention `{panel}_{object}_{size}_{variant}_{frame}` —
+     identify unique panels, objects per panel, animation frame counts.
+  2. Parse `ASHES.json` Lottie: extract per-layer keyframe data (position, scale, opacity, rotation),
+     map layer names to PNG filenames, record animation type per object (enter/exit/idle/parallax).
+  3. Cross-reference source JPGs from `Mahabharataa-Book01-lowcamera/` with panels (size=1000 in
+     filenames = 1000px render resolution).
+  4. Emit `work/boranko/dataset_index.json`: panels list, objects per panel, frame counts,
+     animation metadata per object.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/boranko_audit.py` — Create
+  - `work/boranko/dataset_index.json` — Output: immutable index
+  - `work/boranko/lottie_keyframes.json` — Output: per-layer animation params
+- **Dependencies**: None
+- **Verification**: index non-empty; panels ≥ 20; each panel has ≥ 1 object; lottie keyframes
+  cover all chapter-1 layers
+- **Complexity**: Medium
+
+### Task 14.1: Inspect Miw asset + extract semantic priors from Gita slokas
+
+- **Description**:
+  1. Inspect `sinuan_comics_2.62-2.65-vertical.png` (dimensions, colour depth, DPI).
+     Register `SourceSemanticScope` (chapter=2, verseRange=62-65, `lettering_mode: embedded_artist_text` —
+     Miw's own story text, NOT Gita slokas, preserve as-is, no OCR/replacement).
+  2. Run `story-script` pipeline (`apps/comics-ai/comics-script-context/scripts/extract_scene.py`)
+     on Bhagavad Gita chapter 2 slokas 62-65 (loaded from canonical `Gita_Slokas.csv`, BookId=1,
+     ChapterId=2, Order 62-65) via local Ollama (`qwen2.5-coder:32b`). Output: `SceneExtraction`
+     with characters (e.g. Arjuna, Krishna, objects of sense), actions (contemplation, attachment,
+     falling), mood (contemplative→tension→destruction). Save to `work/bhagavadgita/miw/scene_priors.json`.
+  3. These priors become **semantic hints** for Task 14.2 (object class labels to look for) and
+     Task 14.3 (animation mood/pacing calibration).
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/miw_source.py` — Create
+  - `work/bhagavadgita/miw/source_scope.json` — Output: SourceSemanticScope
+  - `work/bhagavadgita/miw/scene_priors.json` — Output: SceneExtraction from Gita slokas
+- **Dependencies**: None (reads canonical CSV + runs Ollama locally)
+- **Verification**: scope JSON valid; scene_priors.json has ≥ 1 character, mood field present;
+  `lettering_mode` = `embedded_artist_text` in scope
+- **Complexity**: Low-Medium
+
+
+### Task 14.2: Fine-tune object segmenter on boranko ground truth
+
+- **Description**: Fine-tune the existing `UNetBaseline` (checkpoint at
+  `work/comics-ai-multimodal/models/unet_baseline.pt`) on boranko supervision:
+  - **Input pairs**: reconstructed composite (alpha-flatten all boranko layers per panel) → individual
+    RGBA object masks (ground truth from `layers/*.png` per panel).
+  - **Training setup**: source-disjoint split (22 panels available in chapter 1 of Story 1/Book 1);
+    use panels 1-18 for train, 19-22 for val. Train on Apple M4 Max MPS, max 30 epochs.
+  - **Promotion gate**: per-object crop IoU ≥ 0.80 AND boundary F1 ≥ 0.50 on held-out panels.
+    If gate passes → save as `work/boranko/models/segmenter_boranko.pt` (immutable). If not →
+    record failure, retain current checkpoint as fallback.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/boranko_finetune_segmenter.py` — Create
+  - `work/boranko/models/segmenter_boranko.pt` — Output (if promoted)
+  - `work/boranko/segmenter_eval.json` — immutable evaluation record
+- **Dependencies**: Task 14.0
+- **Verification**: eval JSON present; gate result recorded (pass or fail-closed); no unsafe promotion
+- **Complexity**: High (MPS training, real ground truth, strict gates)
+
+### Task 14.3: Fine-tune animation proposer on boranko Lottie keyframes
+
+- **Description**: Fine-tune/calibrate the animation proposer (`comics-ai-animations`'
+  `propose_reveal` baseline or a new learned proposer) on boranko Lottie data:
+  - **Input**: per-object bounding box (from segmenter output), object semantic class (character/bg/
+    foreground/text), panel position (top/mid/bottom of strip).
+  - **Target**: Lottie keyframe parameters — enter delay, duration, easing curve type, parallax
+    depth (`zDepth`), camera pan (x/y offset). Extracted from `lottie_keyframes.json`.
+  - **Approach**: regression model (scikit-learn GradientBoosting or small MLP) trained on
+    boranko's 22+ panels × N objects per panel. Promotion: MAE ≤ 20% of parameter range on held-out.
+  - Output: `work/boranko/models/animation_proposer_boranko.joblib`
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/boranko_finetune_animation.py` — Create
+  - `work/boranko/models/animation_proposer_boranko.joblib` — Output (if promoted)
+  - `work/boranko/animation_eval.json` — immutable evaluation record
+- **Dependencies**: Tasks 14.0, 14.2
+- **Verification**: eval JSON present; gate result recorded; fallback to calibrated baseline if gate fails
+- **Complexity**: High
+
+### Task 14.4: Object-level segmentation of Miw PNG
+
+- **Description**: Run the promoted (or fallback) boranko-fine-tuned segmenter on
+  `sinuan_comics_2.62-2.65-vertical.png`:
+  1. First detect panels (gutter rows, deterministic).
+  2. For each panel: run segmenter → extract individual RGBA objects with alpha masks.
+  3. Classify each object: character / foreground / background / text-balloon / lettering.
+  4. Save each object as `work/bhagavadgita/miw/objects/{panel_n}/{obj_class}_{k}.png` (RGBA).
+  5. Emit `work/bhagavadgita/miw/objects/manifest.json`: panel list, per-panel object list with
+     class, bbox, z-order (depth from composition order).
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/miw_segment_objects.py` — Create
+  - `work/bhagavadgita/miw/objects/` — Output directory
+  - `work/bhagavadgita/miw/objects/manifest.json` — Object manifest
+- **Dependencies**: Tasks 14.1, 14.2
+- **Verification**: objects dir non-empty; manifest valid JSON; each panel has ≥ 2 objects;
+  at least one `character` class detected per panel
+- **Complexity**: High
+
+### Task 14.5: Map panels + objects to slokas (chapter 2, verses 62-65)
+
+- **Description**: Map each detected panel to a `SlokaSource` (chapter=2, orders 62-65) from
+  canonical CSV (Russian BookId=1). Propagate sloka mapping to all objects within each panel.
+  Emit `work/bhagavadgita/miw/panel_sloka_map.json`.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/miw_panel_map.py` — Create
+  - `work/bhagavadgita/miw/panel_sloka_map.json` — Output
+- **Dependencies**: Tasks 14.1, 14.4
+- **Verification**: mapping JSON; chapter=2, orders in {62,63,64,65}
+- **Complexity**: Low
+
+### Task 14.6: Generate per-object animations from boranko proposer
+
+- **Description**: Run the promoted (or calibrated fallback) animation proposer on each object from
+  the Miw segmentation manifest:
+  - Input: object bbox, class, panel index, z-order.
+  - Output per object: `enter_delay_ms`, `duration_ms`, `easing` (linear/ease-in/ease-out/spring),
+    `zDepth` (float), `parallax_x`, `parallax_y`, `cameraPath` waypoints for the panel.
+  - Assemble `work/bhagavadgita/miw/animations/animations_manifest.json` — per-object animation params.
+  - Generate Lottie-compatible JSON skeleton `work/bhagavadgita/miw/animations/panel_{n}.lottie.json`
+    for each panel (embeds object PNGs as assets, keyframes from proposer output).
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/miw_animate_objects.py` — Create
+  - `work/bhagavadgita/miw/animations/animations_manifest.json` — Output
+  - `work/bhagavadgita/miw/animations/panel_{n}.lottie.json` — Output per panel
+- **Dependencies**: Tasks 14.3, 14.4
+- **Verification**: animations manifest non-empty; each panel has a valid Lottie JSON; cameraPath
+  is non-trivial (non-zero y motion); all zDepth values in valid range
+- **Complexity**: High
+
+### Task 14.7: Assemble full layered .comics file
+
+- **Description**: Assemble the Miw strip into a full layered `.comics` archive:
+  - `scrollType: vertical`
+  - Each panel as a **layered** image slot: RGBA objects composited with z-ordering, not flattened.
+  - `cameraPath` + per-layer `zDepth` + animation keyframes embedded from Task 14.6.
+  - Lettering already embedded in artwork (`lettering_mode: embedded`).
+  - Manifest: `sourceArtist: "Miw"`, `chapterId: 2`, `verseRange: "2.62-2.65"`.
+  - Output: `work/bhagavadgita/miw/chapter_2_miw.comics`
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/miw_package.py` — Create
+  - `work/bhagavadgita/miw/chapter_2_miw.comics` — Output
+- **Dependencies**: Tasks 14.5, 14.6
+- **Verification**: `.comics` passes structural validator; opens in comics editor without error;
+  scrollType=vertical; layered panels with animations; cameraPath present
+- **Complexity**: High
+
+### Task 14.8: Validate and register in manifest
+
+- **Description**: Run QA/release state machine on Miw output. Lettering OCR gate is
+  `lettering_mode: embedded`. Register in `work/bhagavadgita/manifest.json` with `source: miw`.
+- **Files**:
+  - `work/bhagavadgita/manifest.json` — Update
+  - `work/bhagavadgita/miw/validation_report.json` — Output
+- **Dependencies**: Task 14.7
+- **Verification**: manifest updated; validation_report `status: valid` or explicit known-gap list
+- **Complexity**: Low
+
+### Task 14.9: Multilingual lettering localization (EN · TH · ZH · HI · BN)
+
+> **Added**: 2026-08-20. Miw's embedded Russian lettering is her own artist text. In addition to
+> preserving the original RU layer, generate localized lettering slots for 5 additional languages
+> using the project's own models (local, no paid API).
+
+- **Description**: For each detected text region in each panel (from the segmenter's `lettering`
+  class in Task 14.4):
+  1. **OCR the Russian source text** from the embedded lettering regions using Apple Vision OCR
+     (`vision_ocr.swift`, already in the repo) or Tesseract fallback. Record the detected Russian
+     text per balloon/caption region.
+  2. **Translate RU → {EN, TH, ZH, HI, BN}** using a local Ollama model
+     (`qwen2.5-coder:32b` or a multilingual model if available — check `ollama list` first).
+     Prompt: structured JSON output `{en, th, zh, hi, bn}` per source text. Timeout 240s.
+     Fallback: if translation fails for a language, emit empty slot for that language (never block
+     the whole pipeline on one language).
+  3. **Render localized text** as PNG images for each language × each panel using the existing
+     `lettering.py` infrastructure (`apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/lettering.py`):
+     - EN: Latin, standard weight
+     - TH: Thai script — verify font availability (`Noto Sans Thai` or system font); use
+       `complex_script_shaping=True` path
+     - ZH: CJK — `Noto Sans SC` or system CJK font
+     - HI: Devanagari — `Noto Sans Devanagari`, complex shaping
+     - BN: Bengali — `Noto Sans Bengali`, complex shaping
+     Save per-language renders to `work/bhagavadgita/miw/lettering/{lang}/panel_{n}_balloon_{k}.png`.
+  4. **Extend `.comics` language slots**: the current format has 3 slots (En=0, Ru=1, Hi=2).
+     Thai (TH), Chinese (ZH), Bengali (BN) require additional slots. Use the extended slot mapping:
+     ```
+     slot 0 = EN  (language-neutral / English)
+     slot 1 = RU  (original embedded artist text, preserve as-is from artwork)
+     slot 2 = HI  (Devanagari)
+     slot 3 = TH  (Thai)
+     slot 4 = ZH  (Chinese Simplified)
+     slot 5 = BN  (Bengali)
+     ```
+     Check whether the editor/viewer schema already supports >3 slots or needs a schema extension.
+     If the viewer doesn't support >3 slots yet: emit slots 0-2 as before and write the extra
+     languages to a sidecar `work/bhagavadgita/miw/lettering/localized_manifest.json` with the
+     rendered PNGs, so they can be wired in once the viewer is extended.
+  5. **Rebuild `chapter_2_miw.comics`** (or emit `chapter_2_miw_localized.comics`) with the
+     extended language slots populated.
+- **Files**:
+  - `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/miw_localize.py` — Create
+  - `work/bhagavadgita/miw/lettering/{en,th,zh,hi,bn}/` — Output dirs per language
+  - `work/bhagavadgita/miw/lettering/localized_manifest.json` — OCR text + translations record
+  - `work/bhagavadgita/miw/chapter_2_miw_localized.comics` — Output (localized archive)
+- **Dependencies**: Tasks 14.4 (objects/lettering regions), 14.7 (base .comics)
+- **Verification**:
+  - `localized_manifest.json` has `ocr_source: ru` field + translations for each of 5 languages
+  - At least 1 rendered PNG per language exists in lettering dirs
+  - `chapter_2_miw_localized.comics` passes structural validator
+  - Ollama failure for any language is recorded as `status: skipped` in manifest (not a hard failure)
+- **Complexity**: High (OCR + multilingual translation + complex script rendering + schema extension)
+
+---
+
+
 ## Checkpoints
 
 After each phase, verify:

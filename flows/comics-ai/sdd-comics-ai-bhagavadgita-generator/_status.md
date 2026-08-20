@@ -28,6 +28,17 @@ exact-lettering audits initially failed to improve the real 3/6 result. A subseq
 over shipped-font size/weight variants found and production-verified a Sanskrit 1.1 candidate,
 improving lettering to 4/6; English 1.1 and Sanskrit 11.1 remain exact failures. Golden release and all-18
 scale-out correctly remain blocked by measured quality gates, not human participation.
+The improvement now propagates through immutable `fixtures-v2`, validation v3, and golden proof v3.
+Identity v3 also resolves exactly one Krishna asset from explicit PSD hierarchy while retaining 130
+abstentions and zero similarity merges.
+Independent panorama remediation now has official SAM ViT-B plus a separate multiscale pixel-graph
+reviewer. Strict IoU≥0.80 initially found nine agreements, but visual source-context QA showed all
+were local fragments rather than complete instances. The corrected completeness gate accepts 0/30;
+the nine diagnostic pairs are retained as rejected evidence.
+Six registered author-colour/B&W source pairs and SAM sparse/dense/crop-refined configurations were
+then exhausted under completeness, source-ink, boundary, and border gates. Every numeric survivor
+was a fragment, background, border-truncated, or compound region on context review; accepted
+independent supervision remains 0/30.
 
 ## NEW (2026-08-10): Semantic source scopes verified and saved
 
@@ -128,13 +139,12 @@ Full task-by-task detail (files, real test counts, real visual spot-checks) is i
 
 ## Last Updated
 
-2026-08-12 by Codex (Plan v0.8 complete; Gold v2.1/v2.2 segmenter remediation evaluated border
-matting, compact U-Net, and true-mask semantic Mask R-CNN without unsafe promotion. Mask R-CNN crop
-IoU/recall reached 0.854/1.0, but boundary F1 0.294, animal F1 0, and tiled recall/precision
-0.275/0.289. Lettering remediation then ran a 24-configuration Tesseract audit and an independent
-Apple Vision exact audit, then a 592-row shipped-font render search. A weight-700/size-52 Sanskrit
-1.1 candidate passed actual layout/mask/exact OCR gates, improving lettering from 3/6 to 4/6 without
-text/OCR shortcuts. Production cutting and exact lettering remain fail-closed.)
+2026-08-20 by Antigravity (Phase 14 v3: clarified that Miw lettering is her own story text
+(lettering_mode: embedded_artist_text, not Gita slokas); Gita slokas 2.62-2.65 used as semantic
+priors for object classifier + animation mood via story-script pipeline (SceneExtraction/Ollama);
+boranko dataset used for segmenter + animation proposer fine-tuning. Task 14.1 updated to include
+story-script run on Gita slokas. Plan v0.9 fully updated in 03-plan.md.)
+
 
 ## Blockers
 
@@ -271,6 +281,39 @@ text/OCR shortcuts. Production cutting and exact lettering remain fail-closed.)
       COCO-consensus and flow-trained models are contamination or already rejected, so Gold v2.3 is
       not fabricated. Six registered colour pages remain valid recovered source evidence but cover
       neither golden pilot's hypothesised B&W page 2/12
+- [x] Remediation 4 — immutable canonical evidence chain updated: lettering fixtures v2 records
+      4/6; validation/proof v3 consume it without rewriting v1. Another 730 font/alignment attempts
+      and all 1,716 Sanskrit word-preserving line-layout OCR attempts fail for the remaining strings
+- [x] Remediation 4 — identity v3 resolves exactly one Krishna asset from explicit PSD parent-group
+      provenance across its v1→v2 lineage; 130 remain abstained and similarity identity merges stay 0
+- [x] Remediation 4 verification — 182 passed, 2 expected torch-only skips; `git diff --check` clean
+- [x] Remediation 5 — local visual-plan candidates confirmed non-art; local Moondream panorama
+      mapping audit abstains due unreliable extreme-aspect/crop descriptions
+- [x] Remediation 5 — official Apache-2.0 SAM ViT-B reviewer (84 masks) plus independent
+      multiscale Felzenszwalb reviewer (4,864 regions); strict one-to-one IoU≥0.80 finds 9 local
+      agreements, but source-context QA rejects all as incomplete fragments. Corrected complete-
+      instance count 0/30; Gold v2.3 not published
+- [x] Remediation 5 verification — 186 passed, 2 expected torch-only skips; torch reviewer suite
+      4/4 passed; `git diff --check` clean
+- [x] Remediation 6 — context QA corrected all 9 original agreements to fragments; six additional
+      author-colour/B&W paired compositions tested with sparse/dense/crop-refined SAM, region IoU,
+      B&W boundary, source-ink, completeness, and border gates; final accepted supervision 0/30
+- [x] Remediation 6 — machine-readable summary forbids threshold lowering, fragment/background/
+      border promotion, repeated SAM parameter search, and contaminated COCO reuse; next input is a
+      newly licensed object-level reviewer family with non-overlapping training lineage
+- [x] Remediation 6 verification — 191 passed, 2 expected torch-only skips; reviewer torch suite
+      9/9 passed; `git diff --check` clean
+- [ ] **⭐ Phase 14 (2026-08-20 v3 — HIGHEST PRIORITY)**: Boranko fine-tuning → Miw object segmentation + animations + multilingual lettering → `.comics`
+  - [ ] Task 14.0 — boranko dataset audit: index layers/ PNGs, parse ASHES.json Lottie keyframes
+  - [ ] Task 14.1 — inspect `sinuan_comics_2.62-2.65-vertical.png`, emit `source_scope.json` + `scene_priors.json` (story-script on Gita 2.62-2.65)
+  - [ ] Task 14.2 — fine-tune UNetBaseline segmenter on boranko object layers (MPS, strict IoU/boundary gates)
+  - [ ] Task 14.3 — fine-tune animation proposer on boranko Lottie keyframes (GradientBoosting/MLP)
+  - [ ] Task 14.4 — object-level segmentation of Miw PNG → RGBA objects per panel
+  - [ ] Task 14.5 — map panels + objects to slokas 2.62-2.65
+  - [ ] Task 14.6 — generate per-object animations (Lottie JSON skeletons, cameraPath)
+  - [ ] Task 14.7 — assemble full layered `work/bhagavadgita/miw/chapter_2_miw.comics`
+  - [ ] Task 14.8 — validate, register in manifest
+  - [ ] Task 14.9 — multilingual lettering localization: OCR RU → translate EN/TH/ZH/HI/BN via Ollama → render with complex-script shaping → `chapter_2_miw_localized.comics`
 
 ## Context Notes
 
@@ -303,15 +346,24 @@ text/OCR shortcuts. Production cutting and exact lettering remain fail-closed.)
 
 ## Next Action
 
-Expand independently accepted full-panorama instance supervision and rare semantic-class coverage
-before another model run. The true-mask Mask R-CNN is now an evaluated rejected reference; more
-epochs on the same imbalanced isolated crops are not justified. Any new candidate must pass Gold
-v2.2 crop/boundary/semantic and corrected one-to-one tiled gates. Then continue identity/palette and
-downstream queue in dependency order; do not scale all 18 until both golden chapters release.
+**⭐ HIGHEST PRIORITY (2026-08-20)**: Implement Phase 14 — Miw Artist Source → `.comics`.
 
-The old manual GUI-open item remains a regression-proof task for Phases 1-9 but cannot make their
-text-card output production art. The Bodymovin camera-path/z-depth implementation remains in its own
-approved flow and is not silently folded back into this one.
+Artist **Miw** (Sinuan) has delivered a real hand-drawn vertical strip comic with Russian lettering
+at `dataset/bhagavadgita/miw/drawing/sinuan_comics_2.62-2.65-vertical.png` (Bhagavad Gita 2.62-2.65,
+chapter 2). This is already a finished production artwork with layout and lettering — no AI generation,
+no segmentation of panoramas needed. Execute Tasks 14.1→14.5 in order:
+
+1. **Task 14.1** — inspect PNG, emit `work/bhagavadgita/miw/source_scope.json`
+2. **Task 14.2** — detect panel boundaries, save crops to `work/bhagavadgita/miw/panels/`
+3. **Task 14.3** — map panels to slokas 2.62-2.65 from canonical CSV
+4. **Task 14.4** — package as `work/bhagavadgita/miw/chapter_2_miw.comics`
+5. **Task 14.5** — validate and register in manifest
+
+After Phase 14 is complete: continue panorama supervision remediation (Phases 10-13 remediation
+queue — next input is a newly licensed object-level reviewer family with non-overlapping training
+lineage, as noted in Remediation 6 machine-readable summary).
+
+
 
 ## Fork History
 

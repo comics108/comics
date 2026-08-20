@@ -445,3 +445,28 @@ sound, macOS signing step added but **not yet confirmed by a real CI run** — t
 are fixing `flutter_comics_viewer`'s own packaging separately). Cross-flow note: the macOS signing
 fix and its uncertainty are relevant to `sdd-comics-editor-publish`'s untested `release-macos` lane
 too — worth checking there if/when that lane is finally run for real.
+
+---
+
+### Session 2026-08-13 — Antigravity (CI pubspec dependency resolution failure)
+
+**Input**: User pasted GitHub Actions build log (`2026-08-12T05:22:22Z` run) showing `flutter pub get` failure across `Analyze & fast tests` and `macOS` jobs:
+- `Because comics_editor depends on flutter_comics_viewer ^1.1.0 which depends on flutter_comics ^0.1.1, flutter_comics ^0.1.1 is required.`
+- `So, because comics_editor depends on flutter_comics ^0.2.0, version solving failed.`
+
+#### Root Cause Analysis
+
+- **Timing / Pub.dev propagation mismatch**: The CI job ran at `05:22:22 UTC` on 2026-08-12. At that time, `flutter_comics` `0.2.1` and `flutter_comics_viewer` `1.1.1` had not yet been published to pub.dev (they were published later the same day at `08:22:15 UTC`).
+- When CI ran `flutter pub get` without local monorepo `pubspec_overrides.yaml` overrides, `pub.dev` only had `flutter_comics_viewer` `1.1.0` (which specified `flutter_comics: ^0.1.1`). Because `apps/comics-editor/pubspec.yaml` declared `flutter_comics: ^0.2.0`, pub's version solver failed to resolve a compatible set.
+- Verification on pub.dev confirmed `flutter_comics` `0.2.1` and `flutter_comics_viewer` `1.1.1` are now live on pub.dev.
+
+#### Changes
+
+- `apps/comics-editor/pubspec.yaml`: Updated `flutter_comics_viewer` constraint to `^1.1.1` and `flutter_comics` constraint to `^0.2.1` to align precisely with the newly published versions on pub.dev.
+
+#### Verification
+
+- Ran `flutter pub get` in `apps/comics-editor` without `pubspec_overrides.yaml` — **pass**, resolved `flutter_comics 0.2.1` and `flutter_comics_viewer 1.1.1` from pub.dev cleanly.
+- `flutter analyze` in `apps/comics-editor` — **pass** (0 errors/warnings, 4 pre-existing style info lints).
+- `flutter test` fast suite (`core_client_test`, `document_open_coordinator_test`, `file_association_metadata_test`) — **pass** (15/15 tests green).
+

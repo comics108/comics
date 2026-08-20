@@ -598,6 +598,116 @@ exact reader rather than an exemption.
 Production segmentation likewise awaits genuinely independent panorama supervision; local absence
 is recorded as an input limitation, not converted into a human-approval blocker.
 
+#### Continued — autonomous remediation iteration 4: canonical v2/v3 evidence chain
+
+- Fixed a real evidence-chain inconsistency without mutating immutable v1 artifacts. Added
+  `build_lettering_fixtures_v2.py`, which replaces a base fixture only when a checksummed promotion
+  report contains an accepted exact-readback candidate and every promoted bitmap exists. Published
+  `lettering/fixtures-v2.json` at **4/6**, SHA-256
+  `2cb34080eb62331c469bcef61f6660dda857d3a3f772eaa8c11b4ef12f6bb7fc`.
+- Parameterized release/proof inputs and published `golden-validation-v2.json` and
+  `golden-proof-v2.json`; both correctly retain blocked release/scale-out while reporting 4/6.
+- Audited 730 additional shipped-font/real-Bold/alignment variants for the two remaining fixtures;
+  none passed. Report SHA-256:
+  `dca1cd1a7d05901a30e4bd3bbeb01c0261768f5981bf306ac1d963398570004c`.
+- Exhaustively tested all 286 word-preserving 3/4-line layouts for Sanskrit 11.1 across three OCR
+  models and PSM 6/11: 1,716 exact attempts, zero matches. Unicode text/order stayed unchanged and
+  no postprocessing/custom words were used. Report SHA-256:
+  `e490c5b4d8bd79e9e92deb6c7f2b56428e2656b2ff5a618c350f2309e7c07f87`.
+- Added `build_identity_v3.py`. It imports only identities backed by explicit PSD parent-group
+  provenance, follows the exact native asset lineage from v1 to v2, never promotes a similarity
+  neighbor, and appends newer explicit assets absent from the older catalog. Exactly one Krishna
+  asset is resolved; 130 results remain abstained and similarity merges remain zero. Identity
+  report SHA-256: `0322d5978af3e990f480bff2642f39fecce8b1ea14bf5869994482fdeff63351`.
+- Published the current canonical `golden-validation-v3.json` (SHA-256
+  `cf0d590fa189ac5f955005a96f327086d635d95362f9c32a734d4c19f7b27c11`) and
+  `golden-proof-v3.json` (SHA-256
+  `4b6459a2ebfa7ff599b427a7e768403e7e5c4be99cc8458a8e6ebf4ca607d858`). The proof records 4/6
+  lettering and the new identity artifact, while all six release dimensions remain fail-closed.
+- Final full lightweight suite: **182 passed, 2 expected torch-only skips** in 35.32s;
+  `git diff --check` clean.
+
+**Ended at**: canonical evidence is internally consistent through v3. Lettering visual/layout
+variants available locally are exhausted for the remaining two strings; identity has one
+source-explicit Krishna instance but not principal coverage for the golden pilots. No release gate
+was weakened.
+
+#### Continued — autonomous remediation iteration 5: independent panorama reviewers
+
+- Audited all 24 local action candidates and confirmed they are JSON visual plans explicitly marked
+  `plan_only_not_production_art`; none was promoted or counted as beat coverage.
+- Exercised the installed local `moondream` VLM against both whole panoramas and fixed-aspect crops.
+  Whole pages collapsed to a line because of extreme aspect ratio; crops returned empty, one-token,
+  or visibly unreliable descriptions. This path is recorded as abstaining and did not approve the
+  chapter-1/page-2 or chapter-11/page-12 hypotheses.
+- Added a genuinely independent segmentation family: official Meta Segment Anything ViT-B,
+  Apache-2.0, official checkpoint SHA-256
+  `ec2df62732614e57411cdcf32a23ffdf28910380d03139ee0f4fcbe91eb8c912`. Installed the official
+  package only in the existing isolated multimodal venv. MPS automatic-mask inference exposed an
+  upstream float64 incompatibility, while CPU smoke inference completed in 1.64s per viewport.
+- Added `sam_panorama_reviewer.py`: five overlapping fixed windows per page, source/checkpoint
+  checksums, strict area/rectangularity filtering, retained bitmap masks. It produced 84 proposed
+  instances (34 page 2, 50 page 12), all explicitly requiring a second independent family. Manifest
+  SHA-256: `705ca4b6b1b8c8b89ef5274b741c2f1a12bca3aa5f92a066f3104076f0ab5dd4`.
+- Added a fully independent non-neural pixel-graph reviewer using BSD-licensed scikit-image
+  Felzenszwalb at fixed scales 80/180/400. It consumes source pixels only—no SAM, COCO, prompts, or
+  outputs—and produced 4,864 proposed regions. Manifest SHA-256:
+  `413cd89e8d02df08438945cde4cae90bcd8585fe581c0842c9a84f05dbf4cfd5`.
+- Initial strict symmetric consensus found nine high-IoU local agreements (page 2: 2; page 12: 7;
+  IoU 0.803–0.915), recorded in diagnostic manifest SHA-256
+  `6701e32bc5f4202225aa5b683cee611caaf052f1c90905be4a51d0e49f9226f7`.
+- A required visual source-context sanity check exposed that all nine were garment/ornament/negative-
+  space fragments, not complete foreground instances. Added a non-compensating completeness gate:
+  viewport coverage ≥1%, width ≥8% of viewport, height ≥15% of page. All nine are now explicitly
+  rejected fragments; accepted count returns to 0/30. Corrected manifest SHA-256:
+  `c2a7168132c14895dc13c44a26921fdab589d0166189cad9ade0cdc8a3fd18c4`.
+- Gold v2.3 was not fabricated and no retraining or production promotion was attempted. The
+  contact-sheet evidence is retained at `independent-reviewers/consensus-v1/contact-sheet.png`.
+- Verification: full lightweight suite **186 passed, 2 expected torch-only skips** in 34.93s;
+  reviewer-focused suite in the torch environment **4/4 passed**; `git diff --check` clean.
+
+**Ended at**: independent-reviewer infrastructure is resolved, but complete-instance consensus is
+0/30 after the visual completeness correction. Production cutting remains fail-closed; next input
+must use additional independent source evidence rather than local fragment agreement.
+
+#### Continued — autonomous remediation iteration 6: completeness/ink/border correction
+
+- Rendered source-context contact sheets for every initially agreed mask. This exposed that all
+  nine page-2/page-12 IoU≥0.80 pairs were clothing/ornament/negative-space fragments. Added explicit
+  minimum completeness gates and republished corrected consensus v2: 0 accepted, 9 rejected
+  fragments, SHA-256 `c2a7168132c14895dc13c44a26921fdab589d0166189cad9ade0cdc8a3fd18c4`.
+- Used genuinely additional source evidence: six author-coloured panoramas already registered to
+  six B&W compositions. SAM reviewed colour pixels while the independent multiscale graph family
+  reviewed corresponding B&W pixels. Sparse run produced 67 SAM masks/5,630 graph regions; strict
+  region consensus yielded two apparent complete candidates, but contact-sheet QA showed both were
+  homogeneous background areas.
+- Added B&W source-ink gates (edge density ≥1%, dark-pixel density ≥2%). Corrected paired consensus
+  accepts 0, rejects 8 fragments and 2 backgrounds; SHA-256
+  `73d9ac3b2d396e7db10fe088c796b7144cae07cd5868465884bd872f63521dd7`.
+- Added cross-rendition boundary evidence instead of requiring identical graph regions. Five sparse
+  candidates passed numeric boundary/completeness/ink thresholds, but source-context QA showed all
+  were truncated at page borders or compound regions. Added a scale-aware 2% border margin; sparse
+  cross-rendition result is 0/67, SHA-256
+  `8cabec14df744073063e15a8fcd01f9e8ea174550bc9669eecc22d95c54a4ee7`.
+- Exhausted the two remaining prebounded SAM configurations without relaxing gates: dense
+  `points_per_side=32` produced 156 and crop-refined `points_per_side=16,crop_n_layers=1` produced
+  296 proposals across six pairs. Both yielded zero complete, inky, non-border boundary candidates.
+  Reports SHA-256: `218dd87089ab05dbf3214d54a7b1593e3e511192e54d045cbd83091177410f92`
+  and `bc5bcdaa692cb4937d5f1af3d48adc30ac1c78931f311024c110275c1e928dad`.
+- Rejected Mask2Former before download/inference: the inspected checkpoint card declared
+  `license: other` and conflicting ADE20K/COCO lineage, failing license/training-provenance gates.
+- Published `independent-reviewers/remediation-summary-v1.json`, SHA-256
+  `4a4dcf5468160885b0ad632b8c3f784c53ffc447987b57babdb8c3e951ed043d`.
+  It forbids counting fragments/backgrounds/border compounds, lowering thresholds, repeating SAM
+  parameter search, or reusing the contaminated COCO consensus family.
+- Verification: full lightweight suite **191 passed, 2 expected torch-only skips** in 35.31s;
+  reviewer-focused torch suite **9/9 passed**; `git diff --check` clean.
+
+**Ended at**: complete accepted independent panorama supervision remains 0/30. SAM sparse/dense/
+crop-refined plus region and cross-rendition boundary reviewers are exhausted. The next autonomous
+input must be a newly licensed object-level reviewer family with non-overlapping training lineage,
+not further tuning of current thresholds.
+
 ### Session 2026-08-06 - Claude
 
 **Started at**: Phase 1, Task 1.1

@@ -1,7 +1,7 @@
 # Visual Mockups: comics-editor-preview-uiux
 
 > Version: 0.1
-> Status: DRAFT
+> Status: APPROVED (2026-08-12, "visual approved")
 > Last Updated: 2026-08-12
 > Requirements: [01-requirements.md](01-requirements.md) (v0.2, APPROVED)
 
@@ -289,6 +289,6 @@ enabled/disabled-by-selection behavior; `All` is always enabled.
 
 ## Approval
 
-- [ ] Reviewed by: Anton Dodonov
-- [ ] Approved on:
+- [x] Reviewed by: Anton Dodonov
+- [x] Approved on: 2026-08-12 ("visual approved")
 - [ ] Notes:

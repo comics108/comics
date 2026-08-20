@@ -1,87 +1,36 @@
-# [FEATURE_NAME]
+# Real artwork preview on the Comics Editor canvas
 
-> Client-Facing Documentation
-> Last Updated: [DATE]
-> Version: 1.0
+The canvas can now switch between lightweight hatched placeholders and the real artwork stored in a comic.
 
-## What This Feature Does
+## What changed
 
-[Describe in 2-3 simple sentences what this feature provides. Focus on benefits and functionality, not implementation. Written for someone without technical background.]
+Two controls sit together in the bottom-right corner of the canvas:
 
-Example:
-- "This feature allows you to automatically track user activity and generate weekly reports"
-- "You can now export your data in multiple formats with a single click"
+- **Preview** shows real artwork for the currently selected layer.
+- **All** shows real artwork for every layer on the canvas.
 
----
+Think of `Preview` as a spotlight for one layer and `All` as turning on the lights for the whole stage.
 
-## How It Works
+## How to use it
 
-[Explain "on your fingers" - using simple analogies and everyday language. Avoid technical jargon. Think: "How would I explain this to my grandparent?"]
+1. Select a layer and turn on **Preview** to inspect only that layer's artwork.
+2. Turn on **All** to inspect the whole composition with real images.
+3. Turn **All** off to return to the previous per-layer choices. A layer whose own **Preview** was enabled stays enabled.
 
-**In Simple Terms:**
+The **All** control works even when no layer is selected.
 
-[Step-by-step explanation using familiar concepts]
+## Safe fallback
 
-Example:
-1. Think of it like a filing cabinet - you put documents in folders
-2. The system automatically organizes them by date and type
-3. When you need something, just search by name or date
-4. Export is like making a photocopy - your original stays safe
+If artwork is missing, incomplete, or temporarily unavailable, the canvas keeps showing the familiar hatched placeholder. Editing remains usable and no broken-image panel interrupts the workflow.
 
----
+## Session behavior
 
-## Key Benefits
+The **All** setting is a viewing convenience for the current editor session. It is not saved into the comic and does not add an undo step. Individual layer **Preview** choices keep their existing saved behavior.
 
-- **[Benefit 1]**: [Why this matters to you]
-- **[Benefit 2]**: [Why this matters to you]
-- **[Benefit 3]**: [Why this matters to you]
+## Performance
 
----
+Real artwork is loaded only when one of the preview controls requests it. Panning and zooming reuse the loaded result instead of rebuilding the artwork on every movement.
 
-## Quick Example
+## Supported documents
 
-[Show a concrete, relatable example of using this feature. Keep it simple and practical.]
-
-### Example Scenario:
-
-**Goal**: [What you want to achieve]
-
-**Steps**:
-1. [First simple step]
-2. [Second simple step]
-3. [Final step]
-
-**Result**: [What you get]
-
----
-
-## Common Questions
-
-### [Question 1 users might have]?
-[Simple answer]
-
-### [Question 2]?
-[Simple answer]
-
-### [Question 3]?
-[Simple answer]
-
----
-
-## What's Next
-
-[Optional: What future enhancements are planned, if applicable]
-
----
-
-## Getting Started
-
-[Very brief, simple instructions for first-time use]
-
-1. [First step to try it out]
-2. [Second step]
-3. [You're done!]
-
----
-
-**Note for Stakeholders**: This documentation focuses on practical usage and benefits. For technical implementation details, see `04-implementation-log.md`.
+The same behavior applies to both comics and puzzle canvases because they share the canvas layer renderer.
