@@ -1,9 +1,8 @@
 # Requirements: dot-comics-format (TDD)
 
-> Version: 0.11 (2026-08-09: completed `Layer.ZDepth` semantics and added the document-level
-> `cameraPath` contract, derived from the real Bhagavad Gita Bodymovin extraction flow.)
+> Version: 0.12 (2026-08-29: aligned `CameraPosition`/`Layer.ZDepth` intent with merged behavior.)
 > Status: APPROVED
-> Last Updated: 2026-08-09
+> Last Updated: 2026-08-29
 
 ## Promotion note (2026-08-02, read this first)
 
@@ -387,61 +386,52 @@ but the core decision (separate fields, not `Kind` values) is settled.
 
 A new, additive, **per-`Layer`** field (not document-level, unlike `scrollType`/`preferredOrientation`/
 `preferredViewportWidth`/`Height` above) — every layer may optionally declare its own relative depth
-along a notional Z axis, purely to drive a **parallax** effect: as the reader scrolls, layers further
-"back" appear to move less per unit of scroll than layers further "forward," faking depth on a format
-that is otherwise, and remains, a genuinely flat 2D scroll strip. This doesn't contradict the earlier
+along a notional Z axis, purely to drive a **parallax** effect: layers farther "back" respond less to
+CameraPosition than layers farther "forward," faking depth on a format that is otherwise, and
+remains, a genuinely flat 2D scroll strip. This doesn't contradict the earlier
 animation-inventory finding that real content never uses true 3D transforms (`ddd:1`/`rx`/`ry`/`rz` —
 **0 of 7** real produced Bodymovin chapters) — `ZDepth` never introduces an actual 3D
-transform/projection, only a per-layer scroll-response scaling.
+transform/projection, only a per-layer relative response to `CameraPosition`.
 
-**Decided (2026-08-08, Anton's direct instruction)**: `Layer.ZDepth`, a numeric field, **defaults to
-`0`** — and, per Anton's explicit instruction, **absent-key and explicit-`0` are the same value**, not
-two cases needing separate handling. `0` means "no depth offset" and must reproduce **exactly** what
-every existing v2012-through-2026 layer already does today: its authored `Anim` keyframes are the full,
-literal onscreen motion, moving 1:1 with scroll with no additional scaling. This is the same
-additive/backward-compatible pattern as every other schema change in this document (`GroupId`/
-`TextRegion`/`ParentId`/`scrollType`/`preferredOrientation`/`preferredViewportWidth`/`Height`) — old
-readers that have never heard of `ZDepth` simply never see the key and render unaffected; new readers
-that see it absent must behave identically to seeing it explicitly `0`.
+**Decided**: `Layer.ZDepth`, a numeric field, defaults to `0`; absent and explicit `0` are identical.
+With an active `cameraPath`, neutral depth receives the baseline camera response, positive
+depth receives a smaller/farther response, and valid negative depth receives a larger/nearer
+response. Without an active path, including v2012 documents, existing ordinary traversal remains.
 
 **Relationship to the existing driving model**: per "Layer & animation model" above, every `Anim`
 keyframe is already a pure function of one driving value (scroll position, or — per the 2026-08-07
 decision — optionally wall-clock time). `ZDepth` does not introduce a third independent driving
-dimension; it **modulates the scroll-driven dimension specifically** — a coefficient applied to how a
-layer's position responds to scroll, not a new independent axis a layer's `Anim` is a function of. A
-layer with a nonzero `ZDepth` and no time-basis anim remains purely scroll-driven; the depth just
-changes the felt "speed" of that scroll response.
+dimension; it controls a layer's relative response to `CameraPosition`, not a new independent axis a
+layer's `Anim` is a function of.
 
-**Completed semantics (v0.11, approved)**: `zDepth` is a finite, unitless relative-depth
+**Completed semantics (v0.12, approved)**: `zDepth` is a finite, unitless relative-depth
 coefficient. Positive values mean farther/slower, negative values mean nearer/faster, and valid
 authored values must be greater than `-1`; `0` remains the neutral/reference plane. A camera-aware
-reader combines the layer with the document's optional `cameraPath` at render time using the formula
-in `03-specifications.md`. Depth is explicitly per visual layer and does **not** inherit or add
+reader combines the layer with the document's optional `cameraPath` at render time. Exact response,
+composition, canonicalization, and sampling rules live only in `03-specifications.md`. Depth is
+explicitly per visual layer and does **not** inherit or add
 through `ParentId`: parenting controls authored transforms, while depth controls optical response to
 the camera. This keeps reparenting from silently changing the layer's apparent depth and avoids
 double-applying depth on nested organizational rigs.
 
 ### `cameraPath` — document camera movement (NEW, 2026-08-09)
 
-The document may declare one optional root-level `cameraPath`: a scroll-position-keyed sequence of
-camera coordinates in the same authored pixel coordinate system as layer translation. It represents
-the camera's **additional non-linear XY movement relative to its first point**; the ordinary viewer
-scroll still supplies the base vertical/horizontal traversal. This distinction is required by the
-real Bhagavad Gita Bodymovin source: its top-level traversal is a simple linear vertical pan, while the
-perceived broken camera curve has to be reconstructed from relative layer motion.
+The document may declare one optional root-level `cameraPath`: a document-scroll-keyed sequence of
+absolute XY camera coordinates in document space. When `cameraPath` is active, CameraPosition
+authoritatively drives XY traversal and positive camera movement moves content oppositely. When the
+path is inert, existing ordinary traversal is preserved.
 
 `cameraPath` and `Layer.zDepth` are complementary but independently optional:
 
-- absent `cameraPath`, an empty path, or a one-point path has zero camera delta and therefore no
-  visual effect, regardless of layer depth;
-- absent/zero `zDepth` has no parallax adjustment, even when a camera path exists;
-- a nonzero `zDepth` only modulates the additional camera-path contribution; it never rewrites the
-  layer's persisted `Anim` values and never becomes a third animation time basis;
-- points are ordered by strictly increasing scroll position in the document's scroll-axis pixel
-  coordinate. Importers whose source time runs in the opposite direction must normalize/reverse it;
-  readers must not depend on decreasing animation ranges;
+- absent/inert `cameraPath` preserves legacy traversal regardless of layer depth;
+- absent/zero `zDepth` receives neutral baseline response when `cameraPath` is active;
+- camera contribution occurs exactly once and never rewrites persisted `Anim` values or becomes a
+  third animation time basis;
 - camera X/Y are document coordinates, not device pixels. Viewport scaling happens after the camera
-  and layer transforms, so one file behaves consistently on phone, tablet, desktop, and Web.
+  and authored layer translation compose.
+
+Detailed math, filtering, ordering, duplicate handling, interpolation, and endpoint behavior are
+defined only in `03-specifications.md`.
 
 The path is document-level in v2026. A multi-scene producer either emits one continuous path in the
 combined document coordinate space or emits separate `.comics` documents; implicit per-scene
@@ -481,14 +471,14 @@ format has to be a learned/heuristic placement problem, not a coordinate transfo
    schema change exactly (absolute values always persisted; old readers ignore the new field/value
    and render unaffected) — no new field in this document ever requires an old reader to understand
    it for correct display.
-5. **Given** the new `Layer.ZDepth` field (2026-08-08), **when** it is absent or explicitly `0` on any
-   layer, **then** that layer's rendering is byte-identical to today's behavior for every pre-existing
-   `.comics`/`.puzzle` file — no reader needs to understand `ZDepth`, and no distinction exists between
-   "absent" and "explicitly `0`," to render any file correctly.
-6. **Given** a document with `cameraPath` and layers on the reference, farther, and nearer planes,
-   **when** a camera-aware reader evaluates them at the same scroll position, **then** `zDepth == 0`
-   adds no offset, positive depth reduces motion relative to the reference plane, and negative depth
-   increases it, using one platform-independent formula.
+5. **Given** a document without an active `cameraPath`, including v2012, **when** `zDepth` is absent
+   or explicitly `0`, **then** existing ordinary traversal is preserved and the two depth states are
+   indistinguishable.
+6. **Given** a document with an active `cameraPath` and layers on the reference, farther, and nearer
+   planes, **when** a camera-aware reader evaluates them at the same scroll position, **then**
+   `zDepth == 0`
+   receives baseline camera response, positive depth reduces that response, and negative depth
+   increases it, with each layer's camera contribution applied exactly once.
 7. **Given** any v2012-through-v2026 document without `cameraPath` and `zDepth`, **when** it is opened
    by a new reader, **then** its model values and rendering remain identical to the pre-v0.11 path.
 

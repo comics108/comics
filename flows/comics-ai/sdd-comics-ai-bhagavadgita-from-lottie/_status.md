@@ -14,8 +14,8 @@ COMPLETE — all Tasks 1.1-1.6 implemented and verified
 
 ## Blockers
 
-- None for this flow. Current viewers still do not render `cameraPath`/`zDepth`; that separately
-  approved schema/library work awaits its own Plan/implementation flows.
+- None for this flow. Shared Dart parsing/sampling/depth-response and merged Dart viewer rendering
+  now support `cameraPath`/`zDepth`; producer inference limitations remain disclosed below.
 
 ## Progress
 
@@ -61,7 +61,8 @@ COMPLETE — all Tasks 1.1-1.6 implemented and verified
   parser instead.
 - Cross-flow follow-up is now approved: `flows/tdd-dot-comics-format` v0.11/v0.8 formally adopts
   `cameraPath` and completes `zDepth`; `flows/sdd-flutter-comics` v0.4 assigns the shared Dart model,
-  parser, clone, and evaluator. Neither addendum is implemented yet.
+  parser, clone, sampler, and depth-response primitives. The merged Dart viewer owns active/inert
+  traversal and total composition. Native v2026 support is not claimed here.
 - A separate, real critique from Anton about `sdd-comics-ai-bhagavadgita-generator`'s own Phase 3
   (Chromium-rendered verse cards vs. real PSD panorama assets) came up in the same session but is
   **out of scope for this flow** — tracked in that flow's own `_status.md`, not here.
@@ -75,5 +76,5 @@ COMPLETE — all Tasks 1.1-1.6 implemented and verified
 
 ## Next Action
 
-Downstream only: draft/approve/implement the separate `sdd-flutter-comics` and viewer Plan addenda
-when visible parallax rendering is desired. This producer flow itself is complete.
+This producer flow itself is complete. Any follow-up should validate producer heuristics against
+real artist-intent/physical-depth evidence rather than duplicate the canonical format contract.

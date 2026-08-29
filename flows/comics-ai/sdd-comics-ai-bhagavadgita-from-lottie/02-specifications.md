@@ -28,7 +28,7 @@ stays a distinct output.
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/package_comics.py` | Modify | Extend `PackagingAsset`/`_layer_json`/`build_data_json` for keyframe lists, `zDepth`, document-root `cameraPath` — backward-compatible, existing 18-chapter path unaffected |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/pipeline.py` | Modify | New, separate CLI entry point, not part of `--all`'s 18-chapter loop |
 | `apps/comics-ai/comics-ai-bhagavadgita-generator/scripts/report.py` | Modify | Parallax-limitation disclosure text for this specific document |
-| `flows/tdd-dot-comics-format/` | Cross-flow, not modified by this flow | Real, disclosed follow-up: `cameraPath` should eventually be formally adopted there, matching how `Layer.ZDepth`/`preferredViewportWidth` were each proposed by a motivating flow and later adopted — not done as part of this flow |
+| `flows/tdd-dot-comics-format/03-specifications.md` | Canonical dependency, not modified by this flow | Sole format contract for the producer's emitted `cameraPath`/`zDepth`; shared Dart and viewer mappings are downstream owners |
 
 ## Source: the Real Bodymovin File
 
@@ -238,9 +238,9 @@ parallax reference, and the reason `cameraPath` must exist before z-depth can be
    `ratio = layer_amplitude / camera_amplitude`; `zDepth = round(1/ratio − 1, 3)` — moves more
    than the camera → closer/faster → negative; less → farther/slower → positive.
 3. **Fully static** (no position or scale keyframes — the real majority, 62–87% of layers per
-   scene): `zDepth = 0.0` — matches `Layer.ZDepth`'s own documented default/no-offset value. A
-   background element pinned to the world, panned past at the camera's own rate, is depth-neutral
-   relative to the camera by definition.
+   scene): `zDepth = 0.0` — the producer's neutral/reference fallback. A background element pinned
+   to the world, panned past at the camera's own rate, is treated as depth-neutral by this heuristic;
+   that inference is not physical-depth ground truth.
 
 `K = 1` is the canonical definition in the approved `tdd-dot-comics-format` v0.11/v0.8 contract:
 `zDepth` is unitless and `motionRatio = 1 / (1 + zDepth)`. The valid authored domain is
@@ -284,6 +284,10 @@ flow's "absent and explicit-0 are the same value" rule and keeping output byte-s
 of layers that don't need it. **`cameraPath`** is written once, as a sibling of `layers`/`sounds` at
 the document root (per "Reconstructed Camera-Path Element" above) — not per-layer.
 
+The serialized output records the inferred values but no confidence score or causal/provenance
+metadata tying a value to verified camera intent or physical depth. Those limitations remain
+producer knowledge rather than format semantics.
+
 ### Open Design Questions
 
 - [x] Absolute canvas position compositing — resolved by Plan Task 1.1 with full affine
@@ -305,9 +309,9 @@ the document root (per "Reconstructed Camera-Path Element" above) — not per-la
 - [ ] **Single layer vs. blended reference**: this spec picks exactly one layer per scene; whether a
       weighted blend of the top-N richest layers would reconstruct a more faithful camera path is a
       real, unexplored alternative, not ruled out, just not the default.
-- [x] `cameraPath` × `Layer.ZDepth` render composition — specified in draft
-      `tdd-dot-comics-format` v0.11/v0.8 as the zero-preserving adjustment
-      `D(s) × (1/(1+zDepth) − 1)`; this importer only derives/persists values and does not render.
+- [x] `cameraPath` × `Layer.ZDepth` render composition — defined only by the current canonical
+      `flows/tdd-dot-comics-format/03-specifications.md`; this importer derives/persists values and
+      does not render or redefine the format contract.
 - [x] Cross-flow schema adoption — approved in `tdd-dot-comics-format` v0.11/v0.8 and
       `sdd-flutter-comics` v0.4.
 

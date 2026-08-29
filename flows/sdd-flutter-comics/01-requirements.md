@@ -261,11 +261,11 @@ real non-uniform source data; `flows/tdd-dot-comics-format` v0.11/v0.8 defines t
 and response math. The shared model must adopt that contract so editor/viewer code does not create
 new duplicate camera models or platform-specific formulas.
 
-The boundary stays the same as v0.3: `flutter_comics` owns persisted types, tolerant parsing,
-cloning, camera-path sampling, and pure parallax-value calculation. `flutter_comics_viewer` owns the
-widget/render transform that consumes those values; `apps/comics-editor` owns editing UI and its
-native-core merge/save bridge. A camera feature must behave identically on Android, iOS, Web,
-macOS, Windows, and Linux because all consumers call the same shared pure-Dart calculation.
+The boundary stays the same as v0.3: `flutter_comics` owns persisted types, tolerant parsing and
+canonicalization, cloning, camera-path sampling/interpolation, and depth normalization/response
+primitives. `flutter_comics_viewer` owns active/inert traversal selection and the total render
+composition; `apps/comics-editor` owns editing UI and its native-core merge/save bridge. Final
+format semantics are defined only by `flows/tdd-dot-comics-format/03-specifications.md`.
 
 ### New User Stories
 
@@ -273,8 +273,9 @@ macOS, Windows, and Linux because all consumers call the same shared pure-Dart c
 shared model and public package API, **so that** each platform does not invent its own schema or
 parallax convention.
 
-**As** a reader of legacy content, **I want** absent camera/depth fields to resolve to inert values,
-**so that** upgrading `flutter_comics` cannot move a single existing layer.
+**As** a reader of legacy content, **I want** an absent/inert camera path to preserve ordinary
+traversal and absent depth to normalize like explicit zero, **so that** upgrading
+`flutter_comics` preserves existing documents.
 
 **As** an import pipeline, **I want** one deterministic camera sampler and depth-response function,
 **so that** a Bodymovin-derived path can be validated before any viewer UI is involved.
@@ -283,11 +284,12 @@ parallax convention.
 
 10. **Given** a `.comics` root with `cameraPath` and layers with `zDepth`, **when**
     `ComicsArchiveReader` reads it, **then** the full typed values survive parsing and cloning;
-    absent/empty camera and absent/explicit-zero depth resolve identically and inertly.
+    fewer than two valid canonical camera positions are inert, and absent/explicit-zero depth
+    normalize identically.
 11. **Given** valid camera points and any valid depth (`zDepth > -1`), **when** the shared evaluator
-    is called at a scroll coordinate, **then** it returns the exact sampling and adjustment defined
-    by `tdd-dot-comics-format/03-specifications.md`, without widgets, platform channels, device
-    pixels, or orientation APIs.
+    is called at a scroll coordinate, **then** it returns the sampling/interpolation and normalized
+    depth-response primitives required by `tdd-dot-comics-format/03-specifications.md`, without
+    widgets, platform channels, device pixels, or orientation APIs.
 12. **Given** invalid depth (`<= -1` or non-finite), unordered/duplicate camera points, or malformed
     point values, **when** the portable reader/evaluator handles them, **then** it follows the
     format's tolerant normalization/fallback rules and never produces `NaN`/infinite transforms.
@@ -296,13 +298,14 @@ parallax convention.
     preserved; this addendum may extend mapping for the new fields but must not redesign ZIP/FFI I/O.
 14. **Given** phone, tablet, desktop, and Web consumers at the same document scroll coordinate,
     **when** they use `flutter_comics`'s evaluator, **then** they receive the same document-space
-    camera sample and layer adjustment. Viewport scaling is applied afterward by each rendering
-    surface and cannot change the document-space result.
+    camera sample and normalized depth response. Final composition and viewport scaling remain the
+    rendering surface's responsibility under the canonical format specification.
 
 ### v0.4 Scope Boundary
 
 - Included: shared types, clone behavior, portable read support, editor bridge round-trip, public
-  exports, pure sampling/response math, and automated contract tests.
+  exports, canonicalization, sampling/interpolation, depth-response primitives, and automated
+  contract tests.
 - Excluded: applying the result in a viewer widget, editor controls/visualization for camera/depth,
   reconstructing a path from Bodymovin, and changing platform orientation/scroll UX. Those belong to
   their respective viewer, VDD, and importer flows.

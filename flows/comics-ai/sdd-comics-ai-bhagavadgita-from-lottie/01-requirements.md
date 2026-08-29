@@ -112,39 +112,30 @@ how `Layer.ZDepth` itself was added, but at the document/scene level rather than
 `.comics`' existing per-layer `TranslateAnim`/`ScaleAnim` keyframe system (already implemented,
 already scroll-driven, per `flows/tdd-dot-comics-format`'s "Layer & animation model") is **still the
 right target shape for each layer's own residual/local motion** — real per-layer keyframes with
-irregular timing map onto it directly, no schema change needed there. **Two things are genuinely
-new**: (1) **z-depth** — `Layer.ZDepth` is a real field in `flows/tdd-dot-comics-format/
-01-requirements.md`/`03-specifications.md` (added the same week, 2026-08-08) but **is not yet
-implemented** in `apps/comics-editor`'s real model (`libs/flutter_comics/lib/src/models.dart` has no
-`zDepth` field today) or rendered as parallax by any current `.comics` viewer; (2) **a reconstructed
-camera-path element** — a genuinely new document/scene-level schema concept with **no existing
-counterpart anywhere in `.comics`**, unlike z-depth which at least already has a Requirements/
-Specifications home in `tdd-dot-comics-format`. Writing both is valid and additive/backward-compatible
-by the same established pattern this format has used for every prior forward-looking field, but
-**must not be presented as visually working today** — no current reader composites a document-level
-camera path against per-layer z-depth into an actual parallax rendering; see the new Must-Have 4
-below and that flow's own Open Design Questions (sign convention, scroll-response formula still
-undecided) — now joined by this addition's own new open questions about exactly how a camera-path
-element and `Layer.ZDepth` compose at render time.
+irregular timing map onto it directly, no schema change needed there. This producer added two
+additive outputs: per-layer `zDepth` and a reconstructed document-level `cameraPath`. Both now have
+their canonical format semantics in `flows/tdd-dot-comics-format/03-specifications.md`; shared Dart
+parsing/sampling/depth-response and merged Dart viewer rendering are implemented. This producer
+still owns only derivation and persistence, not rendering or format semantics.
 
 ## Problem Statement
 
-The Bhagavad Gita dataset contains one real, hand-animated Bodymovin piece with genuine per-layer depth
-and motion cues that no current tooling extracts or preserves — today it exists only as a Bodymovin
-JSON, unusable by any `.comics` viewer/editor. This flow exists to extract that real signal (camera
-path, per-layer z-depth, per-layer motion) faithfully and export it as a `.comics` v2026 document,
-without inventing data the source doesn't actually contain.
+The Bhagavad Gita dataset contains one real, hand-animated Bodymovin piece with per-layer motion and
+scale cues that this implemented producer maps to a reconstructed camera path, inferred z-depth, and
+per-layer motion in a `.comics` v2026 document. The source contains the motion/scale observations;
+the camera/depth interpretation is a disclosed heuristic, not validated artist-intent or physical
+depth.
 
 ## User Stories
 
-**As** Anton, validating fidelity, **I want** every extracted value (camera path, z-depth, per-layer
-keyframes) traced to a specific real number in the source Bodymovin file, not invented or approximated
-without disclosure, **so that** the exported `.comics` document is provably faithful to what the
-artists actually made, not a plausible guess.
+**As** Anton, validating fidelity, **I want** every source observation used by camera-path/z-depth
+inference and every per-layer keyframe traced to a specific real number in the Bodymovin file, with
+approximations disclosed, **so that** the exported `.comics` document is reproducible without
+mistaking inference for what the artists intended.
 
-**As** a future `.comics` renderer implementer, **I want** the reconstructed camera path and
-per-layer z-depth values available as real, inspectable data in a real file, **so that** implementing
-actual parallax rendering later has real ground-truth data to render, not just a schema proposal.
+**As** a `.comics` renderer or producer maintainer, **I want** the reconstructed camera path and
+per-layer z-depth values available as inspectable data in a real file, **so that** the producer's
+heuristics can be tested without treating them as artist-intent or physical-depth ground truth.
 
 ## Acceptance Criteria
 
@@ -161,11 +152,10 @@ actual parallax rendering later has real ground-truth data to render, not just a
    concrete, testable proof: at least two layers in the real output have measurably different
    `zDepth` values.
 3. **Disclosed limitation, not oversold**: the manifest/report for this document states plainly that
-   `zDepth` values are written per `flows/tdd-dot-comics-format`'s additive schema design (safe,
-   round-trippable, ignorable by old readers) but **are not yet rendered as a visible parallax
-   effect by any current `.comics` editor/viewer** — this flow does not claim to have "restored" the
-   visual parallax effect end-to-end, only to have extracted and exported the real data needed for a
-   future renderer to do so.
+   `cameraPath` and `zDepth` are produced by disclosed reconstruction/inference heuristics, not
+   validated artist-intent or physical-depth ground truth. Merged Dart viewer support now renders
+   the canonical fields, but this producer still does not prove that its inferred values restore the
+   artists' intended parallax end-to-end.
 4. **Reconstructed camera path as its own element**: the aggregate, perceived "broken curve" (not
    the trivial linear top-level pan) is reconstructed from the real per-layer relative-motion
    signals and written as a distinct camera-movement element in the exported `.comics` v2026
@@ -187,9 +177,8 @@ actual parallax rendering later has real ground-truth data to render, not just a
 - Claiming `Mediation of the Bhagavat Gita.json` maps to any specific one of
   `sdd-comics-ai-bhagavadgita-generator`'s 18 numbered chapters — that mapping is unconfirmed (see
   the Bodymovin section above) and not assumed here.
-- Implementing the real parallax rendering (the actual scroll-response math that makes a `zDepth`
-  value visually do anything) — that's `flows/tdd-dot-comics-format`'s / a future viewer flow's
-  scope, not this one's. This flow only extracts and writes the data.
+- Implementing CameraPosition/Z-depth rendering — that belongs to the canonical format and viewer
+  flows and is now present in the merged Dart viewer. This producer only extracts and writes data.
 - Installing third-party Bodymovin rendering packages (`python-bodymovin`, `bodymovin-web`, etc.) for any
   verification purpose — per Anton's explicit constraint (2026-08-09): verification instead reuses
   `flows/comics-editor/tdd-dot-bodymovin-import-export`'s own findings and `libs/flutter_comics`'s
@@ -202,12 +191,9 @@ actual parallax rendering later has real ground-truth data to render, not just a
 - **Output cardinality**: exactly one additional `.comics` document (or possibly 3, if the
   1-file-vs-3-scenes Open Question below resolves that way) — never counted toward or presented as
   one of `sdd-comics-ai-bhagavadgita-generator`'s 18 chapters.
-- **Compatibility, narrow disclosed exception**: `Layer.ZDepth` and the new `cameraPath` element are
-  written even though not yet implemented by any real reader — permitted because `Layer.ZDepth`'s
-  own design in `flows/tdd-dot-comics-format` is additive/ignorable-by-old-readers by construction
-  (the same property every other forward-looking field in this format has had before its own
-  implementation), and because Must-Have 3 requires disclosing this plainly rather than silently
-  depending on it as if it already worked.
+- **Compatibility**: `Layer.ZDepth` and `cameraPath` remain additive and ignorable by old readers;
+  current Dart readers understand them. Must-Have 3 still requires disclosing that the producer's
+  inferred values lack validated artist-intent/physical-depth ground truth.
 - **No external Bodymovin tooling**: per Anton's explicit instruction, no `python-bodymovin`/`bodymovin-web`/
   similar third-party rendering package may be installed for verification — reuse
   `tdd-dot-bodymovin-import-export`/`libs/flutter_comics` instead.
@@ -236,9 +222,8 @@ actual parallax rendering later has real ground-truth data to render, not just a
 
 - `dataset/bhagavadgita/vaishnav/bhagavadgita_bodymovin/unzip/1/Mediation of the Bhagavat Gita_content/
   Mediation of the Bhagavat Gita.json` — the real Bodymovin source inspected directly for this flow
-- `flows/tdd-dot-comics-format/01-requirements.md`, `03-specifications.md` — `Layer.ZDepth`'s own
-  design (default 0, additive), source of the "not yet implemented anywhere" constraint, and the
-  canonical adopted home of this flow's `cameraPath` proposal
+- `flows/tdd-dot-comics-format/03-specifications.md` — sole canonical format contract for
+  `cameraPath`/`Layer.ZDepth`; this producer does not redefine its rendering semantics
 - `flows/comics-editor/tdd-dot-bodymovin-import-export/` — the general Bodymovin↔`.comics` mapping
   precedent (parent chains, precomp handling), and the source of `libs/flutter_comics`'s tested
   Bodymovin parser this flow's verification work reuses instead of installing new tooling
