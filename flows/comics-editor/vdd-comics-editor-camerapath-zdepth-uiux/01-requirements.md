@@ -6,8 +6,8 @@
 
 ## Problem Statement
 
-The `.comics` model, editor bridge, and Dart viewer already understand document-level
-`cameraPath` and per-layer `zDepth`, but Comics Editor has no authoring UI for them. An author can
+The shared `.comics` model and Dart viewer understand document-level `cameraPath` and per-layer
+`zDepth`, while this VDD defines the Comics Editor authoring UI for them. An author can
 only obtain the intended 2.5D parallax effect by editing JSON or importing prepared content, cannot
 comfortably see which layers are near/reference/far, and cannot author the camera while scrolling
 the real vertical comic canvas.
@@ -70,9 +70,10 @@ save normally, so that exploration is safe.
 5. **Given** the document is scrolled in Edit mode, **when** a camera path and nonzero layer depths
    exist, **then** the canvas preview remains tied to the actual viewport range for the selected
    General device dimensions, not to the desktop monitor size.
-6. **Given** the document has no path or every layer has depth zero, **when** it is opened and saved
-   without camera/depth edits, **then** its visible behavior remains unchanged and the new UI does
-   not imply that an effect is active.
+6. **Given** the document has no active path, **when** it is opened and saved without camera/depth
+   edits, **then** its visible behavior remains unchanged and the new UI does not imply that an
+   effect is active. With an active path, zero depth is the baseline camera response, not an inert
+   state.
 7. **Given** invalid precise input (`zDepth <= -1`, non-number, non-finite, or invalid camera
    position/coordinates), **when** it is submitted, **then** the editor prevents invalid authored
    state and explains the correction locally without crashing or losing the previous valid value.
@@ -133,16 +134,18 @@ save normally, so that exploration is safe.
   `CameraPathEvaluator`; preserve editor bridge round-trip and undo/redo architecture.
 - **Coordinate model**: Camera position and scroll-basis animation use document pixels and the
   selected device viewport range, not host-window pixels.
-- **Compatibility**: v2012/absent fields are inert; zero depth and no path must not cause visual or
-  persisted churn.
+- **Compatibility**: v2012 and an absent/inert path retain ordinary traversal; absent and explicit
+  zero depth remain identical, while zero depth receives baseline response on an active path.
 - **Platform**: Flutter editor behavior must cover macOS, Windows migration target, Linux, Web,
   Android, and iOS with responsive interaction rather than platform-specific feature differences.
 - **UI consistency**: Follow the approved bottombar/Properties conventions and existing slider plus
   exact-number policy.
 - **Selection identity**: Multi-selection must track stable layer IDs rather than mutable list
   indices and must remain coherent through reorder, delete, Undo/Redo, and parent hierarchies.
-- **Scope ownership**: Format semantics belong to `tdd-dot-comics-format`; rendering math belongs to
-  `flutter_comics`; this VDD owns editor authoring and visualization only.
+- **Scope ownership**: canonical format semantics belong only to
+  `flows/tdd-dot-comics-format/03-specifications.md`; `flutter_comics` owns shared mapping/primitives,
+  `flutter_comics_viewer` owns total rendering composition, and this VDD owns editor authoring and
+  visualization only.
 
 ## Open Questions
 
@@ -160,7 +163,8 @@ save normally, so that exploration is safe.
 ## References
 
 - `flows/tdd-dot-comics-format/01-requirements.md` and `03-specifications.md`
-- `flows/sdd-flutter-comics/` — implemented shared model, parser, evaluator, and editor bridge
+- `flows/sdd-flutter-comics/` — implemented shared model, parser/canonicalizer, sampler, and depth
+  response primitives; editor bridge conformance is not verified from production code in this workspace
 - `flows/comics-viewer/sdd-flutter-comics-viewer-dart/` — implemented rendering/scroll contract
 - `flows/comics-editor/vdd-comics-editor-bottombar-uiux/` — Properties and cross-device conventions
 - `flows/comics-editor/vdd-comics-editor-scroll/` — vertical scroll/navigation behavior

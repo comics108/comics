@@ -29,7 +29,7 @@ not parse or reimplement their JSON/math.
 | System | Change |
 |--------|--------|
 | `lib/src/dart_comics_viewer_backend.dart` | Retain the source `ComicsDoc` on `DartComicsDocument`; own the measured document scroll travel; evaluate sounds from the same document-space offset used by rendering; reset position when a new archive loads |
-| `lib/src/dart_comics_viewer_surface.dart` | Convert viewport constraints to document-space travel; apply one shared camera-depth adjustment after authored translation and before viewport scaling |
+| `lib/src/dart_comics_viewer_surface.dart` | Convert viewport constraints to document-space travel; own active/inert traversal and total camera-depth composition after authored translation and before viewport scaling |
 | `test/dart_comics_viewer_backend_test.dart` | v2012 defaults, v2026 camera/depth propagation, scroll-coordinate and sound-coordinate tests |
 | `test/dart_comics_viewer_surface_test.dart` | Exact zero/far/near `Positioned` offsets and resize invariance |
 | `example/lib/main.dart` | Replace the stale singular sample path with a two-value sample selector; v2026 default, v2012 selectable in one action |
@@ -76,8 +76,12 @@ scale = viewportWidthPx / documentWidth
 viewportHeightDoc = viewportHeightPx / scale
 scrollTravelDoc = max(0, documentHeight - viewportHeightDoc)
 documentScrollOffset = normalizedPosition * scrollTravelDoc
-screenStripOffsetY = -documentScrollOffset * scale
+ordinaryStripOffsetY = -documentScrollOffset * scale
 ```
+
+The surface uses `ordinaryStripOffsetY` only for an inert/absent canonical camera path. An active
+path suppresses that ordinary spatial traversal and uses the total CameraPosition composition from
+`flows/tdd-dot-comics-format/03-specifications.md`.
 
 `DartComicsViewerBackend` gains these internal/public-for-surface operations:
 
@@ -107,30 +111,13 @@ can supply width travel without introducing different camera math.
 
 ### Layer composition
 
-For each rendered layer:
-
-```dart
-final authored = KeyframeInterpolator.translateAt(
-  layer.editorLayer.anims,
-  documentScrollOffset,
-  layer.editorLayer.translate,
-);
-final parallax = CameraPathEvaluator.parallaxAdjustment(
-  document.sourceDocument?.cameraPath,
-  documentScrollOffset,
-  layer.editorLayer.zDepth,
-);
-final effective = authored + parallax;
-
-// Existing rotate/scale/alpha composition remains unchanged.
-Positioned(left: effective.dx * scale, top: effective.dy * scale, ...);
-```
-
-The whole strip still receives only `-documentScrollOffset * scale`. `cameraPath` is never applied
-as an additional strip/global transform: the importer already persisted reference-plane motion in
-layer animations, and adding `C(s)` globally would double it. Parent metadata is likewise not
-resolved here because persisted animations are already absolute; each visual layer receives only
-its own `zDepth` adjustment once.
+The viewer consumes the shared canonical camera sample and normalized depth response but owns the
+render decision. With an active canonical path, CameraPosition replaces ordinary spatial strip
+traversal; authored translation composes first in document space, each layer receives exactly one
+camera contribution, and viewport scaling follows. With an inert/absent path, the existing strip
+translation remains. Parent metadata is not resolved here because persisted animations are already
+absolute. Exact normative math is referenced, not restated, from
+`flows/tdd-dot-comics-format/03-specifications.md`.
 
 ### v2012 format behavior
 
@@ -163,13 +150,13 @@ Status text always contains the active filename. No file picker or persistent pr
 
 | Case | Result |
 |------|--------|
-| no/empty/one-point camera path | shared evaluator returns zero parallax |
+| no/empty/one-point camera path | path is inert; retain existing ordinary traversal |
 | invalid depth/path data | shared reader/evaluator normalization; viewer never sees a non-finite adjustment |
 | viewport wider/taller than content | travel clamps to zero; strip, animations, sound, and camera evaluate at zero |
 | resize at nonzero normalized position | recompute the one document offset; no accumulated transform and no resize-triggered sound |
 | source document absent on manually-created `DartComicsDocument` | inert camera fallback, preserving constructor compatibility |
 | switching example while playing | pause, load, reset to zero; old archive sound tracks are disposed by existing load logic |
-| positive/negative/zero depth | shared response applied once; final device-pixel multiplication happens afterward |
+| positive/negative/zero depth with active path | smaller/larger/baseline response through one camera contribution; final device-pixel multiplication happens afterward |
 
 ### Testing strategy
 
@@ -177,8 +164,8 @@ Status text always contains the active filename. No file picker or persistent pr
   real v2026 parses 519 layers/19 camera points/505 nonzero depths.
 - Coordinate unit: 50% position with a known viewport produces 50% of document scroll travel, not
   50% of full document height; `_evaluateSounds` receives those same before/after values.
-- Surface widget: a synthetic path plus `z=0`, `z=1`, and `z=-0.5` layers yields exact expected
-  `Positioned.left/top` values after scaling; camera is not applied globally.
+- Surface widget: a synthetic active path plus `z=0`, `z=1`, and `z=-0.5` layers yields exact
+  expected `Positioned.left/top` values after scaling; ordinary strip traversal is suppressed.
 - Resize widget: the same document-space target under phone/tablet/desktop constraints has equal
   shared camera/parallax values and only final pixel scale differs.
 - Example widget: v2026 is selected initially; one tap switches to v2012, updates label/source, and

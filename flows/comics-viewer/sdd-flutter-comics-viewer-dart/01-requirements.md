@@ -87,17 +87,18 @@ assets or editing code.
 
 - The Dart surface consumes `ComicsDoc.cameraPath`, `EditorLayer.zDepth`, and
   `CameraPathEvaluator` from `libs/flutter_comics`; it must not parse these fields or duplicate the
-  response formula locally.
+  shared sampling/depth-response primitives locally. Normative rendering semantics live only in
+  `flows/tdd-dot-comics-format/03-specifications.md`.
 - For a vertical strip, `documentScrollOffset = normalizedPosition × max(0,
   documentHeight - viewportHeightInDocumentPixels)`. The equivalent width/travel calculation is
   used when a future horizontal Dart surface is enabled. This same document-space value drives
   scroll-basis visual animations, sound gates, and camera sampling.
-- Each layer is evaluated in this order: authored scroll/time transforms → its own single
-  `parallaxAdjustment(cameraPath, documentScrollOffset, zDepth)` → viewport scaling/painting.
-- `cameraPath` is metadata reconstructing the already-authored reference-plane movement. It must
-  **not** translate the whole scene a second time. `zDepth == 0` therefore remains the reference
-  plane with zero additional adjustment; positive depth moves more slowly and valid negative depth
-  moves more quickly relative to that plane.
+- With at least two valid canonical camera positions, the viewer owns CameraPosition traversal and
+  total per-layer composition: ordinary spatial strip traversal is suppressed, authored transforms
+  compose first, exactly one camera contribution follows, and viewport scaling is last.
+- With an inert or absent path, including v2012 input, the existing ordinary strip traversal remains.
+  At an active path, `zDepth == 0` receives the baseline `1×` camera response; positive depth is
+  smaller/farther and valid negative depth is larger/nearer.
 - Camera/depth math is document-space and platform-independent. Re-layout or orientation change
   recomputes the viewport extent and document scroll offset without accumulating transforms or
   producing `NaN`/infinity.
@@ -122,11 +123,12 @@ assets or editing code.
    scroll animations, sounds, and camera sampling receive the actual document-space scroll offset
    derived from scroll travel, not `position × fullDocumentExtent`.
 10. **Given** a depth-zero, positive-depth, and negative-depth layer at the same camera position,
-    **when** they render, **then** the zero layer gets no additional offset, the positive layer uses
-    the shared slower response, and the negative layer uses the shared faster response, each exactly
-    once before viewport scaling.
-11. **Given** any non-empty camera path, **when** the Dart surface renders it, **then** it does not
-    apply `C(s)` as a second global scene pan; only the per-layer shared adjustment is added.
+    **when** they render with an active path, **then** the zero layer uses baseline response, the
+    positive layer uses the shared slower response, and the negative layer uses the shared faster
+    response, each through exactly one camera contribution before viewport scaling.
+11. **Given** an active canonical camera path, **when** the Dart surface renders it, **then** the
+    path owns spatial traversal and ordinary strip traversal is not also applied; an inert/absent
+    path retains existing traversal.
 12. **Given** a phone-sized, tablet-sized, or resized desktop/Web viewport showing the same
     document-space position, **when** the frame is evaluated, **then** the document-space camera and
     depth results agree; only final device-pixel scaling differs.

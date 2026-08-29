@@ -156,7 +156,7 @@ Three examples use the same control:
 
 ```text
 Near       z=-0.50   response 2.00×   "moves faster than reference"
-Reference  z= 0.00   response 1.00×   "authored motion, no adjustment"
+Reference  z= 0.00   response 1.00×   "baseline camera response"
 Far        z= 1.00   response 0.50×   "moves slower than reference"
 ```
 

@@ -141,8 +141,9 @@ flow's own `_status.md` for the disclosed note.
 
 ## Next Actions
 
-1. Downstream `flows/comics-viewer/sdd-flutter-comics-viewer-dart` v0.2 Specifications await
-   approval; viewer rendering remains intentionally unimplemented until that gate passes.
+1. Downstream `flows/comics-viewer/sdd-flutter-comics-viewer-dart` now implements active/inert
+   traversal and total CameraPosition/Z-depth composition; this shared flow continues to own only
+   parsing/canonicalization, sampling/interpolation, and depth-response primitives.
 2. Task 5.5 from the v0.3 baseline: manual verification on a real device/simulator (open a real dataset `.comics` file
    with `solidColor`/`mask` set in the macOS-targeted `flutter_comics_viewer` example app, confirm
    those fields survive parsing) — the only undone item.

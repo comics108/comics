@@ -2,13 +2,15 @@
 
 ## Current Phase
 
-PLAN ADDENDUM NOT STARTED — `cameraPath` + completed `zDepth` Requirements/Specifications are
-approved. The previously-approved implementation baseline remains complete.
+CAMERAPOSITION/Z-DEPTH CURRENT — shared Dart parsing, canonicalization, sampling, and depth response
+exist; merged Dart viewer rendering implements the current total CameraPosition/Z-depth composition.
+The canonical v2026 contract is current in `03-specifications.md`.
 
 ## Phase Status
 
-v0.11 Requirements and v0.8 Specifications are APPROVED (2026-08-09). Tests, Visual, and the prior
-Plan retain their APPROVED status; a camera/depth Plan addendum has not been drafted. **All 5 prior
+v0.12 Requirements and v0.9 Specifications are APPROVED/current for CameraPosition/Z-depth. Dart
+rendering is implemented; this status makes no claim about native v2026 reader support. Tests,
+Visual, and the prior Plan retain their APPROVED status. **All 5 prior
 plan phases (20 tasks) are done and tested** — see `05-plan.md`'s "Implementation Notes & Corrections"
 section for 16 disclosed corrections found while building. Most consequential:
 - Task 1.1's `clone()` was originally specified to generate a new id, which would have silently
@@ -68,8 +70,8 @@ paragraph's “left open” state; no code has changed.
 
 ## Last Updated
 
-2026-08-09 by Codex (drafted `cameraPath` and completed `Layer.ZDepth` semantics in Requirements/
-Specifications; no code changes)
+2026-08-29 by Codex (aligned the canonical CameraPosition/Z-depth contract with merged Dart viewer
+behavior; shared parsing/evaluation and Dart rendering are implemented; no native-support claim)
 
 ## Correction (2026-08-07): the "MAJOR DISCOVERY" originally logged here was a different format, now split out
 
@@ -98,7 +100,7 @@ was a separate, unrelated file being briefly misread as if it were part of this 
 
 ## Blockers
 
-- Next gate: draft and review a camera/depth Tests/Plan addendum before implementation.
+- No current CameraPosition/Z-depth documentation blocker.
 
 - Waiting on Anton's direction on `02-tests.md`'s remaining Open Design Questions — most
   consequentially whether to fix the newly-found `scaleX`/`scaleY`/`alpha` JSON-default bug
@@ -332,7 +334,5 @@ request: "вынеси из vdd-comics-editor-timeline и sdd-comics-ai-position
 
 ## Next Actions
 
-1. Draft the camera/depth Tests/Plan addendum for the shared model/evaluator and downstream viewer
-   rendering; approved Requirements/Specifications are not implementation authorization.
-3. Keep Task 5.4's separately-disclosed lifecycle-safe live-clock follow-up and the older format-test
+1. Keep Task 5.4's separately-disclosed lifecycle-safe live-clock follow-up and the older format-test
    questions independent from this camera/depth addendum.

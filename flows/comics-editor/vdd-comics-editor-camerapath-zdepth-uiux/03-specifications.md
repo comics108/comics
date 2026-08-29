@@ -8,9 +8,15 @@
 
 ## 1. Scope and Source of Truth
 
-This increment adds authoring and live preview for the already-implemented
-`ComicsDoc.cameraPath` and `EditorLayer.zDepth`. It does not add another camera model, change the
-`.comics` schema, or duplicate interpolation math in the editor.
+**CANONICAL FORMAT CONTRACT**: `flows/tdd-dot-comics-format/03-specifications.md` is the sole source
+for CameraPosition/Z-depth semantics. This VDD adds authoring and preview design for
+`ComicsDoc.cameraPath` and `EditorLayer.zDepth`; it does not add another camera model, change the
+`.comics` schema, or duplicate final composition math in the editor.
+
+**EDITOR IMPLEMENTATION STATUS**: the dated Plan and Implementation Log record a completed editor
+implementation, but the current workspace does not contain the editor production/test tree needed
+to independently verify runtime conformance. This specification therefore states the required
+editor mapping and does not promote that historical record into a current conformance claim.
 
 The implementation must reuse `CameraPathEvaluator`, `KeyframeInterpolator`, the editor's existing
 document-clone history, its bridge/save path, and the selected General `DeviceProfile`. This flow
@@ -224,7 +230,7 @@ Selection adds a `Z-Depth` group:
 - exact input accepts any finite number strictly greater than `-1`;
 - a valid out-of-slider value remains exact, displays `Custom`, and pins only the visual thumb;
 - read-only response comes from `CameraPathEvaluator.responseForDepth(zDepth)`;
-- sign copy is `Near / moves faster`, `Reference / no camera adjustment`, or
+- sign copy is `Near / moves faster`, `Reference / baseline camera response`, or
   `Far / moves slower`;
 - Reset sets exactly `0` as one undoable edit.
 
@@ -414,25 +420,12 @@ authoritative. One pad drag is one history transaction.
 
 ## 11. Edit Rendering and Guides
 
-At corrected `currentTime`, each visible layer uses:
-
-```dart
-final authored = KeyframeInterpolator.translateAt(
-  layer.anims,
-  currentTime,
-  layer.translate,
-);
-final parallax = CameraPathEvaluator.parallaxAdjustment(
-  document.cameraPath,
-  currentTime,
-  layer.zDepth,
-);
-final effective = authored + parallax;
-```
-
-`effective` is multiplied by document-to-screen scale exactly once. Existing scale/rotate/alpha
-composition remains. Camera adjustment is not applied to the strip, baked into Anims, or inherited
-through `ParentId`. Absent/empty/one-point path and depth zero remain inert via the shared evaluator.
+At corrected `currentTime`, Edit preview must consume the shared canonical camera sample and depth
+response and map them to the same active/inert traversal and total composition defined by
+`flows/tdd-dot-comics-format/03-specifications.md`. Authored transforms compose before the single
+camera contribution and document-to-screen scaling follows. An inert/absent path retains ordinary
+traversal; with an active path, zero depth receives baseline response. No effect is baked into
+`Anim`s or inherited through `ParentId`.
 
 Guides paint in an `IgnorePointer` overlay above content and below selection handles: selected point,
 current camera sample, origin/reference crosshair and useful vector, plus an edge indicator when the
@@ -441,8 +434,10 @@ The reticle is display-only; XY pad/sliders/exact fields own editing.
 
 ## 12. Viewer Contract
 
-Viewer continues through `flutter_comics_viewer`, which already consumes camera/depth and canonical
-document scroll. `refreshViewer()` serializes current in-memory edits as for other preview fields.
+The architecture routes Viewer preview through `flutter_comics_viewer`, whose merged Dart surface
+owns CameraPosition/depth rendering. The dated editor implementation record says `refreshViewer()`
+serializes current in-memory edits as for other preview fields; that editor bridge behavior is not
+independently verified from production code in this workspace.
 
 Viewer contains the rendered result and selected-device range band. It contains no Properties tabs,
 camera marks/reticle/XY controls, Z-Depth controls, Scene, or Timeline authoring chrome.
@@ -503,7 +498,7 @@ modal is required.
 | v2012 / fields absent | Reference depth, empty path, no migration prompt/change |
 | no/empty path | No marks/effect; Add creates neutral anchor |
 | one point | Marker retained; explicit inert-anchor copy |
-| all depths zero | Path editable; visible result unchanged |
+| all depths zero | Path editable; an active path uses baseline camera response |
 | hidden/non-renderable layer | Value retained; accurate unavailable/no-content copy |
 | depth `<= -1`, NaN, infinity | Reject and retain prior value |
 | valid depth outside slider | Preserve exact value; Custom edge state |
@@ -561,10 +556,12 @@ modal is required.
 
 ### Rendering/integration
 
-- Fixed-offset Edit positions match shared evaluator for depths `0`, `1`, and `-0.5`.
-- Parallax applies once and does not alter scale/rotate/alpha or strip scroll.
-- Absent/empty/one-point/zero-depth results match pre-feature positions.
-- Save/reopen and Viewer preview retain the same path/depth result.
+- Fixed-offset Edit positions target the P0 total composition for depths `0`, `1`, and `-0.5`.
+- Active-path CameraPosition applies once, suppresses ordinary strip traversal, and does not alter
+  scale/rotate/alpha.
+- Absent/empty/one-point paths match pre-feature traversal; zero depth is baseline when active.
+- Save/reopen and Viewer preview are intended to retain the same path/depth result; runtime editor
+  conformance requires production evidence outside this workspace.
 - v2012 and v2026 fixtures open; v2012 remains inert.
 - Puzzle, manipulation, Timeline, sound, Viewer range, and responsive shell regressions pass.
 - Primary-layer Timeline/Lettering/Cutting behavior remains compatible under multi-selection.

@@ -56,25 +56,20 @@ class ComicsDoc {
 }
 
 class CameraPathEvaluator {
-  /// Samples document-space camera coordinates. Null/0/1-point paths are inert.
+  /// Samples canonical document-space camera coordinates with endpoint holds.
   static Offset sample(CameraPath? path, double scrollPosition);
 
   /// Returns 1/(1+z). Invalid/non-finite z is normalized to 0 first.
   static double responseForDepth(double zDepth);
-
-  /// Returns (sample(path,s) - firstPoint) * (responseForDepth(z) - 1).
-  static Offset parallaxAdjustment(
-    CameraPath? path,
-    double scrollPosition,
-    double zDepth,
-  );
 }
 ```
 
 `CameraPathEvaluator` lives in a new `lib/src/camera_path.dart` and is exported from
 `lib/flutter_comics.dart`. It is analogous to `KeyframeInterpolator`: shared value math with no
-painting, gestures, widgets, device pixels, orientation, or platform APIs. The viewer applies its
-returned `Offset` after authored parent/scroll/time transforms and before viewport scaling.
+painting, gestures, widgets, device pixels, orientation, or platform APIs. The package also retains
+the shipped differential `parallaxAdjustment` helper, but that helper is not the total viewer
+contract. Rendering surfaces consume the shared canonicalization, sample, and depth response under
+the final semantics in `flows/tdd-dot-comics-format/03-specifications.md`.
 
 ### Canonical JSON and Parsing
 
@@ -98,7 +93,7 @@ returned `Offset` after authored parent/scroll/time transforms and before viewpo
   canonical points in strictly increasing order. It omits `cameraPath` when null/empty and may omit
   `zDepth` when zero; nonzero valid values must survive raw-JSON merge/save.
 
-### Sampling and Composition
+### Shared Sampling and Depth Response
 
 For valid points `P[i]` sorted by `position`, values before/after the range hold the first/last
 point. Inside `[P[i].position, P[i+1].position]`, X and Y use the same cubic ease-out factor as
@@ -108,13 +103,11 @@ point. Inside `[P[i].position, P[i+1].position]`, X and Y use the same cubic eas
 t = (s - p0.position) / (p1.position - p0.position)
 eased = (t - 1)^3 + 1
 camera = p0.xy + (p1.xy - p0.xy) * eased
-delta = camera - points.first.xy
-adjustment = delta * (1 / (1 + zDepth) - 1)
 ```
 
-Consequences are contract tests, not UI preferences: `z=0 → adjustment=0`, `z=1 → -0.5×delta`,
-`z=-0.5 → +1×delta`. `ParentId` never alters/inherits depth. Time-basis animation is composed into
-the authored layer translation normally; only the final camera adjustment is scroll-driven.
+`responseForDepth` returns `1`, `0.5`, and `2` for `z=0`, `z=1`, and `z=-0.5`. `ParentId` never
+alters or inherits depth. Active/inert traversal and total rendering composition are viewer-owned;
+their normative behavior lives only in `flows/tdd-dot-comics-format/03-specifications.md`.
 
 ### v0.4 Affected Systems
 
@@ -132,7 +125,7 @@ the authored layer translation normally; only the final camera adjustment is scr
 
 | Case | Required result |
 |------|-----------------|
-| null/empty/one-point path | `Offset.zero` adjustment |
+| null/empty/one-point path | Fewer than two canonical positions; rendering treats the path as inert per P0 |
 | out-of-order/duplicate points | stable sort, last duplicate wins |
 | invalid point | drop it; fewer than two valid points makes path inert |
 | invalid depth | normalize to `0`; never return non-finite values |
@@ -145,14 +138,14 @@ the authored layer translation normally; only the final camera adjustment is scr
 - [ ] `models_test.dart`: defaults plus deep cloning of path and depth
 - [ ] `comics_reader_test.dart`: absent/explicit-zero/nonzero fields, canonical path, malformed and
       duplicate points, invalid depth
-- [ ] `camera_path_test.dart`: endpoint holds, cubic midpoint, zero/near/far formulas, parenting
-      independence, and finite-output guarantees
+- [ ] `camera_path_test.dart`: endpoint holds, cubic midpoint, zero/near/far response factors,
+      parenting independence, and finite-output guarantees
 - [ ] editor `models_mapping_test.dart`: read/merge/save preservation without disturbing unknown raw
       JSON keys
 - [ ] real-fixture contract from `sdd-comics-ai-bhagavadgita-from-bodymovin`: increasing path positions,
       non-linear points, multiple distinct nonzero layer depths
 - [ ] regression: every existing `flutter_comics` and editor test remains green; legacy fixtures
-      produce zero camera adjustment
+      retain an inert/absent camera path and normalized depth defaults
 
 ## Interaction Interface
 

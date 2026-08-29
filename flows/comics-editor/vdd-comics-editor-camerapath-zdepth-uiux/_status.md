@@ -6,7 +6,8 @@ DOCUMENTATION
 
 ## Phase Status
 
-IMPLEMENTATION COMPLETE — DOCUMENTATION NOT STARTED
+IMPLEMENTATION RECORDED COMPLETE — CURRENT WORKSPACE RUNTIME CONFORMANCE NOT VERIFIED —
+DOCUMENTATION NOT STARTED
 
 ## Last Updated
 
@@ -40,14 +41,15 @@ IMPLEMENTATION COMPLETE — DOCUMENTATION NOT STARTED
 
 ## Context Notes
 
-- Shared camera/depth data and evaluator are already implemented; this flow owns editor authoring
-  and visualization, not schema or rendering-math reinvention.
+- Canonical format semantics live only in `flows/tdd-dot-comics-format/03-specifications.md`;
+  shared Dart mapping/primitives and Dart viewer total composition are implemented. This flow owns
+  editor authoring and visualization, not schema or rendering-math reinvention.
 - Default product context is vertical-scroll comic strip in portrait, with horizontal/landscape
   affordances future-disabled.
 - Properties follow `General / Selection / Document`; `zDepth` belongs to Selection and camera path
   belongs to Document.
-- Viewer is result-only. Authoring controls exist only in Editor mode, while both modes render the
-  same scroll/camera/depth result.
+- Viewer is result-only. Authoring controls are designed for Editor mode; equal Editor/Viewer
+  runtime output remains an unverified editor conformance target in this workspace.
 - Desktop numbers remain visible/editable beside sliders; phone precise editing opens in one action.
 - Visual v0.2 approves: separate viewport/camera rail lanes; authoritative Document list plus XY pad;
   add-at-current without jumps; `-0.9…4` soft depth slider with unrestricted valid exact input;
@@ -55,8 +57,9 @@ IMPLEMENTATION COMPLETE — DOCUMENTATION NOT STARTED
 - Specifications v0.2 grounds the Visual in current Flutter code. It also corrects Edit
   `currentTime` to true document pixels (including fit scale), shares the selected-device range
   model with Viewer, and keeps camera point data target-independent.
-- The editor now supports the approved shared ID-based multi-selection model, including explicit
-  `Mixed` Z-Depth UX and primary-layer compatibility for legacy single-selection consumers.
+- The dated implementation record reports support for the approved shared ID-based multi-selection
+  model, including explicit `Mixed` Z-Depth UX and primary-layer compatibility for legacy
+  single-selection consumers; production verification is unavailable in this workspace.
 - Visual v0.3 uses familiar modifier selection on desktop and long-press selection mode on touch;
   adds deterministic batch Show/Hide, depth, Canvas translate, stable Up/Down, and confirmed Delete;
   and keeps unsafe bulk Parent/Kind/animation semantics out of scope.
